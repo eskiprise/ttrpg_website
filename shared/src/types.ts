@@ -14,7 +14,7 @@ export interface User {
 
 export type PublicUserSummary = Pick<
   User,
-  "userId" | "firstName" | "lastName" | "profilePictureUrl"
+  "userId" | "firstName" | "lastName" | "profilePictureUrl" | "roles"
 >;
 
 export interface PublicGameMaster {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import type { GameSystem, SignupRequest, User } from "@ttrpg-club/shared";
+import { Link } from "react-router-dom";
+import type { SignupRequest, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../auth/AuthContext";
 
@@ -162,90 +163,9 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
   );
 }
 
-function AddGame({ token, systems, users }: { token: string | null; systems: GameSystem[]; users: User[] }) {
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [systemId, setSystemId] = useState("");
-  const [dmUserId, setDmUserId] = useState("");
-  const [participantIds, setParticipantIds] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-
-  const dms = users.filter((u) => u.roles.includes("dm"));
-
-  function toggleParticipant(userId: string) {
-    setParticipantIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
-    );
-  }
-
-  async function submit() {
-    setError(null);
-    setStatus(null);
-    if (!title || !date || !systemId || !dmUserId) {
-      setError("Title, date, system and DM are required");
-      return;
-    }
-    try {
-      await apiFetch("/admin/games", {
-        method: "POST",
-        token,
-        body: { title, date, systemId, dmUserId, participantUserIds: participantIds },
-      });
-      setStatus("Game added to the log.");
-      setTitle("");
-      setDate("");
-      setParticipantIds([]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    }
-  }
-
-  return (
-    <div className="card">
-      <h2>Log a Game</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "480px" }}>
-        <input placeholder="Title (e.g. Game #1 - The Beginning)" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        <select value={systemId} onChange={(e) => setSystemId(e.target.value)}>
-          <option value="">Select system…</option>
-          {systems.map((s) => <option key={s.systemId} value={s.systemId}>{s.name}</option>)}
-        </select>
-        <select value={dmUserId} onChange={(e) => setDmUserId(e.target.value)}>
-          <option value="">Select DM…</option>
-          {dms.map((u) => <option key={u.userId} value={u.userId}>{u.firstName} {u.lastName}</option>)}
-        </select>
-        <div>
-          <p className="muted" style={{ margin: "0 0 0.25rem" }}>Participants:</p>
-          {users.map((u) => (
-            <label key={u.userId} style={{ display: "block" }}>
-              <input
-                type="checkbox"
-                checked={participantIds.includes(u.userId)}
-                onChange={() => toggleParticipant(u.userId)}
-              />{" "}
-              {u.firstName} {u.lastName}
-            </label>
-          ))}
-        </div>
-        {error && <p className="error-text">{error}</p>}
-        {status && <p className="muted">{status}</p>}
-        <button onClick={submit}>Add Game</button>
-      </div>
-    </div>
-  );
-}
-
 export function AdminDashboard() {
   const { idToken } = useAuth();
-  const { tick, reload } = useReload();
-  const [systems, setSystems] = useState<GameSystem[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    apiFetch<{ systems: GameSystem[] }>("/game-systems").then((d) => setSystems(d.systems));
-    apiFetch<{ users: User[] }>("/admin/users", { token: idToken }).then((d) => setUsers(d.users));
-  }, [idToken, tick]);
+  const { reload } = useReload();
 
   return (
     <div className="page">
@@ -254,7 +174,13 @@ export function AdminDashboard() {
       <AnonymizeToggle token={idToken} />
       <Members token={idToken} />
       <AddGameSystem token={idToken} onAdded={reload} />
-      <AddGame token={idToken} systems={systems} users={users} />
+      <div className="card">
+        <h2>Log a Game</h2>
+        <p className="muted">
+          Game logging moved to its own page so Game Masters can log their own sessions too.
+        </p>
+        <Link to="/games/log"><button>Go to Log a Game</button></Link>
+      </div>
     </div>
   );
 }

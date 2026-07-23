@@ -6,7 +6,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? "nav-link active" : "nav-link";
 
 export function NavBar() {
-  const { idToken, isAdmin, logout } = useAuth();
+  const { idToken, isAdmin, isDm, logout } = useAuth();
 
   return (
     <nav className="nav-bar">
@@ -22,6 +22,9 @@ export function NavBar() {
           <NavLink to="/game-log" className={linkClass}>Game Log</NavLink>
           {idToken && (
             <NavLink to="/stats" className={linkClass}>My Stats</NavLink>
+          )}
+          {(isAdmin || isDm) && (
+            <NavLink to="/games/log" className={linkClass}>Log a Game</NavLink>
           )}
           {isAdmin && (
             <NavLink to="/admin" className={linkClass}>Admin</NavLink>

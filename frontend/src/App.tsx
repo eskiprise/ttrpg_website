@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
-import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
+import { RequireAdmin, RequireAuth, RequireGameMaster } from "./components/RequireAuth";
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
 import { GameMasters } from "./pages/GameMasters";
@@ -12,6 +12,7 @@ import { Stats } from "./pages/Stats";
 import { Signup } from "./pages/Signup";
 import { Login } from "./pages/Login";
 import { Profile } from "./pages/Profile";
+import { LogGame } from "./pages/LogGame";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+        <Route path="/games/log" element={<RequireGameMaster><LogGame /></RequireGameMaster>} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
       </Routes>
     </>

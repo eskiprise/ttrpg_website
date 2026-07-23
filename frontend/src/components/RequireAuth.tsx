@@ -16,3 +16,11 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
+
+export function RequireGameMaster({ children }: { children: ReactNode }) {
+  const { loading, idToken, isAdmin, isDm } = useAuth();
+  if (loading) return <div className="page">Loading…</div>;
+  if (!idToken) return <Navigate to="/login" replace />;
+  if (!isAdmin && !isDm) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}

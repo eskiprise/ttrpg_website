@@ -34,6 +34,7 @@ import {
 } from "./resources/adminSignup.js";
 import { updateAnonymizeToggle } from "./resources/settings.js";
 import { listUsers, updateUserRoles } from "./resources/adminUsers.js";
+import { listMembers } from "./resources/members.js";
 
 type RouteHandler = (
   event: APIGatewayProxyEventV2
@@ -64,6 +65,8 @@ const routes: Record<string, RouteHandler> = {
   "GET /games/{gameId}/comments": listComments,
   "POST /games/{gameId}/comments": postComment,
   "DELETE /admin/games/{gameId}/comments/{commentId}": deleteComment,
+
+  "GET /members": listMembers,
 
   "GET /me": getMyProfile,
   "GET /me/stats": getMyStats,

@@ -10,7 +10,7 @@ import {
 import type { Game, GameParticipantRef } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { HttpError, json } from "../../lib/response.js";
-import { optionalAuth, requireAdmin } from "../../lib/auth.js";
+import { optionalAuth, requireAuth, type AuthContext } from "../../lib/auth.js";
 import { getSettings } from "../../lib/settings.js";
 import { nicknameFor } from "../../lib/nicknames.js";
 import { getUser, displayName } from "../../lib/users.js";
@@ -24,6 +24,24 @@ function anonymize(game: Game): Game {
       displayName: nicknameFor(p.userId),
     })),
   };
+}
+
+/**
+ * Admins can create/edit/delete any game. A Game Master can only do so for games where
+ * they are (or would be) the DM — they can't log a session crediting someone else.
+ */
+async function requireGameEditAccess(
+  event: APIGatewayProxyEventV2,
+  dmUserId: string
+): Promise<AuthContext> {
+  const auth = await requireAuth(event);
+  if (auth.isAdmin) return auth;
+
+  const user = await getUser(auth.userId);
+  if (user.roles?.includes("dm") && auth.userId === dmUserId) {
+    return auth;
+  }
+  throw new HttpError(403, "Only an admin, or the game's own DM, can do this");
 }
 
 async function shouldAnonymizeFor(
@@ -76,11 +94,11 @@ interface CreateGameBody {
 export async function createGame(
   event: APIGatewayProxyEventV2
 ) {
-  await requireAdmin(event);
   const body = JSON.parse(event.body ?? "{}") as CreateGameBody;
   if (!body.title || !body.date || !body.systemId || !body.dmUserId) {
     throw new HttpError(400, "title, date, systemId and dmUserId are required");
   }
+  await requireGameEditAccess(event, body.dmUserId);
 
   const systemResult = await ddb.send(
     new GetCommand({
@@ -135,7 +153,6 @@ export async function createGame(
 export async function updateGame(
   event: APIGatewayProxyEventV2
 ) {
-  await requireAdmin(event);
   const gameId = event.pathParameters?.gameId;
   if (!gameId) throw new HttpError(400, "Missing gameId");
 
@@ -143,6 +160,7 @@ export async function updateGame(
     new GetCommand({ TableName: Tables.games(), Key: { gameId } })
   );
   if (!existing.Item) throw new HttpError(404, "Game not found");
+  await requireGameEditAccess(event, (existing.Item as Game).dmUserId);
 
   const body = JSON.parse(event.body ?? "{}") as Partial<CreateGameBody>;
   const updated: Game = {
@@ -157,7 +175,6 @@ export async function updateGame(
 export async function deleteGame(
   event: APIGatewayProxyEventV2
 ) {
-  await requireAdmin(event);
   const gameId = event.pathParameters?.gameId;
   if (!gameId) throw new HttpError(400, "Missing gameId");
 
@@ -166,6 +183,7 @@ export async function deleteGame(
   );
   if (!existing.Item) throw new HttpError(404, "Game not found");
   const game = existing.Item as Game;
+  await requireGameEditAccess(event, game.dmUserId);
 
   await ddb.send(new DeleteCommand({ TableName: Tables.games(), Key: { gameId } }));
   await Promise.all(

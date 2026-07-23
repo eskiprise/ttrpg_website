@@ -12,6 +12,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { Role, User } from "@ttrpg-club/shared";
+import { apiFetch } from "../lib/api";
 
 const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
 const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
@@ -38,6 +40,7 @@ interface AuthState {
   isAdmin: boolean;
   userId: string | null;
   email: string | null;
+  roles: Role[];
 }
 
 interface NewPasswordChallenge {
@@ -45,6 +48,7 @@ interface NewPasswordChallenge {
 }
 
 interface AuthContextValue extends AuthState {
+  isDm: boolean;
   login: (
     email: string,
     password: string
@@ -68,6 +72,7 @@ function sessionToState(session: CognitoUserSession): AuthState {
     isAdmin: groups.includes("admin"),
     userId: (payload.sub as string) ?? null,
     email: (payload.email as string) ?? null,
+    roles: [],
   };
 }
 
@@ -77,10 +82,28 @@ const EMPTY_STATE: AuthState = {
   isAdmin: false,
   userId: null,
   email: null,
+  roles: [],
 };
+
+/** Roles (player/dm) live in DynamoDB, not the Cognito token, so fetch them separately. */
+async function fetchRoles(idToken: string): Promise<Role[]> {
+  try {
+    const data = await apiFetch<{ user: User }>("/me", { token: idToken });
+    return data.user.roles ?? [];
+  } catch {
+    return [];
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ ...EMPTY_STATE, loading: true });
+
+  async function applySession(session: CognitoUserSession) {
+    const base = sessionToState(session);
+    setState(base);
+    const roles = await fetchRoles(base.idToken!);
+    setState((prev) => (prev.idToken === base.idToken ? { ...prev, roles } : prev));
+  }
 
   useEffect(() => {
     const currentUser = userPool?.getCurrentUser();
@@ -93,13 +116,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState({ ...EMPTY_STATE, loading: false });
         return;
       }
-      setState(sessionToState(session));
+      void applySession(session);
     });
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
+      isDm: state.roles.includes("dm"),
       login: (email, password) =>
         new Promise((resolve, reject) => {
           const cognitoUser = new CognitoUser({ Username: email, Pool: requirePool() });
@@ -107,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             new AuthenticationDetails({ Username: email, Password: password }),
             {
               onSuccess: (session) => {
-                setState(sessionToState(session));
+                void applySession(session);
                 resolve({ ok: true });
               },
               onFailure: reject,
@@ -121,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         new Promise((resolve, reject) => {
           challenge.cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
             onSuccess: (session) => {
-              setState(sessionToState(session));
+              void applySession(session);
               resolve();
             },
             onFailure: reject,
