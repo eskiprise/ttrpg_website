@@ -1,0 +1,150 @@
+{
+  "nav": {
+    "brand": "The Club",
+    "home": "Home",
+    "about": "About Us",
+    "gameMasters": "Game Masters",
+    "games": "Games",
+    "gameLog": "Game Log",
+    "myStats": "My Stats",
+    "logAGame": "Log a Game",
+    "admin": "Admin",
+    "profile": "Profile",
+    "logIn": "Log In",
+    "logOut": "Log Out",
+    "joinTheClub": "Join the Club"
+  },
+  "common": {
+    "loading": "Loading…",
+    "somethingWrong": "Something went wrong"
+  },
+  "home": {
+    "title": "Welcome to the Club",
+    "intro": "We're a tabletop RPG club running D&D, Delta Green, and more. Browse our Game Masters, check the log of every session we've played, and join us at the table.",
+    "newHereTitle": "New here?",
+    "newHereBefore": "Membership is by admin approval.",
+    "newHereLink": "Submit a signup request",
+    "newHereAfter": "and we'll get back to you.",
+    "exploreTitle": "Explore",
+    "exploreGameMasters": "Meet our Game Masters",
+    "exploreGameSystems": "See what we play",
+    "exploreGameLog": "Browse the Game Log"
+  },
+  "about": {
+    "title": "About Us",
+    "body": "We're a group of friends who get together to play tabletop RPGs. This site tracks who's run and played what, so we can look back on the campaigns we've shared."
+  },
+  "gameMasters": {
+    "title": "Game Masters",
+    "noneListed": "No game masters listed yet.",
+    "noBio": "No bio yet."
+  },
+  "gameMasterDetail": {
+    "noBio": "This game master hasn't written a bio yet."
+  },
+  "gameSystems": {
+    "title": "Games We Play"
+  },
+  "gameLog": {
+    "title": "Game Log",
+    "none": "No games logged yet.",
+    "dm": "DM:"
+  },
+  "gameDetail": {
+    "dm": "Dungeon Master:",
+    "players": "Players:",
+    "noneRecorded": "None recorded"
+  },
+  "poll": {
+    "title": "Rate this session",
+    "loginPrompt": "Log in as a club member to vote and see results.",
+    "viewResults": "View Results",
+    "voteToSeeResults": "Cast your vote above to see how everyone else rated this session.",
+    "votes_one": "{{count}} vote",
+    "votes_other": "{{count}} votes"
+  },
+  "comments": {
+    "title": "Comments",
+    "none": "No comments yet.",
+    "placeholder": "Share your thoughts on this session…",
+    "post": "Post Comment",
+    "loginPrompt": "Log in as a club member to post a comment."
+  },
+  "stats": {
+    "title": "My Stats",
+    "gamesDmdCount_one": "{{count}} game DM'd",
+    "gamesDmdCount_other": "{{count}} games DM'd",
+    "gamesPlayedCount_one": "{{count}} game played",
+    "gamesPlayedCount_other": "{{count}} games played",
+    "gamesDmd": "Games I've DM'd",
+    "gamesPlayed": "Games I've Played",
+    "noneYet": "None yet."
+  },
+  "signup": {
+    "title": "Join the Club",
+    "intro": "Membership is by admin approval. Fill this out and we'll get in touch.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "contact": "Telegram or Viber contact",
+    "submit": "Submit Request",
+    "submittedTitle": "Request Submitted",
+    "submittedBody": "Thanks! An admin will review your request and reach out once you're approved."
+  },
+  "login": {
+    "title": "Log In",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Log In",
+    "newPasswordTitle": "Set Your Password",
+    "newPasswordIntro": "This is your first login — choose a permanent password.",
+    "newPassword": "New password",
+    "newPasswordSubmit": "Set Password & Log In",
+    "loginFailed": "Login failed",
+    "passwordSetFailed": "Could not set new password"
+  },
+  "profile": {
+    "title": "My Profile",
+    "bio": "Bio",
+    "bioGmHint": "(shown on your public Game Master page)",
+    "contact": "Telegram or Viber contact",
+    "avatarHint": "Upload a new profile picture (JPEG, PNG or WebP).",
+    "save": "Save Profile",
+    "updated": "Profile updated.",
+    "avatarUpdated": "Profile picture updated.",
+    "uploadFailed": "Upload failed"
+  },
+  "logGame": {
+    "title": "Log a Game",
+    "titleField": "Title",
+    "titlePlaceholder": "e.g. Game #1 - The Beginning",
+    "date": "Date",
+    "system": "System",
+    "selectSystem": "Select system…",
+    "dm": "DM",
+    "selectDm": "Select DM…",
+    "youAreDm": "DM: you ({{email}})",
+    "participants": "Participants:",
+    "missingFields": "Title, date, system and DM are required",
+    "logged": "Game logged!",
+    "submit": "Log Game"
+  },
+  "admin": {
+    "title": "Admin",
+    "signupRequestsTitle": "Pending Signup Requests",
+    "noPendingRequests": "No pending requests.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "anonymizeTitle": "Anonymize Public Game Log",
+    "anonymizeLabel": "Replace player names with nicknames for logged-out visitors",
+    "membersTitle": "Members",
+    "gameMasterCheckbox": "Game Master",
+    "addSystemTitle": "Add Game System",
+    "systemNamePlaceholder": "Name (e.g. D&D 5e)",
+    "descriptionPlaceholder": "Description",
+    "addSystem": "Add System",
+    "logGameTitle": "Log a Game",
+    "logGameMoved": "Game logging moved to its own page so Game Masters can log their own sessions too.",
+    "goToLogGame": "Go to Log a Game"
+  }
+}
