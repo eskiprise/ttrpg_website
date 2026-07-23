@@ -87,6 +87,13 @@ export interface PollResults {
   yourRating: number;
 }
 
+export interface PollVoterEntry {
+  userId: string;
+  displayName: string;
+  rating: number;
+  votedAt: string;
+}
+
 export interface PersonalStats {
   userId: string;
   gamesDmd: Game[];

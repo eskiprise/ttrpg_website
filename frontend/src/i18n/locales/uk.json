@@ -63,7 +63,11 @@
     "votes_one": "{{count}} голос",
     "votes_few": "{{count}} голоси",
     "votes_many": "{{count}} голосів",
-    "votes_other": "{{count}} голосів"
+    "votes_other": "{{count}} голосів",
+    "edit": "Редагувати",
+    "cancel": "Скасувати",
+    "whoVoted": "Хто голосував",
+    "hideVoters": "Сховати голоси"
   },
   "comments": {
     "title": "Коментарі",

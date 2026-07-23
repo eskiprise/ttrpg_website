@@ -19,7 +19,7 @@ import {
   updateGame,
   deleteGame,
 } from "./resources/games.js";
-import { castVote, getPollResults } from "./resources/poll.js";
+import { castVote, getPollResults, getPollVoters } from "./resources/poll.js";
 import { listComments, postComment, deleteComment } from "./resources/comments.js";
 import {
   getMyProfile,
@@ -61,6 +61,7 @@ const routes: Record<string, RouteHandler> = {
 
   "POST /games/{gameId}/poll-vote": castVote,
   "GET /games/{gameId}/poll-results": getPollResults,
+  "GET /games/{gameId}/poll-voters": getPollVoters,
 
   "GET /games/{gameId}/comments": listComments,
   "POST /games/{gameId}/comments": postComment,

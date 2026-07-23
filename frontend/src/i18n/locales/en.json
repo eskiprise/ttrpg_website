@@ -61,7 +61,11 @@
     "viewResults": "View Results",
     "voteToSeeResults": "Cast your vote above to see how everyone else rated this session.",
     "votes_one": "{{count}} vote",
-    "votes_other": "{{count}} votes"
+    "votes_other": "{{count}} votes",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "whoVoted": "Who voted",
+    "hideVoters": "Hide voters"
   },
   "comments": {
     "title": "Comments",
