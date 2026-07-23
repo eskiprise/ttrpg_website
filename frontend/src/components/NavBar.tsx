@@ -24,7 +24,10 @@ export function NavBar() {
           <NavLink to="/game-systems" className={linkClass}>{t("nav.games")}</NavLink>
           <NavLink to="/game-log" className={linkClass}>{t("nav.gameLog")}</NavLink>
           {idToken && (
-            <NavLink to="/stats" className={linkClass}>{t("nav.myStats")}</NavLink>
+            <>
+              <NavLink to="/stats" className={linkClass}>{t("nav.myStats")}</NavLink>
+              <NavLink to="/statistics" className={linkClass}>{t("nav.statistics")}</NavLink>
+            </>
           )}
           {(isAdmin || isDm) && (
             <NavLink to="/games/log" className={linkClass}>{t("nav.logAGame")}</NavLink>

@@ -9,6 +9,7 @@ import { GameSystems } from "./pages/GameSystems";
 import { GameLog } from "./pages/GameLog";
 import { GameDetail } from "./pages/GameDetail";
 import { Stats } from "./pages/Stats";
+import { Statistics } from "./pages/Statistics";
 import { Signup } from "./pages/Signup";
 import { Login } from "./pages/Login";
 import { Profile } from "./pages/Profile";
@@ -30,6 +31,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
+        <Route path="/statistics" element={<RequireAuth><Statistics /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="/games/log" element={<RequireGameMaster><LogGame /></RequireGameMaster>} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />

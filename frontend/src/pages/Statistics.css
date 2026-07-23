@@ -1,0 +1,89 @@
+.stats-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.stats-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stats-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stats-tile {
+  flex: 1;
+  min-width: 160px;
+}
+
+.stats-tile-value {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--red-bright);
+}
+
+.stats-system-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.stats-system-row:last-child {
+  border-bottom: none;
+}
+
+.stats-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.stats-bar-label {
+  width: 1.5rem;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.stats-bar-track {
+  flex: 1;
+  height: 0.9rem;
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stats-bar-fill {
+  height: 100%;
+  background: var(--series-1);
+}
+
+.stats-bar-count {
+  width: 2.5rem;
+  text-align: right;
+}
+
+.stats-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stats-columns > .card {
+  flex: 1;
+  min-width: 240px;
+}
+
+.stats-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}

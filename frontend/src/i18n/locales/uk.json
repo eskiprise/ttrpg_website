@@ -7,6 +7,7 @@
     "games": "Ігри",
     "gameLog": "Історія ігор",
     "myStats": "Моя статистика",
+    "statistics": "Статистика",
     "logAGame": "Додати гру",
     "admin": "Адмін",
     "profile": "Профіль",
@@ -156,5 +157,27 @@
     "logGameTitle": "Додати гру",
     "logGameMoved": "Додавання ігор перенесено на окрему сторінку, щоб майстри гри теж могли додавати свої сесії.",
     "goToLogGame": "Перейти до додавання гри"
+  },
+  "statistics": {
+    "title": "Статистика клубу",
+    "from": "Від",
+    "to": "До",
+    "apply": "Застосувати",
+    "reset": "Скинути",
+    "totalGames": "Всього ігор",
+    "averageScore": "Середня оцінка",
+    "noGamesInPeriod": "У цей період не зафіксовано жодної гри.",
+    "systemsPlayed": "Зіграні системи",
+    "systemBreakdown": "Середня оцінка за системою",
+    "ratingDistribution": "Розподіл оцінок",
+    "topGameMasters": "Найактивніші майстри гри",
+    "topPlayers": "Найактивніші гравці",
+    "highestRated": "Найвище оцінена",
+    "lowestRated": "Найнижче оцінена",
+    "noData": "Поки що недостатньо даних.",
+    "gamesSuffix_one": "{{count}} гра",
+    "gamesSuffix_few": "{{count}} ігри",
+    "gamesSuffix_many": "{{count}} ігор",
+    "gamesSuffix_other": "{{count}} ігор"
   }
 }

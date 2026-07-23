@@ -7,6 +7,7 @@
     "games": "Games",
     "gameLog": "Game Log",
     "myStats": "My Stats",
+    "statistics": "Statistics",
     "logAGame": "Log a Game",
     "admin": "Admin",
     "profile": "Profile",
@@ -150,5 +151,25 @@
     "logGameTitle": "Log a Game",
     "logGameMoved": "Game logging moved to its own page so Game Masters can log their own sessions too.",
     "goToLogGame": "Go to Log a Game"
+  },
+  "statistics": {
+    "title": "Club Statistics",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "reset": "Reset",
+    "totalGames": "Total Games",
+    "averageScore": "Average Score",
+    "noGamesInPeriod": "No games logged in this period.",
+    "systemsPlayed": "Systems Played",
+    "systemBreakdown": "Average Score by System",
+    "ratingDistribution": "Rating Distribution",
+    "topGameMasters": "Most Active Game Masters",
+    "topPlayers": "Most Active Players",
+    "highestRated": "Highest Rated",
+    "lowestRated": "Lowest Rated",
+    "noData": "Not enough data yet.",
+    "gamesSuffix_one": "{{count}} game",
+    "gamesSuffix_other": "{{count}} games"
   }
 }

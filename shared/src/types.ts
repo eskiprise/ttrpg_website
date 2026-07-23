@@ -109,3 +109,42 @@ export interface AvatarUploadUrlResponse {
   objectKey: string;
   expiresInSeconds: number;
 }
+
+export interface SystemStat {
+  systemId: string;
+  systemName: string;
+  gamesPlayed: number;
+  averageScore: number | null;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  displayName: string;
+  count: number;
+}
+
+export interface GameSpotlight {
+  gameId: string;
+  title: string;
+  averageScore: number;
+}
+
+export interface RatingDistribution {
+  /** counts[i] = number of individual votes with rating i+1, across every game in range */
+  counts: number[];
+  totalVotes: number;
+}
+
+export interface ClubStatistics {
+  from: string | null;
+  to: string | null;
+  totalGames: number;
+  /** Mean of each game's own average rating (games with no votes are excluded, not counted as 0) */
+  averageScore: number | null;
+  ratingDistribution: RatingDistribution;
+  systemStats: SystemStat[];
+  topGameMasters: LeaderboardEntry[];
+  topPlayers: LeaderboardEntry[];
+  highestRatedGame: GameSpotlight | null;
+  lowestRatedGame: GameSpotlight | null;
+}
