@@ -9,7 +9,7 @@ for (const [name, entry] of Object.entries(entries)) {
     entryPoints: [entry],
     bundle: true,
     platform: "node",
-    target: "node22",
+    target: "node24",
     format: "cjs",
     outfile: `dist/${name}.js`,
     external: ["@aws-sdk/*"],
