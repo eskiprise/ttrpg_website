@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GameSystem, PublicUserSummary } from "@ttrpg-club/shared";
@@ -36,7 +36,8 @@ export function LogGame() {
     );
   }
 
-  async function submit() {
+  async function submit(e: FormEvent) {
+    e.preventDefault();
     setError(null);
     setStatus(null);
     if (!title || !date || !systemId || !dmUserId) {
@@ -62,7 +63,7 @@ export function LogGame() {
   return (
     <div className="page">
       <h1>{t("logGame.title")}</h1>
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "480px" }}>
+      <form className="card" onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "480px" }}>
         <label>
           {t("logGame.titleField")}
           <input
@@ -115,8 +116,8 @@ export function LogGame() {
 
         {error && <p className="error-text">{error}</p>}
         {status && <p className="muted">{status}</p>}
-        <button disabled={busy} onClick={submit}>{t("logGame.submit")}</button>
-      </div>
+        <button disabled={busy} type="submit">{t("logGame.submit")}</button>
+      </form>
     </div>
   );
 }
