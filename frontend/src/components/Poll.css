@@ -1,0 +1,50 @@
+.poll-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.poll-options button {
+  min-width: 2.5rem;
+}
+
+.poll-results {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.poll-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.poll-bar-label {
+  width: 1.5rem;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.poll-bar-track {
+  flex: 1;
+  height: 0.9rem;
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.poll-bar-fill {
+  height: 100%;
+  background: var(--red-dim);
+}
+
+.poll-bar-fill.mine {
+  background: var(--red);
+}
+
+.poll-bar-pct {
+  width: 3rem;
+  color: var(--text-muted);
+}
