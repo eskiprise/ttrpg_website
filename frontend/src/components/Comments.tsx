@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { GameComment } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 export function Comments({ gameId }: { gameId: string }) {
+  const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
   const [comments, setComments] = useState<GameComment[] | null>(null);
   const [draft, setDraft] = useState("");
@@ -31,7 +33,7 @@ export function Comments({ gameId }: { gameId: string }) {
       setDraft("");
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     } finally {
       setPosting(false);
     }
@@ -39,16 +41,16 @@ export function Comments({ gameId }: { gameId: string }) {
 
   return (
     <div className="card">
-      <h2>Comments</h2>
+      <h2>{t("comments.title")}</h2>
       {error && <p className="error-text">{error}</p>}
-      {!comments && <p className="muted">Loading…</p>}
-      {comments?.length === 0 && <p className="muted">No comments yet.</p>}
+      {!comments && <p className="muted">{t("common.loading")}</p>}
+      {comments?.length === 0 && <p className="muted">{t("comments.none")}</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {comments?.map((comment) => (
           <div key={comment.commentId}>
             <strong>{comment.displayName}</strong>{" "}
             <span className="muted">
-              {new Date(comment.createdAt).toLocaleString()}
+              {new Date(comment.createdAt).toLocaleString(i18n.language)}
             </span>
             <p style={{ margin: "0.25rem 0 0" }}>{comment.text}</p>
           </div>
@@ -62,17 +64,17 @@ export function Comments({ gameId }: { gameId: string }) {
             style={{ width: "100%" }}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Share your thoughts on this session…"
+            placeholder={t("comments.placeholder")}
           />
           <div>
             <button disabled={posting || !draft.trim()} onClick={submit}>
-              Post Comment
+              {t("comments.post")}
             </button>
           </div>
         </div>
       ) : (
         <p className="muted" style={{ marginTop: "1rem" }}>
-          Log in as a club member to post a comment.
+          {t("comments.loginPrompt")}
         </p>
       )}
     </div>

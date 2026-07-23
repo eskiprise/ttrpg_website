@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { apiFetch } from "../lib/api";
 
 export function Signup() {
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +28,7 @@ export function Signup() {
       });
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     } finally {
       setBusy(false);
     }
@@ -35,40 +37,35 @@ export function Signup() {
   if (submitted) {
     return (
       <div className="page">
-        <h1>Request Submitted</h1>
-        <p>
-          Thanks! An admin will review your request and reach out once you're
-          approved.
-        </p>
+        <h1>{t("signup.submittedTitle")}</h1>
+        <p>{t("signup.submittedBody")}</p>
       </div>
     );
   }
 
   return (
     <div className="page">
-      <h1>Join the Club</h1>
-      <p className="muted">
-        Membership is by admin approval. Fill this out and we'll get in touch.
-      </p>
+      <h1>{t("signup.title")}</h1>
+      <p className="muted">{t("signup.intro")}</p>
       <form className="card" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "420px" }}>
         <label>
-          First name
+          {t("signup.firstName")}
           <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
         </label>
         <label>
-          Last name
+          {t("signup.lastName")}
           <input required value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </label>
         <label>
-          Email
+          {t("signup.email")}
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
         <label>
-          Telegram or Viber contact
+          {t("signup.contact")}
           <input required value={contact} onChange={(e) => setContact(e.target.value)} />
         </label>
         {error && <p className="error-text">{error}</p>}
-        <button disabled={busy} type="submit">Submit Request</button>
+        <button disabled={busy} type="submit">{t("signup.submit")}</button>
       </form>
     </div>
   );

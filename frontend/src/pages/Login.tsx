@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 
 export function Login() {
+  const { t } = useTranslation();
   const { login, completeNewPassword } = useAuth();
   const navigate = useNavigate();
 
@@ -25,7 +27,7 @@ export function Login() {
         setChallenge(result.challenge);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t("login.loginFailed"));
     } finally {
       setBusy(false);
     }
@@ -40,7 +42,7 @@ export function Login() {
       await completeNewPassword(challenge, newPassword);
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not set new password");
+      setError(err instanceof Error ? err.message : t("login.passwordSetFailed"));
     } finally {
       setBusy(false);
     }
@@ -49,15 +51,15 @@ export function Login() {
   if (challenge) {
     return (
       <div className="page">
-        <h1>Set Your Password</h1>
-        <p className="muted">This is your first login — choose a permanent password.</p>
+        <h1>{t("login.newPasswordTitle")}</h1>
+        <p className="muted">{t("login.newPasswordIntro")}</p>
         <form className="card" onSubmit={onCompleteChallenge} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "360px" }}>
           <label>
-            New password
+            {t("login.newPassword")}
             <input required type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           </label>
           {error && <p className="error-text">{error}</p>}
-          <button disabled={busy} type="submit">Set Password &amp; Log In</button>
+          <button disabled={busy} type="submit">{t("login.newPasswordSubmit")}</button>
         </form>
       </div>
     );
@@ -65,18 +67,18 @@ export function Login() {
 
   return (
     <div className="page">
-      <h1>Log In</h1>
+      <h1>{t("login.title")}</h1>
       <form className="card" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "360px" }}>
         <label>
-          Email
+          {t("login.email")}
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
         <label>
-          Password
+          {t("login.password")}
           <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {error && <p className="error-text">{error}</p>}
-        <button disabled={busy} type="submit">Log In</button>
+        <button disabled={busy} type="submit">{t("login.submit")}</button>
       </form>
     </div>
   );

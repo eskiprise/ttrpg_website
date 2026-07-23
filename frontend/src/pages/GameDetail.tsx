@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { Game } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
@@ -7,6 +8,7 @@ import { Poll } from "../components/Poll";
 import { Comments } from "../components/Comments";
 
 export function GameDetail() {
+  const { t } = useTranslation();
   const { gameId } = useParams<{ gameId: string }>();
   const { idToken } = useAuth();
   const [game, setGame] = useState<Game | null>(null);
@@ -20,7 +22,7 @@ export function GameDetail() {
   }, [gameId, idToken]);
 
   if (error) return <div className="page"><p className="error-text">{error}</p></div>;
-  if (!game) return <div className="page"><p className="muted">Loading…</p></div>;
+  if (!game) return <div className="page"><p className="muted">{t("common.loading")}</p></div>;
 
   return (
     <div className="page">
@@ -28,12 +30,12 @@ export function GameDetail() {
       <p className="muted">{game.date} · {game.systemName}</p>
 
       <div className="card">
-        <p><strong>Dungeon Master:</strong> {game.dmDisplayName}</p>
-        <p><strong>Players:</strong>{" "}
+        <p><strong>{t("gameDetail.dm")}</strong> {game.dmDisplayName}</p>
+        <p><strong>{t("gameDetail.players")}</strong>{" "}
           {game.participants
             .filter((p) => p.userId !== game.dmUserId)
             .map((p) => p.displayName)
-            .join(", ") || "None recorded"}
+            .join(", ") || t("gameDetail.noneRecorded")}
         </p>
       </div>
 

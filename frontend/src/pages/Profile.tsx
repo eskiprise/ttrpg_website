@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import type { AvatarUploadUrlResponse, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
@@ -6,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 const AVATAR_CDN_BASE_URL = import.meta.env.VITE_AVATAR_CDN_BASE_URL ?? "";
 
 export function Profile() {
+  const { t } = useTranslation();
   const { idToken } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [bio, setBio] = useState("");
@@ -38,9 +40,9 @@ export function Profile() {
         token: idToken,
         body: { bio, telegramOrViberContact: contact },
       });
-      setStatus("Profile updated.");
+      setStatus(t("profile.updated"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     } finally {
       setBusy(false);
     }
@@ -63,7 +65,7 @@ export function Profile() {
         headers: { "Content-Type": file.type },
         body: file,
       });
-      if (!uploadResponse.ok) throw new Error("Image upload failed");
+      if (!uploadResponse.ok) throw new Error(t("profile.uploadFailed"));
 
       const newAvatarUrl = `${AVATAR_CDN_BASE_URL}/${objectKey}`;
       await apiFetch("/me/profile", {
@@ -72,19 +74,19 @@ export function Profile() {
         body: { profilePictureUrl: newAvatarUrl },
       });
       setAvatarUrl(newAvatarUrl);
-      setStatus("Profile picture updated.");
+      setStatus(t("profile.avatarUpdated"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : t("profile.uploadFailed"));
     } finally {
       setBusy(false);
     }
   }
 
-  if (!user && !error) return <div className="page"><p className="muted">Loading…</p></div>;
+  if (!user && !error) return <div className="page"><p className="muted">{t("common.loading")}</p></div>;
 
   return (
     <div className="page">
-      <h1>My Profile</h1>
+      <h1>{t("profile.title")}</h1>
       {error && <p className="error-text">{error}</p>}
       {status && <p className="muted">{status}</p>}
 
@@ -105,21 +107,21 @@ export function Profile() {
             disabled={busy}
           />
           <p className="muted" style={{ margin: "0.5rem 0 0" }}>
-            Upload a new profile picture (JPEG, PNG or WebP).
+            {t("profile.avatarHint")}
           </p>
         </div>
       </div>
 
       <form className="card" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "480px" }}>
         <label>
-          Bio {user?.roles?.includes("dm") && <span className="muted">(shown on your public Game Master page)</span>}
+          {t("profile.bio")} {user?.roles?.includes("dm") && <span className="muted">{t("profile.bioGmHint")}</span>}
           <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
         </label>
         <label>
-          Telegram or Viber contact
+          {t("profile.contact")}
           <input value={contact} onChange={(e) => setContact(e.target.value)} />
         </label>
-        <button disabled={busy} type="submit">Save Profile</button>
+        <button disabled={busy} type="submit">{t("profile.save")}</button>
       </form>
     </div>
   );

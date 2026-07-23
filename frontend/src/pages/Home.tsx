@@ -1,27 +1,26 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function Home() {
+  const { t } = useTranslation();
+
   return (
     <div className="page">
-      <h1>Welcome to the Club</h1>
-      <p className="muted">
-        We're a tabletop RPG club running D&D, Delta Green, and more. Browse our
-        Game Masters, check the log of every session we've played, and join us
-        at the table.
-      </p>
+      <h1>{t("home.title")}</h1>
+      <p className="muted">{t("home.intro")}</p>
       <div className="card">
-        <h2>New here?</h2>
+        <h2>{t("home.newHereTitle")}</h2>
         <p>
-          Membership is by admin approval. <Link to="/signup">Submit a signup request</Link>{" "}
-          and we'll get back to you.
+          {t("home.newHereBefore")} <Link to="/signup">{t("home.newHereLink")}</Link>{" "}
+          {t("home.newHereAfter")}
         </p>
       </div>
       <div className="card">
-        <h2>Explore</h2>
+        <h2>{t("home.exploreTitle")}</h2>
         <ul>
-          <li><Link to="/game-masters">Meet our Game Masters</Link></li>
-          <li><Link to="/game-systems">See what we play</Link></li>
-          <li><Link to="/game-log">Browse the Game Log</Link></li>
+          <li><Link to="/game-masters">{t("home.exploreGameMasters")}</Link></li>
+          <li><Link to="/game-systems">{t("home.exploreGameSystems")}</Link></li>
+          <li><Link to="/game-log">{t("home.exploreGameLog")}</Link></li>
         </ul>
       </div>
     </div>

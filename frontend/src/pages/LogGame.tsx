@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { GameSystem, PublicUserSummary } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 export function LogGame() {
+  const { t } = useTranslation();
   const { idToken, userId, isAdmin, email } = useAuth();
   const navigate = useNavigate();
 
@@ -38,7 +40,7 @@ export function LogGame() {
     setError(null);
     setStatus(null);
     if (!title || !date || !systemId || !dmUserId) {
-      setError("Title, date, system and DM are required");
+      setError(t("logGame.missingFields"));
       return;
     }
     setBusy(true);
@@ -48,10 +50,10 @@ export function LogGame() {
         token: idToken,
         body: { title, date, systemId, dmUserId, participantUserIds: participantIds },
       });
-      setStatus("Game logged!");
+      setStatus(t("logGame.logged"));
       setTimeout(() => navigate(`/game-log/${game.gameId}`), 800);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     } finally {
       setBusy(false);
     }
@@ -59,24 +61,24 @@ export function LogGame() {
 
   return (
     <div className="page">
-      <h1>Log a Game</h1>
+      <h1>{t("logGame.title")}</h1>
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "480px" }}>
         <label>
-          Title
+          {t("logGame.titleField")}
           <input
-            placeholder="e.g. Game #1 - The Beginning"
+            placeholder={t("logGame.titlePlaceholder")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </label>
         <label>
-          Date
+          {t("logGame.date")}
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
         <label>
-          System
+          {t("logGame.system")}
           <select value={systemId} onChange={(e) => setSystemId(e.target.value)}>
-            <option value="">Select system…</option>
+            <option value="">{t("logGame.selectSystem")}</option>
             {systems.map((s) => (
               <option key={s.systemId} value={s.systemId}>{s.name}</option>
             ))}
@@ -85,20 +87,20 @@ export function LogGame() {
 
         {isAdmin ? (
           <label>
-            DM
+            {t("logGame.dm")}
             <select value={dmUserId} onChange={(e) => setDmUserId(e.target.value)}>
-              <option value="">Select DM…</option>
+              <option value="">{t("logGame.selectDm")}</option>
               {dms.map((m) => (
                 <option key={m.userId} value={m.userId}>{m.firstName} {m.lastName}</option>
               ))}
             </select>
           </label>
         ) : (
-          <p className="muted" style={{ margin: 0 }}>DM: you ({email})</p>
+          <p className="muted" style={{ margin: 0 }}>{t("logGame.youAreDm", { email })}</p>
         )}
 
         <div>
-          <p className="muted" style={{ margin: "0 0 0.25rem" }}>Participants:</p>
+          <p className="muted" style={{ margin: "0 0 0.25rem" }}>{t("logGame.participants")}</p>
           {members.map((m) => (
             <label key={m.userId} style={{ display: "block" }}>
               <input
@@ -113,7 +115,7 @@ export function LogGame() {
 
         {error && <p className="error-text">{error}</p>}
         {status && <p className="muted">{status}</p>}
-        <button disabled={busy} onClick={submit}>Log Game</button>
+        <button disabled={busy} onClick={submit}>{t("logGame.submit")}</button>
       </div>
     </div>
   );

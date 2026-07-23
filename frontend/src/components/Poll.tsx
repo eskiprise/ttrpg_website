@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PollResults } from "@ttrpg-club/shared";
 import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
 import { apiFetch, ApiError } from "../lib/api";
@@ -11,6 +12,7 @@ const RATINGS = Array.from(
 );
 
 export function Poll({ gameId }: { gameId: string }) {
+  const { t } = useTranslation();
   const { idToken } = useAuth();
   const [results, setResults] = useState<PollResults | null>(null);
   const [notVotedYet, setNotVotedYet] = useState(false);
@@ -31,7 +33,7 @@ export function Poll({ gameId }: { gameId: string }) {
       if (err instanceof ApiError && err.status === 403) {
         setNotVotedYet(true);
       } else {
-        setError(err instanceof Error ? err.message : "Something went wrong");
+        setError(err instanceof Error ? err.message : t("common.somethingWrong"));
       }
     } finally {
       setBusy(false);
@@ -49,7 +51,7 @@ export function Poll({ gameId }: { gameId: string }) {
       });
       await fetchResults();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     } finally {
       setBusy(false);
     }
@@ -58,15 +60,15 @@ export function Poll({ gameId }: { gameId: string }) {
   if (!idToken) {
     return (
       <div className="card">
-        <h2>Rate this session</h2>
-        <p className="muted">Log in as a club member to vote and see results.</p>
+        <h2>{t("poll.title")}</h2>
+        <p className="muted">{t("poll.loginPrompt")}</p>
       </div>
     );
   }
 
   return (
     <div className="card">
-      <h2>Rate this session</h2>
+      <h2>{t("poll.title")}</h2>
       <div className="poll-options">
         {RATINGS.map((rating) => (
           <button
@@ -79,20 +81,20 @@ export function Poll({ gameId }: { gameId: string }) {
           </button>
         ))}
         <button className="secondary" disabled={busy} onClick={fetchResults}>
-          View Results
+          {t("poll.viewResults")}
         </button>
       </div>
 
       {notVotedYet && (
         <p className="muted" style={{ marginTop: "0.75rem" }}>
-          Cast your vote above to see how everyone else rated this session.
+          {t("poll.voteToSeeResults")}
         </p>
       )}
       {error && <p className="error-text">{error}</p>}
 
       {results && (
         <div className="poll-results">
-          <p className="muted">{results.totalVotes} vote{results.totalVotes === 1 ? "" : "s"}</p>
+          <p className="muted">{t("poll.votes", { count: results.totalVotes })}</p>
           {RATINGS.map((rating) => {
             const count = results.counts[rating - POLL_RATING_MIN];
             const pct = results.totalVotes ? Math.round((count / results.totalVotes) * 100) : 0;

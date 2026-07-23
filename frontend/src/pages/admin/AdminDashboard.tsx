@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { SignupRequest, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../auth/AuthContext";
@@ -10,6 +11,7 @@ function useReload() {
 }
 
 function SignupRequests({ token }: { token: string | null }) {
+  const { t } = useTranslation();
   const { tick, reload } = useReload();
   const [requests, setRequests] = useState<SignupRequest[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,23 +31,23 @@ function SignupRequests({ token }: { token: string | null }) {
       });
       reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     }
   }
 
   return (
     <div className="card">
-      <h2>Pending Signup Requests</h2>
+      <h2>{t("admin.signupRequestsTitle")}</h2>
       {error && <p className="error-text">{error}</p>}
-      {requests?.length === 0 && <p className="muted">No pending requests.</p>}
+      {requests?.length === 0 && <p className="muted">{t("admin.noPendingRequests")}</p>}
       {requests?.map((r) => (
         <div key={r.requestId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
           <div>
             <strong>{r.firstName} {r.lastName}</strong> — {r.email} — {r.telegramOrViberContact}
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={() => act(r.requestId, "approve")}>Approve</button>
-            <button className="secondary" onClick={() => act(r.requestId, "reject")}>Reject</button>
+            <button onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
+            <button className="secondary" onClick={() => act(r.requestId, "reject")}>{t("admin.reject")}</button>
           </div>
         </div>
       ))}
@@ -54,6 +56,7 @@ function SignupRequests({ token }: { token: string | null }) {
 }
 
 function AnonymizeToggle({ token }: { token: string | null }) {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,16 +71,16 @@ function AnonymizeToggle({ token }: { token: string | null }) {
       });
       setChecked(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     }
   }
 
   return (
     <div className="card">
-      <h2>Anonymize Public Game Log</h2>
+      <h2>{t("admin.anonymizeTitle")}</h2>
       <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
         <input type="checkbox" checked={checked} onChange={toggle} />
-        Replace player names with nicknames for logged-out visitors
+        {t("admin.anonymizeLabel")}
       </label>
       {error && <p className="error-text">{error}</p>}
     </div>
@@ -85,6 +88,7 @@ function AnonymizeToggle({ token }: { token: string | null }) {
 }
 
 function Members({ token }: { token: string | null }) {
+  const { t } = useTranslation();
   const { tick, reload } = useReload();
   const [users, setUsers] = useState<User[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -108,19 +112,19 @@ function Members({ token }: { token: string | null }) {
       });
       reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     }
   }
 
   return (
     <div className="card">
-      <h2>Members</h2>
+      <h2>{t("admin.membersTitle")}</h2>
       {error && <p className="error-text">{error}</p>}
       {users?.map((u) => (
         <div key={u.userId} style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", borderBottom: "1px solid var(--border)" }}>
           <span>{u.firstName} {u.lastName} — {u.email}</span>
           <label>
-            <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> Game Master
+            <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> {t("admin.gameMasterCheckbox")}
           </label>
         </div>
       ))}
@@ -129,6 +133,7 @@ function Members({ token }: { token: string | null }) {
 }
 
 function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () => void }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -146,40 +151,39 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
       setDescription("");
       onAdded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
     }
   }
 
   return (
     <div className="card">
-      <h2>Add Game System</h2>
+      <h2>{t("admin.addSystemTitle")}</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "420px" }}>
-        <input placeholder="Name (e.g. D&D 5e)" value={name} onChange={(e) => setName(e.target.value)} />
-        <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <input placeholder={t("admin.systemNamePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
+        <textarea placeholder={t("admin.descriptionPlaceholder")} value={description} onChange={(e) => setDescription(e.target.value)} />
         {error && <p className="error-text">{error}</p>}
-        <button onClick={submit}>Add System</button>
+        <button onClick={submit}>{t("admin.addSystem")}</button>
       </div>
     </div>
   );
 }
 
 export function AdminDashboard() {
+  const { t } = useTranslation();
   const { idToken } = useAuth();
   const { reload } = useReload();
 
   return (
     <div className="page">
-      <h1>Admin</h1>
+      <h1>{t("admin.title")}</h1>
       <SignupRequests token={idToken} />
       <AnonymizeToggle token={idToken} />
       <Members token={idToken} />
       <AddGameSystem token={idToken} onAdded={reload} />
       <div className="card">
-        <h2>Log a Game</h2>
-        <p className="muted">
-          Game logging moved to its own page so Game Masters can log their own sessions too.
-        </p>
-        <Link to="/games/log"><button>Go to Log a Game</button></Link>
+        <h2>{t("admin.logGameTitle")}</h2>
+        <p className="muted">{t("admin.logGameMoved")}</p>
+        <Link to="/games/log"><button>{t("admin.goToLogGame")}</button></Link>
       </div>
     </div>
   );
