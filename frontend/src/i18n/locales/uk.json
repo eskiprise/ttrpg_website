@@ -179,5 +179,13 @@
     "gamesSuffix_few": "{{count}} ігри",
     "gamesSuffix_many": "{{count}} ігор",
     "gamesSuffix_other": "{{count}} ігор"
+  },
+  "telegramApp": {
+    "openFromBot": "Відкрийте це через бота клубу в Telegram, щоб побачити свою статистику.",
+    "title": "Привіт, {{name}}!",
+    "totalRatings": "Оцінено сесій",
+    "averageRating": "Ваша середня оцінка",
+    "recentRatings": "Останні оцінки",
+    "noRatingsYet": "Ви ще не оцінили жодної сесії — скористайтесь /rate у чаті!"
   }
 }

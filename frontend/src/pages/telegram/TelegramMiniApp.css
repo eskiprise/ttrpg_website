@@ -1,0 +1,32 @@
+.telegram-app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+}
+
+.telegram-stat-value {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--red-bright);
+}
+
+.telegram-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.telegram-rating-row:last-child {
+  border-bottom: none;
+}
+
+.telegram-rating-row > span:first-child {
+  flex: 1;
+}
+
+.telegram-rating-badge {
+  color: var(--red-bright);
+  font-weight: 600;
+}

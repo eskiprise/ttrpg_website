@@ -110,6 +110,21 @@ export interface AvatarUploadUrlResponse {
   expiresInSeconds: number;
 }
 
+export interface TelegramRecentRating {
+  pollId: string;
+  questionText: string;
+  rating: number;
+  answeredAt: string;
+}
+
+export interface TelegramUserStats {
+  telegramUserId: number;
+  displayName: string;
+  totalRatingsGiven: number;
+  averageRatingGiven: number | null;
+  recentRatings: TelegramRecentRating[];
+}
+
 export interface SystemStat {
   systemId: string;
   systemName: string;

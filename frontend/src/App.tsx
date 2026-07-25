@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
 import { RequireAdmin, RequireAuth, RequireGameMaster } from "./components/RequireAuth";
 import { Home } from "./pages/Home";
@@ -15,11 +15,17 @@ import { Login } from "./pages/Login";
 import { Profile } from "./pages/Profile";
 import { LogGame } from "./pages/LogGame";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { TelegramMiniApp } from "./pages/telegram/TelegramMiniApp";
 
 function App() {
+  const location = useLocation();
+  // The Telegram Mini App renders inside Telegram's own narrow WebView chrome —
+  // the normal site nav doesn't belong there.
+  const isTelegramApp = location.pathname.startsWith("/telegram");
+
   return (
     <>
-      <NavBar />
+      {!isTelegramApp && <NavBar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -35,6 +41,7 @@ function App() {
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="/games/log" element={<RequireGameMaster><LogGame /></RequireGameMaster>} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+        <Route path="/telegram" element={<TelegramMiniApp />} />
       </Routes>
     </>
   );

@@ -171,5 +171,13 @@
     "noData": "Not enough data yet.",
     "gamesSuffix_one": "{{count}} game",
     "gamesSuffix_other": "{{count}} games"
+  },
+  "telegramApp": {
+    "openFromBot": "Open this from the club's Telegram bot to see your stats.",
+    "title": "Hi, {{name}}!",
+    "totalRatings": "Sessions Rated",
+    "averageRating": "Average Rating You Give",
+    "recentRatings": "Recent Ratings",
+    "noRatingsYet": "You haven't rated any sessions yet — use /rate in the chat!"
   }
 }
