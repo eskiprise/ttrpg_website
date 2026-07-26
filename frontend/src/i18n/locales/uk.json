@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "Клуб",
+    "brand": "Dice & Adventures Club",
     "home": "Головна",
     "about": "Про нас",
     "gameMasters": "Майстри гри",
@@ -10,6 +10,7 @@
     "statistics": "Статистика",
     "logAGame": "Додати гру",
     "admin": "Адмін",
+    "menu": "Меню",
     "profile": "Профіль",
     "logIn": "Увійти",
     "logOut": "Вийти",
@@ -20,15 +21,25 @@
     "somethingWrong": "Щось пішло не так"
   },
   "home": {
-    "title": "Ласкаво просимо до клубу",
+    "eyebrow_one": "{{count}} сесію відзіграно цього сезону",
+    "eyebrow_few": "{{count}} сесії відзіграно цього сезону",
+    "eyebrow_many": "{{count}} сесій відзіграно цього сезону",
+    "eyebrow_other": "{{count}} сесій відзіграно цього сезону",
+    "heroTitle": "Кожна сесія — на пам'яті.",
     "intro": "Ми — клуб настільних рольових ігор, де проводимо D&D, Delta Green та інші системи. Перегляньте наших майстрів гри, історію зіграних сесій і приєднуйтесь до нас за столом.",
+    "latestSession": "Остання сесія",
+    "noSessionsYet": "Ще немає зіграних сесій.",
+    "statSessions": "Зіграно сесій",
+    "statGameMasters": "Майстрів гри",
+    "statSystems": "Зіграних систем",
+    "recentSessions": "Останні сесії",
+    "seeAllGameMasters": "Усі майстри гри",
+    "seeAllGameLog": "Уся історія ігор",
     "newHereTitle": "Вперше тут?",
     "newHereBefore": "Членство надається після схвалення адміністратором.",
     "newHereLink": "Подайте заявку на реєстрацію",
     "newHereAfter": "і ми з вами зв'яжемось.",
-    "exploreTitle": "Досліджуйте",
     "exploreGameMasters": "Познайомтесь з нашими майстрами гри",
-    "exploreGameSystems": "Подивіться, у що ми граємо",
     "exploreGameLog": "Перегляньте історію ігор"
   },
   "about": {

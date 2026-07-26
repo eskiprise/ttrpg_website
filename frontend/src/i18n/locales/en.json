@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "The Club",
+    "brand": "Dice & Adventures Club",
     "home": "Home",
     "about": "About Us",
     "gameMasters": "Game Masters",
@@ -10,6 +10,7 @@
     "statistics": "Statistics",
     "logAGame": "Log a Game",
     "admin": "Admin",
+    "menu": "Menu",
     "profile": "Profile",
     "logIn": "Log In",
     "logOut": "Log Out",
@@ -20,15 +21,23 @@
     "somethingWrong": "Something went wrong"
   },
   "home": {
-    "title": "Welcome to the Club",
+    "eyebrow_one": "{{count}} session logged this season",
+    "eyebrow_other": "{{count}} sessions logged this season",
+    "heroTitle": "Every session, remembered.",
     "intro": "We're a tabletop RPG club running D&D, Delta Green, and more. Browse our Game Masters, check the log of every session we've played, and join us at the table.",
+    "latestSession": "Latest session",
+    "noSessionsYet": "No sessions logged yet.",
+    "statSessions": "Sessions logged",
+    "statGameMasters": "Game Masters",
+    "statSystems": "Systems played",
+    "recentSessions": "Recent sessions",
+    "seeAllGameMasters": "All Game Masters",
+    "seeAllGameLog": "Full Game Log",
     "newHereTitle": "New here?",
     "newHereBefore": "Membership is by admin approval.",
     "newHereLink": "Submit a signup request",
     "newHereAfter": "and we'll get back to you.",
-    "exploreTitle": "Explore",
     "exploreGameMasters": "Meet our Game Masters",
-    "exploreGameSystems": "See what we play",
     "exploreGameLog": "Browse the Game Log"
   },
   "about": {

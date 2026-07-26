@@ -1,18 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-2: var(--accent-2);
+  --color-border: var(--border);
+
+  --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+}
+
+/* Day (light) is the default; .dark is applied to <html> by ThemeToggle,
+   which also picks the initial value from prefers-color-scheme. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --bg: #121014;
-  --bg-elevated: #1c181d;
-  --bg-card: #211c21;
-  --border: #3a2a2e;
-  --text: #e8dfe1;
-  --text-muted: #a9989c;
-  --red: #c8102e;
-  --red-bright: #e8324a;
-  --red-dim: #6e1522;
+  --bg: #eef0ea;
+  --surface: #ffffff;
+  --surface-2: #e5e8df;
+  --ink: #20241f;
+  --ink-muted: #4b5245;
+  --accent: #8c2f39;
+  --accent-ink: #fbf3f0;
+  --accent-2: #a9793a;
+  --border: #d8dbcf;
 
-  /* Categorical chart palette — validated against --bg-card (#211c21):
-     adjacent-pair CVD ΔE >= 8.4, normal-vision ΔE >= 19.3, contrast >= 3:1 for all 8. */
+  /* Legacy aliases kept for pages not yet ported to Tailwind utilities. */
+  --bg-elevated: var(--surface-2);
+  --bg-card: var(--surface);
+  --text: var(--ink);
+  --text-muted: var(--ink-muted);
+  --red: var(--accent);
+  --red-bright: var(--accent);
+  --red-dim: #cf9fa4;
+
+  /* Categorical chart palette — validated against the old dark --bg-card (#211c21).
+     TODO(statistics redesign): re-validate against the new --surface for both themes. */
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
@@ -21,102 +50,134 @@
   --series-6: #008300;
   --series-7: #9085e9;
   --series-8: #e66767;
-
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
 }
 
-* {
-  box-sizing: border-box;
+.dark {
+  color-scheme: dark;
+
+  --bg: #1a1613;
+  --surface: #221d19;
+  --surface-2: #2b241f;
+  --ink: #efe7dd;
+  --ink-muted: #b9ae9f;
+  --accent: #c24b4b;
+  --accent-ink: #1a1613;
+  --accent-2: #d9a94a;
+  --border: #3a322b;
+
+  --red-dim: #5c3535;
 }
 
-html, body, #root {
-  height: 100%;
+/* Wrapped in Tailwind's cascade layers so plain utility classes (e.g. bg-accent
+   on a <button>) can still override these defaults — unlayered CSS always beats
+   @layer rules regardless of specificity, which would otherwise block them. */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  h1, h2, h3 {
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  button, input, textarea, select {
+    font-family: inherit;
+    font-size: 1rem;
+  }
+
+  button {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+  button:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  button:disabled {
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    cursor: not-allowed;
+  }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink);
+  }
+  button.secondary:hover {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+
+  input, textarea, select {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem;
+  }
+
+  form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-}
+@layer components {
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
 
-a {
-  color: var(--red-bright);
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
+  .card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
 
-h1, h2, h3 {
-  color: var(--red-bright);
-  font-weight: 600;
-}
+  .muted {
+    color: var(--ink-muted);
+  }
 
-button, input, textarea, select {
-  font-family: inherit;
-  font-size: 1rem;
-}
-
-button {
-  background: var(--red);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
-button:hover {
-  background: var(--red-bright);
-}
-button:disabled {
-  background: var(--bg-elevated);
-  color: var(--text-muted);
-  cursor: not-allowed;
-}
-button.secondary {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-button.secondary:hover {
-  border-color: var(--red);
-  background: var(--bg-elevated);
-}
-
-input, textarea, select {
-  background: var(--bg-elevated);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.5rem;
-}
-
-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
-}
-
-.card {
-  display: block;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-}
-
-.muted {
-  color: var(--text-muted);
-}
-
-.error-text {
-  color: var(--red-bright);
+  .error-text {
+    color: var(--accent);
+  }
 }

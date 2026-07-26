@@ -4,7 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Club</title>
+    <title>Dice & Adventures Club</title>
+    <script>
+      // Set the theme class before first paint, so there's no flash of the
+      // wrong theme while React mounts (see src/theme/ThemeContext.tsx).
+      (function () {
+        var stored = localStorage.getItem("theme");
+        var isDark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (isDark) document.documentElement.classList.add("dark");
+      })();
+    </script>
     <!-- Official Telegram Mini App SDK. Harmless outside Telegram — window.Telegram.WebApp
          just has no real WebView behind it, so the /telegram page detects that and shows
          a "open this from the bot" message instead. -->
