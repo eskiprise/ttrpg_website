@@ -168,7 +168,7 @@ export function Home() {
                   className="flex flex-col gap-1 border-b border-border px-6 py-4 last:border-b-0 hover:bg-surface-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
                   <div>
-                    <strong>{game.title}</strong>
+                    <strong className="text-ink">{game.title}</strong>
                     <p className="text-sm text-ink-muted">
                       {game.date} · {game.systemName} · {t("gameLog.dm")} {game.dmDisplayName}
                     </p>

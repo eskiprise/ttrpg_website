@@ -15,16 +15,18 @@ export function GameSystems() {
   }, []);
 
   return (
-    <div className="page">
-      <h1>{t("gameSystems.title")}</h1>
-      {error && <p className="error-text">{error}</p>}
-      {!systems && !error && <p className="muted">{t("common.loading")}</p>}
-      {systems?.map((system) => (
-        <div key={system.systemId} className="card">
-          <h2>{system.name}</h2>
-          <p className="muted">{system.description}</p>
-        </div>
-      ))}
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold">{t("gameSystems.title")}</h1>
+      {error && <p className="mt-4 text-accent">{error}</p>}
+      {!systems && !error && <p className="mt-4 text-ink-muted">{t("common.loading")}</p>}
+      <div className="mt-8 flex flex-col gap-4">
+        {systems?.map((system) => (
+          <div key={system.systemId} className="rounded-lg border border-border bg-surface p-6">
+            <h2 className="text-xl font-bold">{system.name}</h2>
+            <p className="mt-2 text-ink-muted">{system.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

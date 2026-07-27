@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "./PieChart.css";
 
 export interface PieSlice {
   key: string;
@@ -90,36 +89,42 @@ export function PieChart({ slices }: { slices: PieSlice[] }) {
   });
 
   return (
-    <div className="piechart">
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="piechart-svg">
+    <div className="flex flex-wrap items-center gap-6">
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-[200px] w-[200px] flex-shrink-0">
         {arcs.map((arc) => (
           <g
             key={arc.key}
-            className={hovered && hovered !== arc.key ? "piechart-slice dimmed" : "piechart-slice"}
+            className={`transition-opacity duration-150 ${hovered && hovered !== arc.key ? "opacity-35" : "opacity-100"}`}
             onMouseEnter={() => setHovered(arc.key)}
             onMouseLeave={() => setHovered(null)}
           >
             <path d={arc.path} fill={arc.color} />
             <title>{`${arc.label}: ${arc.value} (${arc.pct}%)`}</title>
             {arc.showLabel && (
-              <text x={arc.labelPos.x} y={arc.labelPos.y} className="piechart-label">
+              <text
+                x={arc.labelPos.x}
+                y={arc.labelPos.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="pointer-events-none fill-white text-[11px] font-semibold"
+              >
                 {arc.pct}%
               </text>
             )}
           </g>
         ))}
       </svg>
-      <ul className="piechart-legend">
+      <ul className="flex min-w-[180px] flex-1 list-none flex-col gap-2 p-0">
         {arcs.map((arc) => (
           <li
             key={arc.key}
-            className={hovered && hovered !== arc.key ? "dimmed" : undefined}
+            className={`flex items-center gap-2 transition-opacity duration-150 ${hovered && hovered !== arc.key ? "opacity-40" : "opacity-100"}`}
             onMouseEnter={() => setHovered(arc.key)}
             onMouseLeave={() => setHovered(null)}
           >
-            <span className="piechart-swatch" style={{ background: arc.color }} />
-            <span>{arc.label}</span>
-            <span className="muted">{arc.value} · {arc.pct}%</span>
+            <span className="h-3 w-3 flex-shrink-0 rounded-[3px]" style={{ background: arc.color }} />
+            <span className="flex-1">{arc.label}</span>
+            <span className="text-ink-muted">{arc.value} · {arc.pct}%</span>
           </li>
         ))}
       </ul>

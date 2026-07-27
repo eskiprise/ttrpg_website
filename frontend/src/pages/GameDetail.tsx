@@ -21,17 +21,18 @@ export function GameDetail() {
       .catch((err) => setError(err.message));
   }, [gameId, idToken]);
 
-  if (error) return <div className="page"><p className="error-text">{error}</p></div>;
-  if (!game) return <div className="page"><p className="muted">{t("common.loading")}</p></div>;
+  if (error) return <div className="mx-auto max-w-3xl px-6 py-16"><p className="text-accent">{error}</p></div>;
+  if (!game) return <div className="mx-auto max-w-3xl px-6 py-16"><p className="text-ink-muted">{t("common.loading")}</p></div>;
 
   return (
-    <div className="page">
-      <h1>{game.title}</h1>
-      <p className="muted">{game.date} · {game.systemName}</p>
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold">{game.title}</h1>
+      <p className="mt-1 text-ink-muted">{game.date} · {game.systemName}</p>
 
-      <div className="card">
+      <div className="mt-6 rounded-lg border border-border bg-surface p-6">
         <p><strong>{t("gameDetail.dm")}</strong> {game.dmDisplayName}</p>
-        <p><strong>{t("gameDetail.players")}</strong>{" "}
+        <p className="mt-2">
+          <strong>{t("gameDetail.players")}</strong>{" "}
           {game.participants
             .filter((p) => p.userId !== game.dmUserId)
             .map((p) => p.displayName)

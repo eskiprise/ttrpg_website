@@ -13,11 +13,10 @@ export function LanguageSwitcher() {
   return (
     <button
       type="button"
-      className="secondary"
       aria-label={`Switch to ${next === "uk" ? "Ukrainian" : "English"}`}
       title={next === "uk" ? "Українською" : "In English"}
       onClick={() => i18n.changeLanguage(next)}
-      style={{ fontSize: "1.2rem", lineHeight: 1, padding: "0.4rem 0.6rem" }}
+      className="secondary flex h-9 w-9 items-center justify-center rounded-full p-0 text-lg leading-none"
     >
       {FLAGS[current]}
     </button>

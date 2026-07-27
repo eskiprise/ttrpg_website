@@ -4,7 +4,6 @@ import type { PollResults, PollVoterEntry } from "@ttrpg-club/shared";
 import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
 import { apiFetch, ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
-import "./Poll.css";
 
 const RATINGS = Array.from(
   { length: POLL_RATING_MAX - POLL_RATING_MIN + 1 },
@@ -90,9 +89,9 @@ export function Poll({ gameId }: { gameId: string }) {
 
   if (!idToken) {
     return (
-      <div className="card">
-        <h2>{t("poll.title")}</h2>
-        <p className="muted">{t("poll.loginPrompt")}</p>
+      <div className="mt-6 rounded-lg border border-border bg-surface p-6">
+        <h2 className="text-xl font-bold">{t("poll.title")}</h2>
+        <p className="mt-2 text-ink-muted">{t("poll.loginPrompt")}</p>
       </div>
     );
   }
@@ -100,46 +99,44 @@ export function Poll({ gameId }: { gameId: string }) {
   const showVotingButtons = hasVoted !== true || editing;
 
   return (
-    <div className="card">
-      <h2>{t("poll.title")}</h2>
+    <div className="mt-6 rounded-lg border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("poll.title")}</h2>
 
       {showVotingButtons && (
-        <div className="poll-options">
+        <div className="mt-4 flex flex-wrap gap-2">
           {RATINGS.map((rating) => (
             <button
               key={rating}
-              className={results?.yourRating === rating ? "" : "secondary"}
+              type="button"
+              className={`min-w-10 ${results?.yourRating === rating ? "" : "secondary"}`}
               disabled={busy}
               onClick={() => vote(rating)}
             >
               {rating}
             </button>
           ))}
-          <button className="secondary" disabled={busy} onClick={() => fetchResults(true)}>
+          <button type="button" className="secondary" disabled={busy} onClick={() => fetchResults(true)}>
             {t("poll.viewResults")}
           </button>
           {editing && (
-            <button className="secondary" disabled={busy} onClick={() => setEditing(false)}>
+            <button type="button" className="secondary" disabled={busy} onClick={() => setEditing(false)}>
               {t("poll.cancel")}
             </button>
           )}
         </div>
       )}
 
-      {notVotedYet && (
-        <p className="muted" style={{ marginTop: "0.75rem" }}>
-          {t("poll.voteToSeeResults")}
-        </p>
-      )}
-      {error && <p className="error-text">{error}</p>}
+      {notVotedYet && <p className="mt-3 text-ink-muted">{t("poll.voteToSeeResults")}</p>}
+      {error && <p className="mt-3 text-accent">{error}</p>}
 
       {results && hasVoted && !editing && (
-        <div className="poll-results">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p className="muted" style={{ margin: 0 }}>{t("poll.votes", { count: results.totalVotes })}</p>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button className="secondary" onClick={() => setEditing(true)}>{t("poll.edit")}</button>
+        <div className="mt-4 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <p className="text-ink-muted">{t("poll.votes", { count: results.totalVotes })}</p>
+            <div className="flex gap-2">
+              <button type="button" className="secondary" onClick={() => setEditing(true)}>{t("poll.edit")}</button>
               <button
+                type="button"
                 className="secondary"
                 disabled={votersBusy}
                 onClick={() => (voters ? setVoters(null) : loadVoters())}
@@ -152,26 +149,26 @@ export function Poll({ gameId }: { gameId: string }) {
             const count = results.counts[rating - POLL_RATING_MIN];
             const pct = results.totalVotes ? Math.round((count / results.totalVotes) * 100) : 0;
             return (
-              <div className="poll-bar-row" key={rating}>
-                <span className="poll-bar-label">{rating}</span>
-                <div className="poll-bar-track">
+              <div className="flex items-center gap-2" key={rating}>
+                <span className="w-6 text-right text-ink-muted">{rating}</span>
+                <div className="h-[0.9rem] flex-1 overflow-hidden rounded-full bg-surface-2">
                   <div
-                    className={rating === results.yourRating ? "poll-bar-fill mine" : "poll-bar-fill"}
+                    className={`h-full ${rating === results.yourRating ? "bg-accent" : "bg-accent/45"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                <span className="poll-bar-pct">{pct}%</span>
+                <span className="w-12 text-ink-muted">{pct}%</span>
               </div>
             );
           })}
 
           {voters && (
-            <div className="poll-voters">
+            <div className="mt-3 flex flex-col gap-1.5 border-t border-border pt-3">
               {voters.map((v) => (
-                <div key={v.userId} className="poll-voter-row">
+                <div key={v.userId} className="flex justify-between gap-3 text-sm">
                   <span>{v.displayName}</span>
-                  <span className="poll-voter-rating">{v.rating}/10</span>
-                  <span className="muted">{new Date(v.votedAt).toLocaleString(i18n.language)}</span>
+                  <span className="font-bold text-accent">{v.rating}/10</span>
+                  <span className="text-ink-muted">{new Date(v.votedAt).toLocaleString(i18n.language)}</span>
                 </div>
               ))}
             </div>

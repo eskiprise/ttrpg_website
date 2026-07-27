@@ -50,15 +50,18 @@ export function Login() {
 
   if (challenge) {
     return (
-      <div className="page">
-        <h1>{t("login.newPasswordTitle")}</h1>
-        <p className="muted">{t("login.newPasswordIntro")}</p>
-        <form className="card" onSubmit={onCompleteChallenge} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "360px" }}>
-          <label>
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <h1 className="text-3xl font-bold">{t("login.newPasswordTitle")}</h1>
+        <p className="mt-2 text-ink-muted">{t("login.newPasswordIntro")}</p>
+        <form
+          onSubmit={onCompleteChallenge}
+          className="mt-6 flex max-w-[360px] flex-col gap-4 rounded-lg border border-border bg-surface p-6"
+        >
+          <label className="flex flex-col gap-1">
             {t("login.newPassword")}
             <input required type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           </label>
-          {error && <p className="error-text">{error}</p>}
+          {error && <p className="text-accent">{error}</p>}
           <button disabled={busy} type="submit">{t("login.newPasswordSubmit")}</button>
         </form>
       </div>
@@ -66,18 +69,21 @@ export function Login() {
   }
 
   return (
-    <div className="page">
-      <h1>{t("login.title")}</h1>
-      <form className="card" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "360px" }}>
-        <label>
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold">{t("login.title")}</h1>
+      <form
+        onSubmit={onSubmit}
+        className="mt-6 flex max-w-[360px] flex-col gap-4 rounded-lg border border-border bg-surface p-6"
+      >
+        <label className="flex flex-col gap-1">
           {t("login.email")}
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("login.password")}
           <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
-        {error && <p className="error-text">{error}</p>}
+        {error && <p className="text-accent">{error}</p>}
         <button disabled={busy} type="submit">{t("login.submit")}</button>
       </form>
     </div>

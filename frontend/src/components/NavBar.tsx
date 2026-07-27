@@ -38,11 +38,11 @@ export function NavBar() {
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-surface">
       <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-8 px-6">
-        <NavLink to="/" className="flex flex-shrink-0 items-center gap-2 font-display text-xl font-bold">
+        <NavLink to="/" className="flex min-w-0 items-center gap-2 font-display text-base font-bold sm:text-xl">
           <span className="relative h-6 w-6 flex-shrink-0 rounded border-[1.5px] border-ink">
             <span className="absolute top-1/2 left-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent" />
           </span>
-          {t("nav.brand")}
+          <span className="truncate">{t("nav.brand")}</span>
         </NavLink>
 
         <nav className="hidden flex-1 items-center gap-6 lg:flex">{primaryLinks}</nav>

@@ -36,21 +36,23 @@ function SignupRequests({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="card">
-      <h2>{t("admin.signupRequestsTitle")}</h2>
-      {error && <p className="error-text">{error}</p>}
-      {requests?.length === 0 && <p className="muted">{t("admin.noPendingRequests")}</p>}
-      {requests?.map((r) => (
-        <div key={r.requestId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
-          <div>
-            <strong>{r.firstName} {r.lastName}</strong> — {r.email} — {r.telegramOrViberContact}
+    <div className="rounded-lg border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.signupRequestsTitle")}</h2>
+      {error && <p className="mt-3 text-accent">{error}</p>}
+      {requests?.length === 0 && <p className="mt-3 text-ink-muted">{t("admin.noPendingRequests")}</p>}
+      <div className="mt-3 flex flex-col">
+        {requests?.map((r) => (
+          <div key={r.requestId} className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0">
+            <div>
+              <strong>{r.firstName} {r.lastName}</strong> — {r.email} — {r.telegramOrViberContact}
+            </div>
+            <div className="flex flex-shrink-0 gap-2">
+              <button type="button" onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
+              <button type="button" className="secondary" onClick={() => act(r.requestId, "reject")}>{t("admin.reject")}</button>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
-            <button className="secondary" onClick={() => act(r.requestId, "reject")}>{t("admin.reject")}</button>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -76,13 +78,13 @@ function AnonymizeToggle({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="card">
-      <h2>{t("admin.anonymizeTitle")}</h2>
-      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div className="rounded-lg border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.anonymizeTitle")}</h2>
+      <label className="mt-3 flex items-center gap-2">
         <input type="checkbox" checked={checked} onChange={toggle} />
         {t("admin.anonymizeLabel")}
       </label>
-      {error && <p className="error-text">{error}</p>}
+      {error && <p className="mt-3 text-accent">{error}</p>}
     </div>
   );
 }
@@ -117,17 +119,19 @@ function Members({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="card">
-      <h2>{t("admin.membersTitle")}</h2>
-      {error && <p className="error-text">{error}</p>}
-      {users?.map((u) => (
-        <div key={u.userId} style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", borderBottom: "1px solid var(--border)" }}>
-          <span>{u.firstName} {u.lastName} — {u.email}</span>
-          <label>
-            <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> {t("admin.gameMasterCheckbox")}
-          </label>
-        </div>
-      ))}
+    <div className="rounded-lg border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.membersTitle")}</h2>
+      {error && <p className="mt-3 text-accent">{error}</p>}
+      <div className="mt-3 flex flex-col">
+        {users?.map((u) => (
+          <div key={u.userId} className="flex justify-between gap-3 border-b border-border py-2 last:border-b-0">
+            <span>{u.firstName} {u.lastName} — {u.email}</span>
+            <label className="flex flex-shrink-0 items-center gap-2">
+              <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> {t("admin.gameMasterCheckbox")}
+            </label>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -156,13 +160,13 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
   }
 
   return (
-    <div className="card">
-      <h2>{t("admin.addSystemTitle")}</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "420px" }}>
+    <div className="rounded-lg border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.addSystemTitle")}</h2>
+      <div className="mt-3 flex max-w-[420px] flex-col gap-2">
         <input placeholder={t("admin.systemNamePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
         <textarea placeholder={t("admin.descriptionPlaceholder")} value={description} onChange={(e) => setDescription(e.target.value)} />
-        {error && <p className="error-text">{error}</p>}
-        <button onClick={submit}>{t("admin.addSystem")}</button>
+        {error && <p className="text-accent">{error}</p>}
+        <button type="button" onClick={submit}>{t("admin.addSystem")}</button>
       </div>
     </div>
   );
@@ -174,16 +178,16 @@ export function AdminDashboard() {
   const { reload } = useReload();
 
   return (
-    <div className="page">
-      <h1>{t("admin.title")}</h1>
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-16">
+      <h1 className="text-3xl font-bold">{t("admin.title")}</h1>
       <SignupRequests token={idToken} />
       <AnonymizeToggle token={idToken} />
       <Members token={idToken} />
       <AddGameSystem token={idToken} onAdded={reload} />
-      <div className="card">
-        <h2>{t("admin.logGameTitle")}</h2>
-        <p className="muted">{t("admin.logGameMoved")}</p>
-        <Link to="/games/log"><button>{t("admin.goToLogGame")}</button></Link>
+      <div className="rounded-lg border border-border bg-surface p-6">
+        <h2 className="text-xl font-bold">{t("admin.logGameTitle")}</h2>
+        <p className="mt-2 text-ink-muted">{t("admin.logGameMoved")}</p>
+        <Link to="/games/log"><button type="button" className="mt-3">{t("admin.goToLogGame")}</button></Link>
       </div>
     </div>
   );

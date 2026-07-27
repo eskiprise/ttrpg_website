@@ -31,17 +31,9 @@
   --accent-2: #a9793a;
   --border: #d8dbcf;
 
-  /* Legacy aliases kept for pages not yet ported to Tailwind utilities. */
-  --bg-elevated: var(--surface-2);
-  --bg-card: var(--surface);
-  --text: var(--ink);
-  --text-muted: var(--ink-muted);
-  --red: var(--accent);
-  --red-bright: var(--accent);
-  --red-dim: #cf9fa4;
-
-  /* Categorical chart palette — validated against the old dark --bg-card (#211c21).
-     TODO(statistics redesign): re-validate against the new --surface for both themes. */
+  /* Categorical chart palette — re-validated (dataviz skill's validate_palette.js)
+     against both the Day surface (#ffffff) and Night surface (#221d19); all checks
+     pass for both, so the same 8 colors carry over unchanged. */
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
@@ -64,8 +56,6 @@
   --accent-ink: #1a1613;
   --accent-2: #d9a94a;
   --border: #3a322b;
-
-  --red-dim: #5c3535;
 }
 
 /* Wrapped in Tailwind's cascade layers so plain utility classes (e.g. bg-accent
@@ -154,30 +144,5 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-  }
-}
-
-@layer components {
-  .page {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 2rem 1.25rem 4rem;
-  }
-
-  .card {
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-  }
-
-  .muted {
-    color: var(--ink-muted);
-  }
-
-  .error-text {
-    color: var(--accent);
   }
 }

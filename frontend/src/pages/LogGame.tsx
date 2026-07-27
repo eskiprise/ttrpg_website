@@ -61,10 +61,13 @@ export function LogGame() {
   }
 
   return (
-    <div className="page">
-      <h1>{t("logGame.title")}</h1>
-      <form className="card" onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "480px" }}>
-        <label>
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold">{t("logGame.title")}</h1>
+      <form
+        onSubmit={submit}
+        className="mt-6 flex max-w-[480px] flex-col gap-4 rounded-lg border border-border bg-surface p-6"
+      >
+        <label className="flex flex-col gap-1">
           {t("logGame.titleField")}
           <input
             placeholder={t("logGame.titlePlaceholder")}
@@ -72,11 +75,11 @@ export function LogGame() {
             onChange={(e) => setTitle(e.target.value)}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("logGame.date")}
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("logGame.system")}
           <select value={systemId} onChange={(e) => setSystemId(e.target.value)}>
             <option value="">{t("logGame.selectSystem")}</option>
@@ -87,7 +90,7 @@ export function LogGame() {
         </label>
 
         {isAdmin ? (
-          <label>
+          <label className="flex flex-col gap-1">
             {t("logGame.dm")}
             <select value={dmUserId} onChange={(e) => setDmUserId(e.target.value)}>
               <option value="">{t("logGame.selectDm")}</option>
@@ -97,25 +100,27 @@ export function LogGame() {
             </select>
           </label>
         ) : (
-          <p className="muted" style={{ margin: 0 }}>{t("logGame.youAreDm", { email })}</p>
+          <p className="text-ink-muted">{t("logGame.youAreDm", { email })}</p>
         )}
 
         <div>
-          <p className="muted" style={{ margin: "0 0 0.25rem" }}>{t("logGame.participants")}</p>
-          {members.map((m) => (
-            <label key={m.userId} style={{ display: "block" }}>
-              <input
-                type="checkbox"
-                checked={participantIds.includes(m.userId)}
-                onChange={() => toggleParticipant(m.userId)}
-              />{" "}
-              {m.firstName} {m.lastName}
-            </label>
-          ))}
+          <p className="mb-1 text-ink-muted">{t("logGame.participants")}</p>
+          <div className="flex flex-col gap-1">
+            {members.map((m) => (
+              <label key={m.userId} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={participantIds.includes(m.userId)}
+                  onChange={() => toggleParticipant(m.userId)}
+                />
+                {m.firstName} {m.lastName}
+              </label>
+            ))}
+          </div>
         </div>
 
-        {error && <p className="error-text">{error}</p>}
-        {status && <p className="muted">{status}</p>}
+        {error && <p className="text-accent">{error}</p>}
+        {status && <p className="text-ink-muted">{status}</p>}
         <button disabled={busy} type="submit">{t("logGame.submit")}</button>
       </form>
     </div>

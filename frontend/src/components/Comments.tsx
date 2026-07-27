@@ -40,42 +40,40 @@ export function Comments({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="card">
-      <h2>{t("comments.title")}</h2>
-      {error && <p className="error-text">{error}</p>}
-      {!comments && <p className="muted">{t("common.loading")}</p>}
-      {comments?.length === 0 && <p className="muted">{t("comments.none")}</p>}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+    <div className="mt-6 rounded-lg border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("comments.title")}</h2>
+      {error && <p className="mt-3 text-accent">{error}</p>}
+      {!comments && <p className="mt-3 text-ink-muted">{t("common.loading")}</p>}
+      {comments?.length === 0 && <p className="mt-3 text-ink-muted">{t("comments.none")}</p>}
+      <div className="mt-3 flex flex-col gap-4">
         {comments?.map((comment) => (
           <div key={comment.commentId}>
             <strong>{comment.displayName}</strong>{" "}
-            <span className="muted">
+            <span className="text-sm text-ink-muted">
               {new Date(comment.createdAt).toLocaleString(i18n.language)}
             </span>
-            <p style={{ margin: "0.25rem 0 0" }}>{comment.text}</p>
+            <p className="mt-1">{comment.text}</p>
           </div>
         ))}
       </div>
 
       {idToken ? (
-        <div style={{ marginTop: "1rem" }}>
+        <div className="mt-4">
           <textarea
             rows={3}
-            style={{ width: "100%" }}
+            className="w-full"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder={t("comments.placeholder")}
           />
-          <div>
-            <button disabled={posting || !draft.trim()} onClick={submit}>
+          <div className="mt-2">
+            <button type="button" disabled={posting || !draft.trim()} onClick={submit}>
               {t("comments.post")}
             </button>
           </div>
         </div>
       ) : (
-        <p className="muted" style={{ marginTop: "1rem" }}>
-          {t("comments.loginPrompt")}
-        </p>
+        <p className="mt-4 text-ink-muted">{t("comments.loginPrompt")}</p>
       )}
     </div>
   );

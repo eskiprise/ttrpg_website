@@ -82,21 +82,21 @@ export function Profile() {
     }
   }
 
-  if (!user && !error) return <div className="page"><p className="muted">{t("common.loading")}</p></div>;
+  if (!user && !error) return <div className="mx-auto max-w-3xl px-6 py-16"><p className="text-ink-muted">{t("common.loading")}</p></div>;
 
   return (
-    <div className="page">
-      <h1>{t("profile.title")}</h1>
-      {error && <p className="error-text">{error}</p>}
-      {status && <p className="muted">{status}</p>}
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold">{t("profile.title")}</h1>
+      {error && <p className="mt-4 text-accent">{error}</p>}
+      {status && <p className="mt-4 text-ink-muted">{status}</p>}
 
-      <div className="card" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+      <div className="mt-6 flex items-center gap-6 rounded-lg border border-border bg-surface p-6">
         <img
           src={avatarUrl ?? "/default-avatar.svg"}
           alt=""
           width={96}
           height={96}
-          style={{ borderRadius: "50%", objectFit: "cover" }}
+          className="h-24 w-24 flex-shrink-0 rounded-full object-cover"
         />
         <div>
           <input
@@ -106,18 +106,19 @@ export function Profile() {
             onChange={onAvatarSelected}
             disabled={busy}
           />
-          <p className="muted" style={{ margin: "0.5rem 0 0" }}>
-            {t("profile.avatarHint")}
-          </p>
+          <p className="mt-2 text-sm text-ink-muted">{t("profile.avatarHint")}</p>
         </div>
       </div>
 
-      <form className="card" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "480px" }}>
-        <label>
-          {t("profile.bio")} {user?.roles?.includes("dm") && <span className="muted">{t("profile.bioGmHint")}</span>}
+      <form
+        onSubmit={onSubmit}
+        className="mt-6 flex max-w-[480px] flex-col gap-4 rounded-lg border border-border bg-surface p-6"
+      >
+        <label className="flex flex-col gap-1">
+          {t("profile.bio")} {user?.roles?.includes("dm") && <span className="text-sm text-ink-muted">{t("profile.bioGmHint")}</span>}
           <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("profile.contact")}
           <input value={contact} onChange={(e) => setContact(e.target.value)} />
         </label>

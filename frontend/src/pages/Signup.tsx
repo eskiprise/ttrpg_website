@@ -36,35 +36,38 @@ export function Signup() {
 
   if (submitted) {
     return (
-      <div className="page">
-        <h1>{t("signup.submittedTitle")}</h1>
-        <p>{t("signup.submittedBody")}</p>
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <h1 className="text-3xl font-bold">{t("signup.submittedTitle")}</h1>
+        <p className="mt-4 text-ink-muted">{t("signup.submittedBody")}</p>
       </div>
     );
   }
 
   return (
-    <div className="page">
-      <h1>{t("signup.title")}</h1>
-      <p className="muted">{t("signup.intro")}</p>
-      <form className="card" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "420px" }}>
-        <label>
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-3xl font-bold">{t("signup.title")}</h1>
+      <p className="mt-2 text-ink-muted">{t("signup.intro")}</p>
+      <form
+        onSubmit={onSubmit}
+        className="mt-6 flex max-w-[420px] flex-col gap-4 rounded-lg border border-border bg-surface p-6"
+      >
+        <label className="flex flex-col gap-1">
           {t("signup.firstName")}
           <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("signup.lastName")}
           <input required value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("signup.email")}
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <label>
+        <label className="flex flex-col gap-1">
           {t("signup.contact")}
           <input required value={contact} onChange={(e) => setContact(e.target.value)} />
         </label>
-        {error && <p className="error-text">{error}</p>}
+        {error && <p className="text-accent">{error}</p>}
         <button disabled={busy} type="submit">{t("signup.submit")}</button>
       </form>
     </div>
