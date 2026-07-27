@@ -36,7 +36,13 @@ import { updateAnonymizeToggle } from "./resources/settings.js";
 import { listUsers, updateUserRoles } from "./resources/adminUsers.js";
 import { listMembers } from "./resources/members.js";
 import { getClubStatistics } from "./resources/statistics.js";
-import { getTelegramStats } from "./resources/telegram.js";
+import { getTelegramStats, postTelegramFeedback } from "./resources/telegram.js";
+import {
+  getTelegramGamesAll,
+  getTelegramGamesConducted,
+  getTelegramGamesPlayed,
+  getTelegramGameVoters,
+} from "./resources/telegramGames.js";
 
 type RouteHandler = (
   event: APIGatewayProxyEventV2
@@ -87,6 +93,11 @@ const routes: Record<string, RouteHandler> = {
   "PATCH /admin/users/{userId}/roles": updateUserRoles,
 
   "POST /telegram/stats": getTelegramStats,
+  "POST /telegram/feedback": postTelegramFeedback,
+  "POST /telegram/games/played": getTelegramGamesPlayed,
+  "POST /telegram/games/conducted": getTelegramGamesConducted,
+  "POST /telegram/games/all": getTelegramGamesAll,
+  "POST /telegram/games/{pollId}/voters": getTelegramGameVoters,
 };
 
 export const handler: APIGatewayProxyHandlerV2 = async (

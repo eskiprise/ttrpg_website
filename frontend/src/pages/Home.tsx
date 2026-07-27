@@ -182,22 +182,6 @@ export function Home() {
           )}
         </div>
       </section>
-
-      <div className="bg-ink">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <div>
-            <h2 className="text-xl font-bold text-bg">{t("home.newHereTitle")}</h2>
-            <p className="mt-1 max-w-[40ch] text-sm text-bg/75">
-              {t("home.newHereBefore")} {t("home.newHereAfter")}
-            </p>
-          </div>
-          <Link to="/signup">
-            <button type="button" className="bg-accent text-accent-ink hover:bg-accent-2">
-              {t("home.newHereLink")}
-            </button>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

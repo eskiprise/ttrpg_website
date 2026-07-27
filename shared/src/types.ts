@@ -125,6 +125,41 @@ export interface TelegramUserStats {
   recentRatings: TelegramRecentRating[];
 }
 
+/** One row in the "My Games Played" / "My Games Conducted" / "All Games" lists. */
+export interface TelegramGameSummary {
+  pollId: string;
+  questionText: string;
+  createdAt: string;
+  gmDisplayName: string;
+  playerCount: number;
+  averageScore: number | null;
+  /** The caller's own vote on this poll, or null if they didn't vote (or voted "see results"). */
+  myRating: number | null;
+}
+
+export interface TelegramGameVoter {
+  telegramUserId: number;
+  displayName: string;
+  rating: number;
+  answeredAt: string;
+}
+
+/** The per-game drill-down: who voted what for a single session. */
+export interface TelegramGameDetail extends TelegramGameSummary {
+  voters: TelegramGameVoter[];
+}
+
+export interface TelegramFeedbackSubmission {
+  initData: string;
+  pollId: string;
+  adventureRating: number;
+  tableRating: number;
+  gmRating: number;
+  selfRating: number;
+  feedbackText?: string;
+  revealIdentity: boolean;
+}
+
 export interface SystemStat {
   systemId: string;
   systemName: string;

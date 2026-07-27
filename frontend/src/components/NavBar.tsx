@@ -12,7 +12,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function NavBar() {
-  const { idToken, isAdmin, isDm, logout } = useAuth();
+  const { idToken, isAdmin, logout } = useAuth();
   const { t } = useTranslation();
 
   const primaryLinks = (
@@ -27,9 +27,6 @@ export function NavBar() {
           <NavLink to="/stats" className={linkClass}>{t("nav.myStats")}</NavLink>
           <NavLink to="/statistics" className={linkClass}>{t("nav.statistics")}</NavLink>
         </>
-      )}
-      {(isAdmin || isDm) && (
-        <NavLink to="/games/log" className={linkClass}>{t("nav.logAGame")}</NavLink>
       )}
       {isAdmin && <NavLink to="/admin" className={linkClass}>{t("nav.admin")}</NavLink>}
     </>
@@ -70,12 +67,7 @@ export function NavBar() {
               <button type="button" className="secondary" onClick={logout}>{t("nav.logOut")}</button>
             </>
           ) : (
-            <>
-              <NavLink to="/login" className={linkClass}>{t("nav.logIn")}</NavLink>
-              <NavLink to="/signup">
-                <button type="button">{t("nav.joinTheClub")}</button>
-              </NavLink>
-            </>
+            <NavLink to="/login" className={linkClass}>{t("nav.logIn")}</NavLink>
           )}
         </div>
       </div>

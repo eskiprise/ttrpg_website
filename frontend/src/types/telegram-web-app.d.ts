@@ -13,6 +13,8 @@ interface TelegramWebApp {
   /** Convenience-parsed, UNSIGNED mirror of initData — display only, never for auth decisions. */
   initDataUnsafe: {
     user?: TelegramWebAppUser;
+    /** Present when opened via a t.me/<bot>/<app>?startapp=<value> deep link. */
+    start_param?: string;
   };
   ready: () => void;
   expand: () => void;

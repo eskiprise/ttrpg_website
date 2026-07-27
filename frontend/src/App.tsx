@@ -15,7 +15,11 @@ import { Login } from "./pages/Login";
 import { Profile } from "./pages/Profile";
 import { LogGame } from "./pages/LogGame";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
-import { TelegramMiniApp } from "./pages/telegram/TelegramMiniApp";
+import { TelegramMiniAppRoot } from "./pages/telegram/TelegramMiniAppRoot";
+import { TelegramStatsHome } from "./pages/telegram/TelegramStatsHome";
+import { TelegramGamesList } from "./pages/telegram/TelegramGamesList";
+import { TelegramGameDetail } from "./pages/telegram/TelegramGameDetail";
+import { TelegramFeedbackForm } from "./pages/telegram/TelegramFeedbackForm";
 
 function App() {
   const location = useLocation();
@@ -41,7 +45,14 @@ function App() {
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="/games/log" element={<RequireGameMaster><LogGame /></RequireGameMaster>} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-        <Route path="/telegram" element={<TelegramMiniApp />} />
+        <Route path="/telegram" element={<TelegramMiniAppRoot />}>
+          <Route index element={<TelegramStatsHome />} />
+          <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
+          <Route path="games/played" element={<TelegramGamesList kind="played" />} />
+          <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />
+          <Route path="games/all" element={<TelegramGamesList kind="all" />} />
+          <Route path="game/:pollId" element={<TelegramGameDetail />} />
+        </Route>
       </Routes>
     </>
   );

@@ -1,8 +1,14 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import type { TelegramRecentRating, TelegramUserStats } from "@ttrpg-club/shared";
+import { ulid } from "ulid";
+import { PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import type {
+  TelegramFeedbackSubmission,
+  TelegramRecentRating,
+  TelegramUserStats,
+} from "@ttrpg-club/shared";
+import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
-import { verifyTelegramInitData } from "../../lib/telegramAuth.js";
+import { formatTelegramDisplayName, verifyTelegramInitData } from "../../lib/telegramAuth.js";
 import { HttpError, json } from "../../lib/response.js";
 
 const RECENT_RATINGS_LIMIT = 10;
@@ -46,17 +52,64 @@ export async function getTelegramStats(event: APIGatewayProxyEventV2) {
       answeredAt: v.answeredAt,
     }));
 
-  const displayName = user.lastName
-    ? `${user.firstName} ${user.lastName}`
-    : (user.username ? `${user.firstName} (@${user.username})` : user.firstName);
-
   const stats: TelegramUserStats = {
     telegramUserId: user.id,
-    displayName,
+    displayName: formatTelegramDisplayName(user),
     totalRatingsGiven,
     averageRatingGiven,
     recentRatings,
   };
 
   return json(200, { stats });
+}
+
+function isValidRating(value: unknown): value is number {
+  return typeof value === "number" && value >= POLL_RATING_MIN && value <= POLL_RATING_MAX;
+}
+
+/**
+ * Detailed, mostly-anonymous feedback (four 1-10 ratings + optional free text) left via
+ * the Mini App's feedback form — a separate, private channel from the quick /rate poll
+ * vote. Stored here purely for the record; the actual delivery to the GM happens via a
+ * DynamoDB Stream on this table triggering a notifier Lambda in ttrpg_poll_bot (which
+ * DMs the GM, revealing the submitter's identity only if they opted in).
+ */
+export async function postTelegramFeedback(event: APIGatewayProxyEventV2) {
+  const body = JSON.parse(event.body ?? "{}") as Partial<TelegramFeedbackSubmission>;
+  if (!body.initData) throw new HttpError(400, "initData is required");
+  if (!body.pollId) throw new HttpError(400, "pollId is required");
+  if (
+    !isValidRating(body.adventureRating) ||
+    !isValidRating(body.tableRating) ||
+    !isValidRating(body.gmRating) ||
+    !isValidRating(body.selfRating)
+  ) {
+    throw new HttpError(400, `Ratings must be between ${POLL_RATING_MIN} and ${POLL_RATING_MAX}`);
+  }
+
+  const user = await verifyTelegramInitData(body.initData);
+  if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
+
+  await ddb.send(
+    new PutCommand({
+      TableName: Tables.telegramFeedback(),
+      Item: {
+        pollId: body.pollId,
+        feedbackId: ulid(),
+        telegramUserId: user.id,
+        submitterFirstName: user.firstName,
+        submitterLastName: user.lastName ?? "",
+        submitterUsername: user.username ?? "",
+        revealIdentity: Boolean(body.revealIdentity),
+        adventureRating: body.adventureRating,
+        tableRating: body.tableRating,
+        gmRating: body.gmRating,
+        selfRating: body.selfRating,
+        feedbackText: body.feedbackText?.trim() ?? "",
+        submittedAt: new Date().toISOString(),
+      },
+    })
+  );
+
+  return json(201, { ok: true });
 }

@@ -23,6 +23,16 @@ export interface TelegramInitDataUser {
   username?: string;
 }
 
+export function formatTelegramDisplayName(user: {
+  firstName: string;
+  lastName?: string;
+  username?: string;
+}): string {
+  if (user.lastName) return `${user.firstName} ${user.lastName}`;
+  if (user.username) return `${user.firstName} (@${user.username})`;
+  return user.firstName;
+}
+
 const MAX_INIT_DATA_AGE_SECONDS = 3600; // 1 hour — initData is freshly signed every app open
 
 /**
