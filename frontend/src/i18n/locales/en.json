@@ -6,7 +6,6 @@
     "gameMasters": "Game Masters",
     "games": "Games",
     "gameLog": "Game Log",
-    "myStats": "My Stats",
     "statistics": "Statistics",
     "admin": "Admin",
     "menu": "Menu",
@@ -78,16 +77,6 @@
     "placeholder": "Share your thoughts on this session…",
     "post": "Post Comment",
     "loginPrompt": "Log in as a club member to post a comment."
-  },
-  "stats": {
-    "title": "My Stats",
-    "gamesDmdCount_one": "{{count}} game DM'd",
-    "gamesDmdCount_other": "{{count}} games DM'd",
-    "gamesPlayedCount_one": "{{count}} game played",
-    "gamesPlayedCount_other": "{{count}} games played",
-    "gamesDmd": "Games I've DM'd",
-    "gamesPlayed": "Games I've Played",
-    "noneYet": "None yet."
   },
   "signup": {
     "title": "Join the Club",

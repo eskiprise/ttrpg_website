@@ -6,7 +6,6 @@
     "gameMasters": "Майстри гри",
     "games": "Ігри",
     "gameLog": "Історія ігор",
-    "myStats": "Моя статистика",
     "statistics": "Статистика",
     "admin": "Адмін",
     "menu": "Меню",
@@ -82,20 +81,6 @@
     "placeholder": "Поділіться враженнями про цю сесію…",
     "post": "Опублікувати коментар",
     "loginPrompt": "Увійдіть як учасник клубу, щоб залишити коментар."
-  },
-  "stats": {
-    "title": "Моя статистика",
-    "gamesDmdCount_one": "{{count}} проведена гра",
-    "gamesDmdCount_few": "{{count}} проведені гри",
-    "gamesDmdCount_many": "{{count}} проведених ігор",
-    "gamesDmdCount_other": "{{count}} проведених ігор",
-    "gamesPlayedCount_one": "{{count}} зіграна гра",
-    "gamesPlayedCount_few": "{{count}} зіграні гри",
-    "gamesPlayedCount_many": "{{count}} зіграних ігор",
-    "gamesPlayedCount_other": "{{count}} зіграних ігор",
-    "gamesDmd": "Ігри, які я провів(ла)",
-    "gamesPlayed": "Ігри, у яких я грав(ла)",
-    "noneYet": "Поки що немає."
   },
   "signup": {
     "title": "Приєднатися до клубу",
