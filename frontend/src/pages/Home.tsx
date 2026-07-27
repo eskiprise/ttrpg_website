@@ -133,6 +133,25 @@ export function Home() {
       <section className="px-6 pt-0 pb-16">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex flex-wrap items-baseline justify-between gap-4">
+            <h2 className="text-2xl font-bold">{t("home.upcomingSessions")}</h2>
+          </div>
+          <div className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-border bg-surface p-2">
+            <iframe
+              src="https://calendar.google.com/calendar/embed?src=a06e3c9e0ef67ca9738ad9bb2143afbd4403677de38d1fda8ff7a658b9886734%40group.calendar.google.com&ctz=Europe%2FKiev"
+              title={t("home.upcomingSessions")}
+              width="100%"
+              height={600}
+              style={{ border: 0 }}
+              frameBorder="0"
+              scrolling="no"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 pt-0 pb-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 flex flex-wrap items-baseline justify-between gap-4">
             <h2 className="text-2xl font-bold">{t("home.recentSessions")}</h2>
             <Link to="/game-log" className="text-sm font-semibold text-accent hover:underline">
               {t("home.seeAllGameLog")} →
