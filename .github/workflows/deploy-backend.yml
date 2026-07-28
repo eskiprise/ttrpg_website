@@ -2,7 +2,7 @@ name: Deploy Backend
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - "backend/**"
       - "shared/**"
@@ -15,11 +15,13 @@ permissions:
 
 env:
   AWS_REGION: eu-west-2
-  LAMBDA_FUNCTION_NAME: ttrpg-club-api
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # develop -> the "development" GitHub Environment (dev Lambda), main -> "production"
+    # (prod Lambda) — each environment holds its own LAMBDA_FUNCTION_NAME variable.
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,10 +49,10 @@ jobs:
       - name: Update Lambda function code
         run: |
           aws lambda update-function-code \
-            --function-name "${{ env.LAMBDA_FUNCTION_NAME }}" \
+            --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}" \
             --zip-file fileb://backend/function.zip
 
       - name: Wait for update to finish
         run: |
           aws lambda wait function-updated \
-            --function-name "${{ env.LAMBDA_FUNCTION_NAME }}"
+            --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}"

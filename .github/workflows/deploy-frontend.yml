@@ -2,7 +2,7 @@ name: Deploy Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - "frontend/**"
       - "shared/**"
@@ -15,11 +15,13 @@ permissions:
 
 env:
   AWS_REGION: eu-west-2
-  FRONTEND_BUCKET: ttrpg-club-frontend
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # develop -> the "development" GitHub Environment (dev bucket/distribution/Cognito),
+    # main -> "production" — each environment holds its own set of vars below.
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +47,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Sync to S3
-        run: aws s3 sync frontend/dist "s3://${{ env.FRONTEND_BUCKET }}" --delete
+        run: aws s3 sync frontend/dist "s3://${{ vars.FRONTEND_BUCKET }}" --delete
 
       - name: Invalidate CloudFront cache
         run: |
