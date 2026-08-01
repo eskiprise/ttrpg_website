@@ -130,7 +130,10 @@ export async function getTelegramLeaderboard(event: APIGatewayProxyEventV2) {
   ]);
 
   const pollsInRange = polls.filter((poll) => withinRange(poll.createdAt ?? "", body.from, body.to));
-  const pollIdsInRange = new Set(pollsInRange.map((poll) => poll.pollId));
+  // pollId -> that session's GM (undefined for legacy polls with no creator recorded).
+  const gmByPollId = new Map<string, number | undefined>(
+    pollsInRange.map((poll) => [poll.pollId, poll.creatorUserId])
+  );
 
   // Players: one vote row per (pollId, telegramUserId) by table key, so a plain row
   // count IS the number of distinct sessions they rated — no dedupe needed. Rows only
@@ -141,7 +144,11 @@ export async function getTelegramLeaderboard(event: APIGatewayProxyEventV2) {
   const playersByUser = new Map<number, Tally>();
   for (const vote of votes) {
     if (typeof vote.telegramUserId !== "number") continue;
-    if (!pollIdsInRange.has(vote.pollId)) continue;
+    if (!gmByPollId.has(vote.pollId)) continue;
+    // Running a session isn't playing it. GMs routinely vote on their own poll, which
+    // would otherwise count them as a player for every session they ran — those games
+    // belong on the GM board only.
+    if (gmByPollId.get(vote.pollId) === vote.telegramUserId) continue;
     upsert(
       playersByUser,
       vote.telegramUserId,
