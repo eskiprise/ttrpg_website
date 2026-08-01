@@ -195,6 +195,17 @@
     "feedbackRevealLabel": "Let the GM see that this feedback is from me",
     "feedbackSubmit": "Send Feedback",
     "feedbackThanksTitle": "Thanks!",
-    "feedbackThanksBody": "Your feedback has been sent to the GM."
+    "feedbackThanksBody": "Your feedback has been sent to the GM.",
+    "leaderboard": "Leaderboard",
+    "leaderboardPlayers": "Most games played",
+    "leaderboardGameMasters": "Most games run",
+    "leaderboardEmpty": "No data yet.",
+    "leaderboardShowAll": "Show all ({{count}} more)",
+    "leaderboardShowLess": "Show less",
+    "placeLabel": "Place {{place}}",
+    "gamesPlayedCount_one": "{{count}} game",
+    "gamesPlayedCount_other": "{{count}} games",
+    "gamesConductedCount_one": "{{count}} game",
+    "gamesConductedCount_other": "{{count}} games"
   }
 }

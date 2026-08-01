@@ -149,6 +149,31 @@ export interface TelegramGameDetail extends TelegramGameSummary {
   voters: TelegramGameVoter[];
 }
 
+/** One row in a leaderboard list. */
+export interface TelegramLeaderboardEntry {
+  telegramUserId: number;
+  displayName: string;
+  gamesCount: number;
+  /**
+   * Standard competition ranking ("1224"): everyone on the same gamesCount shares a
+   * place, and the next distinct score skips ahead by however many tied above it —
+   * so two people tied for 1st are both 1st and the next is 3rd, never 2nd.
+   */
+  place: number;
+}
+
+/**
+ * Both leaderboards, returned in full (not paginated) — at club scale these are tens
+ * of rows, so the Mini App just shows the top 10 and expands the rest client-side
+ * rather than making a second round trip.
+ */
+export interface TelegramLeaderboards {
+  /** Most sessions played, by vote count. */
+  players: TelegramLeaderboardEntry[];
+  /** Most sessions run, by polls created. */
+  gameMasters: TelegramLeaderboardEntry[];
+}
+
 export interface TelegramFeedbackSubmission {
   initData: string;
   pollId: string;

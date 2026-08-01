@@ -65,6 +65,12 @@ export function TelegramStatsHome() {
         >
           {t("telegramApp.allGames")} →
         </Link>
+        <Link
+          to="/telegram/leaderboard"
+          className="rounded-lg border border-border bg-surface p-4 font-semibold hover:bg-surface-2"
+        >
+          🏆 {t("telegramApp.leaderboard")} →
+        </Link>
       </div>
 
       {stats.totalRatingsGiven === 0 && <p className="text-ink-muted">{t("telegramApp.noRatingsYet")}</p>}

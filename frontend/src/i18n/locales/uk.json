@@ -201,6 +201,21 @@
     "feedbackRevealLabel": "Дозволити майстру бачити, що цей фідбек від мене",
     "feedbackSubmit": "Надіслати фідбек",
     "feedbackThanksTitle": "Дякуємо!",
-    "feedbackThanksBody": "Твій фідбек надіслано майстру."
+    "feedbackThanksBody": "Твій фідбек надіслано майстру.",
+    "leaderboard": "Лідерборд",
+    "leaderboardPlayers": "Найбільше зіграних ігор",
+    "leaderboardGameMasters": "Найбільше проведених ігор",
+    "leaderboardEmpty": "Поки що немає даних.",
+    "leaderboardShowAll": "Показати всіх (ще {{count}})",
+    "leaderboardShowLess": "Показати менше",
+    "placeLabel": "{{place}} місце",
+    "gamesPlayedCount_one": "{{count}} гра",
+    "gamesPlayedCount_few": "{{count}} ігри",
+    "gamesPlayedCount_many": "{{count}} ігор",
+    "gamesPlayedCount_other": "{{count}} ігор",
+    "gamesConductedCount_one": "{{count}} гра",
+    "gamesConductedCount_few": "{{count}} ігри",
+    "gamesConductedCount_many": "{{count}} ігор",
+    "gamesConductedCount_other": "{{count}} ігор"
   }
 }
