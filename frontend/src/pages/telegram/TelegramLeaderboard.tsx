@@ -95,25 +95,78 @@ type LoadState =
   | { status: "error"; message: string }
   | { status: "ready"; leaderboards: TelegramLeaderboards };
 
+type Period = "thisMonth" | "lastMonth" | "allTime" | "custom";
+
+/** Local-time YYYY-MM-DD — the same shape the API's inclusive from/to bounds expect. */
+function toIsoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * Full calendar month, `offset` months back from today (0 = current). Day 0 of the
+ * following month is the last day of this one, which keeps month lengths and leap
+ * years correct without any special-casing.
+ */
+function monthRange(offset: number): { from: string; to: string } {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+  return { from: toIsoDate(first), to: toIsoDate(last) };
+}
+
+function monthLabel(offset: number, locale: string): string {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + offset, 1).toLocaleDateString(locale, {
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function TelegramLeaderboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { initData } = useTelegramApp();
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [period, setPeriod] = useState<Period>("thisMonth");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+
+  async function load(range: { from?: string; to?: string }) {
+    setState({ status: "loading" });
+    try {
+      const data = await apiFetch<{ leaderboards: TelegramLeaderboards }>("/telegram/leaderboard", {
+        method: "POST",
+        body: { initData, from: range.from, to: range.to },
+      });
+      setState({ status: "ready", leaderboards: data.leaderboards });
+    } catch (err) {
+      setState({
+        status: "error",
+        message: err instanceof Error ? err.message : t("common.somethingWrong"),
+      });
+    }
+  }
+
+  function selectPeriod(next: Period) {
+    setPeriod(next);
+    if (next === "thisMonth") void load(monthRange(0));
+    else if (next === "lastMonth") void load(monthRange(-1));
+    else if (next === "allTime") void load({});
+    // "custom" waits for the user to pick dates and press Apply.
+  }
 
   useEffect(() => {
-    apiFetch<{ leaderboards: TelegramLeaderboards }>("/telegram/leaderboard", {
-      method: "POST",
-      body: { initData },
-    })
-      .then((data) => setState({ status: "ready", leaderboards: data.leaderboards }))
-      .catch((err) =>
-        setState({
-          status: "error",
-          message: err instanceof Error ? err.message : t("common.somethingWrong"),
-        })
-      );
+    void load(monthRange(0)); // default view: the current month
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const TABS: { key: Period; label: string }[] = [
+    { key: "thisMonth", label: monthLabel(0, i18n.language) },
+    { key: "lastMonth", label: monthLabel(-1, i18n.language) },
+    { key: "allTime", label: t("telegramApp.leaderboardAllTime") },
+    { key: "custom", label: t("telegramApp.leaderboardCustomRange") },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -121,6 +174,46 @@ export function TelegramLeaderboard() {
         ← {t("telegramApp.back")}
       </Link>
       <h1 className="text-xl font-bold">{t("telegramApp.leaderboard")}</h1>
+
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            aria-pressed={period === tab.key}
+            onClick={() => selectPeriod(tab.key)}
+            // first-letter (not `capitalize`) because Intl returns month names
+            // lowercased in Ukrainian — `capitalize` would also uppercase the "р."
+            // year marker and every word of the translated labels.
+            className={
+              period === tab.key
+                ? "rounded-lg px-3 py-1.5 text-sm font-semibold first-letter:uppercase"
+                : "secondary rounded-lg px-3 py-1.5 text-sm font-semibold first-letter:uppercase"
+            }
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {period === "custom" && (
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4">
+          <label className="flex flex-col gap-1 text-sm">
+            {t("statistics.from")}
+            <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            {t("statistics.to")}
+            <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+          </label>
+          <button
+            type="button"
+            onClick={() => void load({ from: customFrom || undefined, to: customTo || undefined })}
+          >
+            {t("statistics.apply")}
+          </button>
+        </div>
+      )}
 
       {state.status === "loading" && <p className="text-ink-muted">{t("common.loading")}</p>}
       {state.status === "error" && <p className="text-accent">{state.message}</p>}

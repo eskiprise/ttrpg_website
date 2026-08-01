@@ -216,6 +216,10 @@
     "gamesConductedCount_one": "{{count}} гра",
     "gamesConductedCount_few": "{{count}} ігри",
     "gamesConductedCount_many": "{{count}} ігор",
-    "gamesConductedCount_other": "{{count}} ігор"
+    "gamesConductedCount_other": "{{count}} ігор",
+    "leaderboardAllTime": "За весь час",
+    "leaderboardCustomRange": "Свій період",
+    "leaderboardThisMonth": "Поточний місяць",
+    "leaderboardLastMonth": "Попередній місяць"
   }
 }

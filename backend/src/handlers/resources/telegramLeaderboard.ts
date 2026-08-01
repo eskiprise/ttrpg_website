@@ -24,6 +24,19 @@ interface VoteRecord {
 }
 
 /**
+ * Both leaderboards are filtered on the *session* date (the poll's createdAt), not on
+ * when a vote happened to be cast — someone rating a July session in early August is
+ * still a July game. This also matches how "My Games Played" already filters, so the
+ * two screens can't disagree about which month a session belongs to.
+ */
+function withinRange(createdAt: string, from?: string | null, to?: string | null): boolean {
+  const date = createdAt.slice(0, 10);
+  if (from && date < from) return false;
+  if (to && date > to) return false;
+  return true;
+}
+
+/**
  * A DynamoDB Scan returns at most 1MB per call, so a single ScanCommand silently
  * truncates once these tables outgrow that — which would quietly under-count the
  * leaderboard rather than fail. Page through until LastEvaluatedKey is exhausted.
@@ -98,8 +111,15 @@ function upsert(
   }
 }
 
+interface LeaderboardRequestBody {
+  initData?: string;
+  /** Inclusive YYYY-MM-DD bounds. Both omitted means all time. */
+  from?: string;
+  to?: string;
+}
+
 export async function getTelegramLeaderboard(event: APIGatewayProxyEventV2) {
-  const body = JSON.parse(event.body ?? "{}") as { initData?: string };
+  const body = JSON.parse(event.body ?? "{}") as LeaderboardRequestBody;
   if (!body.initData) throw new HttpError(400, "initData is required");
   const user = await verifyTelegramInitData(body.initData);
   if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
@@ -109,12 +129,19 @@ export async function getTelegramLeaderboard(event: APIGatewayProxyEventV2) {
     scanAll<PollRecord>(Tables.telegramRatingPolls()),
   ]);
 
+  const pollsInRange = polls.filter((poll) => withinRange(poll.createdAt ?? "", body.from, body.to));
+  const pollIdsInRange = new Set(pollsInRange.map((poll) => poll.pollId));
+
   // Players: one vote row per (pollId, telegramUserId) by table key, so a plain row
   // count IS the number of distinct sessions they rated — no dedupe needed. Rows only
   // exist for real ratings; "see results" and retracted votes are deleted by the bot.
+  // A vote whose poll is missing entirely is skipped: without the session it belongs to
+  // there's no date to place it in, so counting it would make "all time" disagree with
+  // the sum of the individual months.
   const playersByUser = new Map<number, Tally>();
   for (const vote of votes) {
     if (typeof vote.telegramUserId !== "number") continue;
+    if (!pollIdsInRange.has(vote.pollId)) continue;
     upsert(
       playersByUser,
       vote.telegramUserId,
@@ -130,7 +157,7 @@ export async function getTelegramLeaderboard(event: APIGatewayProxyEventV2) {
   // GMs: polls created before creator tracking shipped have no creatorUserId — skip
   // them rather than lumping every legacy session under one phantom "unknown" GM.
   const gmsByUser = new Map<number, Tally>();
-  for (const poll of polls) {
+  for (const poll of pollsInRange) {
     if (typeof poll.creatorUserId !== "number") continue;
     upsert(
       gmsByUser,

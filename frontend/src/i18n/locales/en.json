@@ -206,6 +206,10 @@
     "gamesPlayedCount_one": "{{count}} game",
     "gamesPlayedCount_other": "{{count}} games",
     "gamesConductedCount_one": "{{count}} game",
-    "gamesConductedCount_other": "{{count}} games"
+    "gamesConductedCount_other": "{{count}} games",
+    "leaderboardAllTime": "All time",
+    "leaderboardCustomRange": "Custom range",
+    "leaderboardThisMonth": "This month",
+    "leaderboardLastMonth": "Previous month"
   }
 }
