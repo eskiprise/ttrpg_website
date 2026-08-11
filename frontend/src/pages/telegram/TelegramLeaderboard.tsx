@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TelegramLeaderboardEntry, TelegramLeaderboards } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useTelegramApp } from "./TelegramAppContext";
+import { useRunOnVisible } from "./useRefetchOnVisible";
 
 const TOP_COUNT = 10;
 
@@ -131,14 +132,22 @@ export function TelegramLeaderboard() {
   const [period, setPeriod] = useState<Period>("thisMonth");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  // Last range actually applied — reopening the app should refresh whatever the user
+  // was looking at (including a custom range), not silently jump back to this month.
+  const appliedRange = useRef<{ from?: string; to?: string }>(monthRange(0));
+  const hasLoadedOnce = useRef(false);
 
   async function load(range: { from?: string; to?: string }) {
-    setState({ status: "loading" });
+    appliedRange.current = range;
+    // Only show the loading state on the very first fetch — a background refetch on
+    // reopen shouldn't flash the lists away while it runs.
+    if (!hasLoadedOnce.current) setState({ status: "loading" });
     try {
       const data = await apiFetch<{ leaderboards: TelegramLeaderboards }>("/telegram/leaderboard", {
         method: "POST",
         body: { initData, from: range.from, to: range.to },
       });
+      hasLoadedOnce.current = true;
       setState({ status: "ready", leaderboards: data.leaderboards });
     } catch (err) {
       setState({
@@ -159,6 +168,10 @@ export function TelegramLeaderboard() {
   useEffect(() => {
     void load(monthRange(0)); // default view: the current month
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useRunOnVisible(() => {
+    void load(appliedRange.current);
   }, []);
 
   const TABS: { key: Period; label: string }[] = [

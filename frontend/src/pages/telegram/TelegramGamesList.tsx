@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TelegramGameSummary } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useTelegramApp } from "./TelegramAppContext";
+import { useRunOnVisible } from "./useRefetchOnVisible";
 
 const ENDPOINTS = {
   played: "/telegram/games/played",
@@ -25,8 +26,13 @@ export function TelegramGamesList({ kind }: { kind: keyof typeof ENDPOINTS }) {
   const [games, setGames] = useState<TelegramGameSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Tracks the last range actually applied (as opposed to whatever's currently typed
+  // into the date inputs but not yet submitted), so reopening the app can silently
+  // refresh the same view instead of resetting the user's filter.
+  const appliedRange = useRef({ from: "", to: "" });
 
   async function load(fromValue: string, toValue: string) {
+    appliedRange.current = { from: fromValue, to: toValue };
     setBusy(true);
     setError(null);
     try {
@@ -43,9 +49,15 @@ export function TelegramGamesList({ kind }: { kind: keyof typeof ENDPOINTS }) {
   }
 
   useEffect(() => {
+    setFrom("");
+    setTo("");
     setGames(null);
     void load("", "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind]);
+
+  useRunOnVisible(() => {
+    void load(appliedRange.current.from, appliedRange.current.to);
   }, [kind]);
 
   return (
