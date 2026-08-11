@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TelegramGameDetail as TelegramGameDetailType } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useTelegramApp } from "./TelegramAppContext";
+import { useRefetchOnVisible } from "./useRefetchOnVisible";
 
 export function TelegramGameDetail() {
   const { t, i18n } = useTranslation();
@@ -13,7 +14,7 @@ export function TelegramGameDetail() {
   const [game, setGame] = useState<TelegramGameDetailType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useRefetchOnVisible(() => {
     if (!pollId) return;
     apiFetch<{ game: TelegramGameDetailType }>(`/telegram/games/${pollId}/voters`, {
       method: "POST",
@@ -21,7 +22,6 @@ export function TelegramGameDetail() {
     })
       .then((data) => setGame(data.game))
       .catch((err) => setError(err instanceof Error ? err.message : t("common.somethingWrong")));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollId]);
 
   if (error) return <p className="text-accent">{error}</p>;

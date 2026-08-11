@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TelegramUserStats } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useTelegramApp } from "./TelegramAppContext";
+import { useRefetchOnVisible } from "./useRefetchOnVisible";
 
 type LoadState =
   | { status: "loading" }
@@ -14,14 +15,20 @@ export function TelegramStatsHome() {
   const { t } = useTranslation();
   const { initData } = useTelegramApp();
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const hasLoadedOnce = useRef(false);
 
-  useEffect(() => {
+  useRefetchOnVisible(() => {
+    // Only show the loading state on the very first fetch — a background refetch on
+    // reopen shouldn't flash the whole screen back to a spinner while it runs.
+    if (!hasLoadedOnce.current) setState({ status: "loading" });
     apiFetch<{ stats: TelegramUserStats }>("/telegram/stats", { method: "POST", body: { initData } })
-      .then((data) => setState({ status: "ready", stats: data.stats }))
+      .then((data) => {
+        hasLoadedOnce.current = true;
+        setState({ status: "ready", stats: data.stats });
+      })
       .catch((err) =>
         setState({ status: "error", message: err instanceof Error ? err.message : t("common.somethingWrong") })
       );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (state.status === "loading") return <p className="text-ink-muted">{t("common.loading")}</p>;
@@ -64,6 +71,12 @@ export function TelegramStatsHome() {
           className="rounded-lg border border-border bg-surface p-4 font-semibold hover:bg-surface-2"
         >
           {t("telegramApp.allGames")} →
+        </Link>
+        <Link
+          to="/telegram/leaderboard"
+          className="rounded-lg border border-border bg-surface p-4 font-semibold hover:bg-surface-2"
+        >
+          🏆 {t("telegramApp.leaderboard")} →
         </Link>
       </div>
 

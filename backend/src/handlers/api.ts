@@ -43,6 +43,7 @@ import {
   getTelegramGamesPlayed,
   getTelegramGameVoters,
 } from "./resources/telegramGames.js";
+import { getTelegramLeaderboard } from "./resources/telegramLeaderboard.js";
 
 type RouteHandler = (
   event: APIGatewayProxyEventV2
@@ -98,6 +99,7 @@ const routes: Record<string, RouteHandler> = {
   "POST /telegram/games/conducted": getTelegramGamesConducted,
   "POST /telegram/games/all": getTelegramGamesAll,
   "POST /telegram/games/{pollId}/voters": getTelegramGameVoters,
+  "POST /telegram/leaderboard": getTelegramLeaderboard,
 };
 
 export const handler: APIGatewayProxyHandlerV2 = async (
