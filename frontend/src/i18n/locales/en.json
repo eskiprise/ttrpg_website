@@ -191,7 +191,7 @@
     "feedbackSelfLabel": "Rate yourself",
     "feedbackSelfHelp": "How satisfied are you with your own play — your roleplaying, decision-making, and so on? Did you do your role justice, or could you have done better?",
     "feedbackTextLabel": "Feedback",
-    "feedbackTextHelp": "You can write detailed feedback here if you'd like, but it's optional. This will be sent to the GM anonymously — unless you check the box below, in which case the GM will see who sent it.",
+    "feedbackTextHelp": "You can write detailed feedback here if you'd like, but it's optional. By default the GM will see this feedback is from you — uncheck the box below if you'd rather send it anonymously.",
     "feedbackRevealLabel": "Let the GM see that this feedback is from me",
     "feedbackSubmit": "Send Feedback",
     "feedbackThanksTitle": "Thanks!",

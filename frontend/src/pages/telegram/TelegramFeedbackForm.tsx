@@ -50,7 +50,7 @@ export function TelegramFeedbackForm() {
   const [gmRating, setGmRating] = useState<number | null>(null);
   const [selfRating, setSelfRating] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
-  const [revealIdentity, setRevealIdentity] = useState(false);
+  const [revealIdentity, setRevealIdentity] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
