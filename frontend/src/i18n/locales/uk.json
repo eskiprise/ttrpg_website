@@ -202,6 +202,7 @@
     "feedbackSubmit": "Надіслати фідбек",
     "feedbackThanksTitle": "Дякуємо!",
     "feedbackThanksBody": "Твій фідбек надіслано майстру.",
+    "feedbackNotEligible": "Оскільки ти ще не оцінив/оцінила цю сесію, ти не можеш залишити розгорнутий фідбек.",
     "leaderboard": "Лідерборд",
     "leaderboardPlayers": "Найбільше зіграних ігор",
     "leaderboardGameMasters": "Найбільше проведених ігор",

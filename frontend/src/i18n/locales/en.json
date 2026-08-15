@@ -196,6 +196,7 @@
     "feedbackSubmit": "Send Feedback",
     "feedbackThanksTitle": "Thanks!",
     "feedbackThanksBody": "Your feedback has been sent to the GM.",
+    "feedbackNotEligible": "Since you haven't rated this session yet, you can't leave extended feedback.",
     "leaderboard": "Leaderboard",
     "leaderboardPlayers": "Most games played",
     "leaderboardGameMasters": "Most games run",

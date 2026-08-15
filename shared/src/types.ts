@@ -185,6 +185,16 @@ export interface TelegramFeedbackSubmission {
   revealIdentity: boolean;
 }
 
+export interface TelegramFeedbackEligibilityRequest {
+  initData: string;
+  pollId: string;
+}
+
+/** Whether the caller has a recorded rating vote on this poll — required before they can leave extended feedback. */
+export interface TelegramFeedbackEligibility {
+  eligible: boolean;
+}
+
 export interface SystemStat {
   systemId: string;
   systemName: string;
