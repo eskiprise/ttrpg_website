@@ -126,7 +126,7 @@ recovery is enabled on all prod tables.
 | `settings` | `pk` | Site-wide settings (e.g. an anonymize toggle for public stats). |
 | `telegram_rating_polls` | `pollId` (+ `creatorUserId-index` GSI) | One row per `/rate` poll created in the Telegram chat — question text, GM (`creatorUserId`). Written by `ttrpg_poll_bot`, read by this backend for the Mini App. |
 | `telegram_rating_votes` | `pollId` + `telegramUserId` (+ `telegramUserId-index` GSI) | One row per person's rating on a poll — the row's mere existence is the vote; a retraction deletes it. Same pipeline as above. |
-| `telegram_feedback` | `pollId` + `feedbackId` | Detailed, mostly-anonymous per-session feedback submitted via the Mini App's feedback form. Gated on `telegram_rating_votes`: only someone who voted on that poll's `/rate` may submit (`POST /telegram/feedback/eligibility` lets the Mini App check before rendering the form; `POST /telegram/feedback` re-checks server-side). Has a DynamoDB Stream → triggers `notifyFeedback` in `ttrpg_poll_bot`, DMing the GM. |
+| `telegram_feedback` | `pollId` + `feedbackId` | Detailed, mostly-anonymous per-session feedback submitted via the Mini App's feedback form. Gated on `telegram_rating_votes`: only someone who voted on that poll's `/rate` may submit, and only once per poll (`POST /telegram/feedback/eligibility` lets the Mini App check both before rendering the form; `POST /telegram/feedback` re-checks both server-side). Has a DynamoDB Stream → triggers `notifyFeedback` in `ttrpg_poll_bot`, DMing the GM. |
 
 The three `telegram_*` tables are the ones this website *reads* to power the Mini App
 (`TABLE_TELEGRAM_RATING_VOTES`/`_POLLS`/`_FEEDBACK` env vars) — they're *written* by

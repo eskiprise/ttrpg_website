@@ -190,9 +190,13 @@ export interface TelegramFeedbackEligibilityRequest {
   pollId: string;
 }
 
-/** Whether the caller has a recorded rating vote on this poll — required before they can leave extended feedback. */
+/**
+ * Whether the caller may leave extended feedback on this poll: they must have a recorded
+ * rating vote (`eligible`), and not have already submitted feedback for it (`alreadySubmitted`).
+ */
 export interface TelegramFeedbackEligibility {
   eligible: boolean;
+  alreadySubmitted: boolean;
 }
 
 export interface SystemStat {
