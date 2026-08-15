@@ -1,7 +1,9 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { ulid } from "ulid";
-import { PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import type {
+  TelegramFeedbackEligibility,
+  TelegramFeedbackEligibilityRequest,
   TelegramFeedbackSubmission,
   TelegramRecentRating,
   TelegramUserStats,
@@ -67,6 +69,36 @@ function isValidRating(value: unknown): value is number {
   return typeof value === "number" && value >= POLL_RATING_MIN && value <= POLL_RATING_MAX;
 }
 
+/** Has this user cast a rating vote on this poll? Required before they can leave extended feedback. */
+async function hasVotedOnPoll(pollId: string, telegramUserId: number): Promise<boolean> {
+  const result = await ddb.send(
+    new GetCommand({
+      TableName: Tables.telegramRatingVotes(),
+      Key: { pollId, telegramUserId },
+    })
+  );
+  return Boolean(result.Item);
+}
+
+/**
+ * Lets the Mini App check eligibility before rendering the feedback form, so someone who
+ * hasn't voted sees an explanatory message instead of a form they'll be rejected from on
+ * submit.
+ */
+export async function getTelegramFeedbackEligibility(event: APIGatewayProxyEventV2) {
+  const body = JSON.parse(event.body ?? "{}") as Partial<TelegramFeedbackEligibilityRequest>;
+  if (!body.initData) throw new HttpError(400, "initData is required");
+  if (!body.pollId) throw new HttpError(400, "pollId is required");
+
+  const user = await verifyTelegramInitData(body.initData);
+  if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
+
+  const eligibility: TelegramFeedbackEligibility = {
+    eligible: await hasVotedOnPoll(body.pollId, user.id),
+  };
+  return json(200, { eligibility });
+}
+
 /**
  * Detailed, mostly-anonymous feedback (four 1-10 ratings + optional free text) left via
  * the Mini App's feedback form — a separate, private channel from the quick /rate poll
@@ -89,6 +121,10 @@ export async function postTelegramFeedback(event: APIGatewayProxyEventV2) {
 
   const user = await verifyTelegramInitData(body.initData);
   if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
+
+  if (!(await hasVotedOnPoll(body.pollId, user.id))) {
+    throw new HttpError(403, "You must vote on this session before leaving extended feedback");
+  }
 
   await ddb.send(
     new PutCommand({

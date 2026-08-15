@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import type { TelegramFeedbackEligibility } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
 import { useTelegramApp } from "./TelegramAppContext";
 
@@ -37,6 +38,8 @@ function RatingRow({
   );
 }
 
+type EligibilityState = { status: "loading" } | { status: "error"; message: string } | { status: "checked"; eligible: boolean };
+
 export function TelegramFeedbackForm() {
   const { t } = useTranslation();
   const { pollId } = useParams<{ pollId: string }>();
@@ -51,8 +54,33 @@ export function TelegramFeedbackForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [eligibility, setEligibility] = useState<EligibilityState>({ status: "loading" });
 
   const allRated = Boolean(adventureRating && tableRating && gmRating && selfRating);
+
+  useEffect(() => {
+    if (!pollId) return;
+    let cancelled = false;
+    setEligibility({ status: "loading" });
+    apiFetch<{ eligibility: TelegramFeedbackEligibility }>("/telegram/feedback/eligibility", {
+      method: "POST",
+      body: { initData, pollId },
+    })
+      .then((res) => {
+        if (!cancelled) setEligibility({ status: "checked", eligible: res.eligibility.eligible });
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setEligibility({
+            status: "error",
+            message: err instanceof Error ? err.message : t("common.somethingWrong"),
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pollId, initData, t]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -82,6 +110,10 @@ export function TelegramFeedbackForm() {
   }
 
   if (!pollId) return <p className="text-accent">{t("common.somethingWrong")}</p>;
+
+  if (eligibility.status === "loading") return <p className="text-ink-muted">{t("common.loading")}</p>;
+  if (eligibility.status === "error") return <p className="text-accent">{eligibility.message}</p>;
+  if (!eligibility.eligible) return <p className="text-accent">{t("telegramApp.feedbackNotEligible")}</p>;
 
   if (submitted) {
     return (

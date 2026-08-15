@@ -36,7 +36,11 @@ import { updateAnonymizeToggle } from "./resources/settings.js";
 import { listUsers, updateUserRoles } from "./resources/adminUsers.js";
 import { listMembers } from "./resources/members.js";
 import { getClubStatistics } from "./resources/statistics.js";
-import { getTelegramStats, postTelegramFeedback } from "./resources/telegram.js";
+import {
+  getTelegramFeedbackEligibility,
+  getTelegramStats,
+  postTelegramFeedback,
+} from "./resources/telegram.js";
 import {
   getTelegramGamesAll,
   getTelegramGamesConducted,
@@ -95,6 +99,7 @@ const routes: Record<string, RouteHandler> = {
 
   "POST /telegram/stats": getTelegramStats,
   "POST /telegram/feedback": postTelegramFeedback,
+  "POST /telegram/feedback/eligibility": getTelegramFeedbackEligibility,
   "POST /telegram/games/played": getTelegramGamesPlayed,
   "POST /telegram/games/conducted": getTelegramGamesConducted,
   "POST /telegram/games/all": getTelegramGamesAll,
