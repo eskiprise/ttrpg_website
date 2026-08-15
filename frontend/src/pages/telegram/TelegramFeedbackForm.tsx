@@ -38,7 +38,10 @@ function RatingRow({
   );
 }
 
-type EligibilityState = { status: "loading" } | { status: "error"; message: string } | { status: "checked"; eligible: boolean };
+type EligibilityState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "checked"; eligible: boolean; alreadySubmitted: boolean };
 
 export function TelegramFeedbackForm() {
   const { t } = useTranslation();
@@ -67,7 +70,13 @@ export function TelegramFeedbackForm() {
       body: { initData, pollId },
     })
       .then((res) => {
-        if (!cancelled) setEligibility({ status: "checked", eligible: res.eligibility.eligible });
+        if (!cancelled) {
+          setEligibility({
+            status: "checked",
+            eligible: res.eligibility.eligible,
+            alreadySubmitted: res.eligibility.alreadySubmitted,
+          });
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -114,6 +123,9 @@ export function TelegramFeedbackForm() {
   if (eligibility.status === "loading") return <p className="text-ink-muted">{t("common.loading")}</p>;
   if (eligibility.status === "error") return <p className="text-accent">{eligibility.message}</p>;
   if (!eligibility.eligible) return <p className="text-accent">{t("telegramApp.feedbackNotEligible")}</p>;
+  if (eligibility.alreadySubmitted && !submitted) {
+    return <p className="text-accent">{t("telegramApp.feedbackAlreadySubmitted")}</p>;
+  }
 
   if (submitted) {
     return (

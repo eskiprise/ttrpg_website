@@ -81,9 +81,27 @@ async function hasVotedOnPoll(pollId: string, telegramUserId: number): Promise<b
 }
 
 /**
+ * Has this user already submitted feedback for this poll? The table's key is
+ * pollId + feedbackId (a ulid, not the submitter), so there's no direct GetItem — query
+ * the poll's feedback rows (never more than a handful per session) and check in memory,
+ * same pattern as fetchVotesForPoll in telegramGames.ts.
+ */
+async function hasSubmittedFeedback(pollId: string, telegramUserId: number): Promise<boolean> {
+  const result = await ddb.send(
+    new QueryCommand({
+      TableName: Tables.telegramFeedback(),
+      KeyConditionExpression: "pollId = :pollId",
+      ExpressionAttributeValues: { ":pollId": pollId },
+    })
+  );
+  const items = (result.Items ?? []) as { telegramUserId: number }[];
+  return items.some((item) => item.telegramUserId === telegramUserId);
+}
+
+/**
  * Lets the Mini App check eligibility before rendering the feedback form, so someone who
- * hasn't voted sees an explanatory message instead of a form they'll be rejected from on
- * submit.
+ * hasn't voted, or has already submitted feedback, sees an explanatory message instead
+ * of a form they'll be rejected from on submit.
  */
 export async function getTelegramFeedbackEligibility(event: APIGatewayProxyEventV2) {
   const body = JSON.parse(event.body ?? "{}") as Partial<TelegramFeedbackEligibilityRequest>;
@@ -93,9 +111,11 @@ export async function getTelegramFeedbackEligibility(event: APIGatewayProxyEvent
   const user = await verifyTelegramInitData(body.initData);
   if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
 
-  const eligibility: TelegramFeedbackEligibility = {
-    eligible: await hasVotedOnPoll(body.pollId, user.id),
-  };
+  const [eligible, alreadySubmitted] = await Promise.all([
+    hasVotedOnPoll(body.pollId, user.id),
+    hasSubmittedFeedback(body.pollId, user.id),
+  ]);
+  const eligibility: TelegramFeedbackEligibility = { eligible, alreadySubmitted };
   return json(200, { eligibility });
 }
 
@@ -124,6 +144,9 @@ export async function postTelegramFeedback(event: APIGatewayProxyEventV2) {
 
   if (!(await hasVotedOnPoll(body.pollId, user.id))) {
     throw new HttpError(403, "You must vote on this session before leaving extended feedback");
+  }
+  if (await hasSubmittedFeedback(body.pollId, user.id)) {
+    throw new HttpError(409, "You have already submitted feedback for this session");
   }
 
   await ddb.send(
