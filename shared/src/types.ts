@@ -137,6 +137,7 @@ export interface TelegramUserStats {
 export interface TelegramAchievementStatus {
   id: string;
   title: string;
+  description: string;
   emoji: string;
   category: AchievementCategory;
   tier: AchievementTier;

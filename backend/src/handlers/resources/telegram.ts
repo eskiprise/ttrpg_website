@@ -241,6 +241,7 @@ export async function getTelegramAchievements(event: APIGatewayProxyEventV2) {
   const achievements: TelegramAchievementStatus[] = ACHIEVEMENTS.map((achievement) => ({
     id: achievement.id,
     title: achievement.title,
+    description: achievement.description,
     emoji: achievement.emoji,
     category: achievement.category,
     tier: achievement.tier,

@@ -41,6 +41,7 @@ function AchievementCard({ achievement }: { achievement: TelegramAchievementStat
       <AchievementIcon tier={achievement.tier} emoji={achievement.emoji} unlocked={achievement.unlocked} />
       <div className="min-w-0 flex-1">
         <p className={`font-semibold ${achievement.unlocked ? "" : "text-ink-muted"}`}>{achievement.title}</p>
+        <p className="text-xs text-ink-muted">{achievement.description}</p>
         {achievement.unlocked ? (
           <p className="text-xs text-ink-muted">
             {t("telegramApp.achievementUnlockedAt", {
