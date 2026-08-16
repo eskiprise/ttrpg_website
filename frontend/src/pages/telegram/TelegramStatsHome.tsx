@@ -40,6 +40,35 @@ export function TelegramStatsHome() {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">{t("telegramApp.title", { name: stats.displayName })}</h1>
 
+      <Link
+        to="/telegram/achievements"
+        className="rounded-lg border border-border bg-surface p-4 hover:bg-surface-2"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{stats.levelEmoji}</span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">
+              {t("telegramApp.levelLabel", { level: stats.level })} · {stats.levelTitle}
+            </p>
+            {stats.xpForNextLevel !== null ? (
+              <>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className="h-full bg-accent"
+                    style={{ width: `${Math.min(100, (stats.currentXp / stats.xpForNextLevel) * 100)}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-ink-muted">
+                  {stats.currentXp} / {stats.xpForNextLevel} XP
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-xs text-ink-muted">{t("telegramApp.maxLevel")}</p>
+            )}
+          </div>
+        </div>
+      </Link>
+
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-sm text-ink-muted">{t("telegramApp.totalRatings")}</p>

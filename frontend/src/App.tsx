@@ -20,6 +20,7 @@ import { TelegramGamesList } from "./pages/telegram/TelegramGamesList";
 import { TelegramGameDetail } from "./pages/telegram/TelegramGameDetail";
 import { TelegramFeedbackForm } from "./pages/telegram/TelegramFeedbackForm";
 import { TelegramLeaderboard } from "./pages/telegram/TelegramLeaderboard";
+import { TelegramAchievements } from "./pages/telegram/TelegramAchievements";
 
 function App() {
   const location = useLocation();
@@ -52,6 +53,7 @@ function App() {
           <Route path="games/all" element={<TelegramGamesList kind="all" />} />
           <Route path="game/:pollId" element={<TelegramGameDetail />} />
           <Route path="leaderboard" element={<TelegramLeaderboard />} />
+          <Route path="achievements" element={<TelegramAchievements />} />
         </Route>
       </Routes>
     </>

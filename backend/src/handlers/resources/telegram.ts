@@ -2,18 +2,42 @@ import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { ulid } from "ulid";
 import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import type {
+  TelegramAchievementStatus,
   TelegramFeedbackEligibility,
   TelegramFeedbackEligibilityRequest,
   TelegramFeedbackSubmission,
   TelegramRecentRating,
   TelegramUserStats,
 } from "@ttrpg-club/shared";
-import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
+import { ACHIEVEMENTS, LEVEL_THRESHOLDS, LEVEL_TITLES, POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { formatTelegramDisplayName, verifyTelegramInitData } from "../../lib/telegramAuth.js";
 import { HttpError, json } from "../../lib/response.js";
 
 const RECENT_RATINGS_LIMIT = 10;
+
+interface PlayerLevelRow {
+  level?: number;
+  currentXp?: number;
+  totalXp?: number;
+  gamesPlayed?: number;
+  feedbackGiven?: number;
+}
+
+/** XP is only ever awarded by ttrpg_poll_bot — this is a read-only lookup with sensible defaults for a player who hasn't earned any XP yet. */
+async function getPlayerLevelRow(telegramUserId: number): Promise<Required<PlayerLevelRow>> {
+  const result = await ddb.send(
+    new GetCommand({ TableName: Tables.telegramPlayerLevel(), Key: { telegramUserId } })
+  );
+  const item = (result.Item ?? {}) as PlayerLevelRow;
+  return {
+    level: item.level ?? 1,
+    currentXp: item.currentXp ?? 0,
+    totalXp: item.totalXp ?? 0,
+    gamesPlayed: item.gamesPlayed ?? 0,
+    feedbackGiven: item.feedbackGiven ?? 0,
+  };
+}
 
 export async function getTelegramStats(event: APIGatewayProxyEventV2) {
   const body = JSON.parse(event.body ?? "{}") as { initData?: string };
@@ -54,12 +78,20 @@ export async function getTelegramStats(event: APIGatewayProxyEventV2) {
       answeredAt: v.answeredAt,
     }));
 
+  const playerLevel = await getPlayerLevelRow(user.id);
+  const levelTitle = LEVEL_TITLES[playerLevel.level - 1];
+
   const stats: TelegramUserStats = {
     telegramUserId: user.id,
     displayName: formatTelegramDisplayName(user),
     totalRatingsGiven,
     averageRatingGiven,
     recentRatings,
+    level: playerLevel.level,
+    levelTitle: levelTitle.title,
+    levelEmoji: levelTitle.emoji,
+    currentXp: playerLevel.currentXp,
+    xpForNextLevel: LEVEL_THRESHOLDS[playerLevel.level - 1] ?? null,
   };
 
   return json(200, { stats });
@@ -171,4 +203,52 @@ export async function postTelegramFeedback(event: APIGatewayProxyEventV2) {
   );
 
   return json(201, { ok: true });
+}
+
+/**
+ * Full achievement catalog merged with the caller's own unlock status. Achievements are
+ * only ever awarded by ttrpg_poll_bot (same reasoning as XP — see gamification.ts); this
+ * is a read-only merge of the shared ACHIEVEMENTS catalog with telegram_achievements
+ * (which ids are unlocked) and telegram_player_level (progress toward a locked one).
+ */
+export async function getTelegramAchievements(event: APIGatewayProxyEventV2) {
+  const body = JSON.parse(event.body ?? "{}") as { initData?: string };
+  if (!body.initData) throw new HttpError(400, "initData is required");
+
+  const user = await verifyTelegramInitData(body.initData);
+  if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
+
+  const [playerLevel, unlockedResult] = await Promise.all([
+    getPlayerLevelRow(user.id),
+    ddb.send(
+      new QueryCommand({
+        TableName: Tables.telegramAchievements(),
+        KeyConditionExpression: "telegramUserId = :userId",
+        ExpressionAttributeValues: { ":userId": user.id },
+      })
+    ),
+  ]);
+
+  const unlockedItems = (unlockedResult.Items ?? []) as { achievementId: string; unlockedAt: string }[];
+  const unlockedById = new Map(unlockedItems.map((item) => [item.achievementId, item.unlockedAt]));
+
+  const progressByCategory: Record<TelegramAchievementStatus["category"], number> = {
+    gamesPlayed: playerLevel.gamesPlayed,
+    feedbackGiven: playerLevel.feedbackGiven,
+    level: playerLevel.level,
+  };
+
+  const achievements: TelegramAchievementStatus[] = ACHIEVEMENTS.map((achievement) => ({
+    id: achievement.id,
+    title: achievement.title,
+    emoji: achievement.emoji,
+    category: achievement.category,
+    tier: achievement.tier,
+    threshold: achievement.threshold,
+    unlocked: unlockedById.has(achievement.id),
+    unlockedAt: unlockedById.get(achievement.id) ?? null,
+    progress: progressByCategory[achievement.category],
+  }));
+
+  return json(200, { achievements });
 }
