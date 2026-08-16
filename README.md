@@ -30,7 +30,7 @@ npm workspaces, three packages:
 | Workspace | What |
 |---|---|
 | `frontend/` | React + TypeScript + Vite + Tailwind CSS v4. Static SPA, deployed to S3 + CloudFront. |
-| `backend/` | Node.js/TypeScript. **One** Lambda function that routes 38 endpoints internally (see [API](#api)) — bundled with esbuild, not a per-route Lambda. |
+| `backend/` | Node.js/TypeScript. **One** Lambda function that routes 40 endpoints internally (see [API](#api)) — bundled with esbuild, not a per-route Lambda. |
 | `shared/` | Types shared between frontend and backend (`Role`, `TelegramLeaderboardEntry`, etc.) — imported as `@ttrpg-club/shared`. |
 
 ## Prerequisites
@@ -110,7 +110,7 @@ See `../aws_infra/README.md`'s "Website stack" section.
 
 ## Data Model (DynamoDB)
 
-Owned by `aws_infra/dynamodb/ttrpg_club/<env>` — one Terraform state, all 11 tables,
+Owned by `aws_infra/dynamodb/ttrpg_club/<env>` — one Terraform state, all 14 tables,
 dev and prod fully separate (`ttrpg_club_dev_*` / `ttrpg_club_prod_*` names). Point-in-time
 recovery is enabled on all prod tables.
 
@@ -127,12 +127,17 @@ recovery is enabled on all prod tables.
 | `telegram_rating_polls` | `pollId` (+ `creatorUserId-index` GSI) | One row per `/rate` poll created in the Telegram chat — question text, GM (`creatorUserId`). Written by `ttrpg_poll_bot`, read by this backend for the Mini App. |
 | `telegram_rating_votes` | `pollId` + `telegramUserId` (+ `telegramUserId-index` GSI) | One row per person's rating on a poll — the row's mere existence is the vote; a retraction deletes it. Same pipeline as above. |
 | `telegram_feedback` | `pollId` + `feedbackId` | Detailed, mostly-anonymous per-session feedback submitted via the Mini App's feedback form. Gated on `telegram_rating_votes`: only someone who voted on that poll's `/rate` may submit, and only once per poll (`POST /telegram/feedback/eligibility` lets the Mini App check both before rendering the form; `POST /telegram/feedback` re-checks both server-side). Has a DynamoDB Stream → triggers `notifyFeedback` in `ttrpg_poll_bot`, DMing the GM. |
+| `telegram_xp_ledger` | `telegramUserId` + `sourceId` | Append-only audit trail of every XP award (gamification) — written and read only by `ttrpg_poll_bot`; this backend never touches it. |
+| `telegram_player_level` | `telegramUserId` | One row per player: current level/XP plus lifetime `gamesPlayed`/`feedbackGiven` counters. Written by `ttrpg_poll_bot`, read by this backend for `/telegram/stats` and `/telegram/achievements`. |
+| `telegram_achievements` | `telegramUserId` + `achievementId` | One-time badges (no XP) — a row's existence is the unlock. Written by `ttrpg_poll_bot`, read by this backend for `/telegram/achievements`. |
 
-The three `telegram_*` tables are the ones this website *reads* to power the Mini App
-(`TABLE_TELEGRAM_RATING_VOTES`/`_POLLS`/`_FEEDBACK` env vars) — they're *written* by
-`ttrpg_poll_bot`, not by this backend (except `telegram_feedback`, which the Mini App's
-feedback form itself writes to via `POST /telegram/feedback`). See
-`../ttrpg_poll_bot/README_LAMBDA.md` for exactly how/when each gets written.
+The `telegram_*` tables are the ones this website *reads* to power the Mini App
+(`TABLE_TELEGRAM_RATING_VOTES`/`_POLLS`/`_FEEDBACK`/`_PLAYER_LEVEL`/`_ACHIEVEMENTS` env
+vars) — they're *written* by `ttrpg_poll_bot`, not by this backend (except
+`telegram_feedback`, which the Mini App's feedback form itself writes to via
+`POST /telegram/feedback`; XP/levels/achievements are deliberately awarded only by the
+bot, never this backend — see `../ttrpg_poll_bot/README_LAMBDA.md`'s Gamification
+section for why). See that same doc for exactly how/when each table gets written.
 
 ## API
 
@@ -155,7 +160,7 @@ Grouped by area:
 **Telegram Mini App** (`initData`-authenticated, no Cognito token):
 `POST /telegram/stats`, `POST /telegram/feedback`, `POST /telegram/feedback/eligibility`,
 `POST /telegram/games/played|conducted|all`, `POST /telegram/games/:pollId/voters`,
-`POST /telegram/leaderboard`.
+`POST /telegram/leaderboard`, `POST /telegram/achievements`.
 
 ## Deployment
 

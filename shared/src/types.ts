@@ -1,3 +1,5 @@
+import type { AchievementCategory, AchievementTier } from "./gamification";
+
 export type Role = "player" | "dm" | "admin";
 
 export interface User {
@@ -123,6 +125,26 @@ export interface TelegramUserStats {
   totalRatingsGiven: number;
   averageRatingGiven: number | null;
   recentRatings: TelegramRecentRating[];
+  level: number;
+  levelTitle: string;
+  levelEmoji: string;
+  currentXp: number;
+  /** XP needed to reach the next level, or null if already at the max level. */
+  xpForNextLevel: number | null;
+}
+
+/** One achievement, merged with the caller's own unlock status — see gamification.ts's ACHIEVEMENTS catalog. */
+export interface TelegramAchievementStatus {
+  id: string;
+  title: string;
+  emoji: string;
+  category: AchievementCategory;
+  tier: AchievementTier;
+  threshold: number;
+  unlocked: boolean;
+  unlockedAt: string | null;
+  /** The caller's current count toward `threshold` for this achievement's category. */
+  progress: number;
 }
 
 /** One row in the "My Games Played" / "My Games Conducted" / "All Games" lists. */

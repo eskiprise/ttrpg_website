@@ -37,6 +37,7 @@ import { listUsers, updateUserRoles } from "./resources/adminUsers.js";
 import { listMembers } from "./resources/members.js";
 import { getClubStatistics } from "./resources/statistics.js";
 import {
+  getTelegramAchievements,
   getTelegramFeedbackEligibility,
   getTelegramStats,
   postTelegramFeedback,
@@ -105,6 +106,7 @@ const routes: Record<string, RouteHandler> = {
   "POST /telegram/games/all": getTelegramGamesAll,
   "POST /telegram/games/{pollId}/voters": getTelegramGameVoters,
   "POST /telegram/leaderboard": getTelegramLeaderboard,
+  "POST /telegram/achievements": getTelegramAchievements,
 };
 
 export const handler: APIGatewayProxyHandlerV2 = async (

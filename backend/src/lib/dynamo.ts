@@ -24,4 +24,7 @@ export const Tables = {
   telegramRatingVotes: () => requireEnv("TABLE_TELEGRAM_RATING_VOTES"),
   telegramRatingPolls: () => requireEnv("TABLE_TELEGRAM_RATING_POLLS"),
   telegramFeedback: () => requireEnv("TABLE_TELEGRAM_FEEDBACK"),
+  telegramXpLedger: () => requireEnv("TABLE_TELEGRAM_XP_LEDGER"),
+  telegramPlayerLevel: () => requireEnv("TABLE_TELEGRAM_PLAYER_LEVEL"),
+  telegramAchievements: () => requireEnv("TABLE_TELEGRAM_ACHIEVEMENTS"),
 };
