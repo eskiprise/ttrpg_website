@@ -68,20 +68,22 @@ export interface AchievementDefinition {
   category: AchievementCategory;
   threshold: number;
   title: string;
+  /** Short explanation of what this counts and how to unlock it — shown alongside the title, since a title alone (e.g. "Вершина шляху") doesn't say what it's for. */
+  description: string;
   emoji: string;
   /** Icon color tier — see Icons in the achievements section of the design plan. */
   tier: AchievementTier;
 }
 
-/** One-time badges — no XP. Titles are placeholders, same as LEVEL_TITLES. */
+/** One-time badges — no XP. Titles/descriptions are placeholders, same as LEVEL_TITLES. */
 export const ACHIEVEMENTS: AchievementDefinition[] = [
-  { id: "games_played_1", category: "gamesPlayed", threshold: 1, title: "Початок покладено", emoji: "🌱", tier: "bronze" },
-  { id: "games_played_10", category: "gamesPlayed", threshold: 10, title: "Поціновувач ігор", emoji: "🎲", tier: "silver" },
-  { id: "games_played_50", category: "gamesPlayed", threshold: 50, title: "Хранитель пригод", emoji: "🗺️", tier: "gold" },
-  { id: "games_played_100", category: "gamesPlayed", threshold: 100, title: "Легенда за столом", emoji: "👑", tier: "platinum" },
-  { id: "feedback_given_1", category: "feedbackGiven", threshold: 1, title: "Перший відгук", emoji: "✍️", tier: "bronze" },
-  { id: "feedback_given_10", category: "feedbackGiven", threshold: 10, title: "Голос спільноти", emoji: "📣", tier: "silver" },
-  { id: "feedback_given_20", category: "feedbackGiven", threshold: 20, title: "Уважний слухач", emoji: "👂", tier: "gold" },
-  { id: "feedback_given_50", category: "feedbackGiven", threshold: 50, title: "Майстер фідбеку", emoji: "🖋️", tier: "platinum" },
-  { id: "max_level", category: "level", threshold: MAX_PLAYER_LEVEL, title: "Вершина шляху", emoji: "🏔️", tier: "platinum" },
+  { id: "games_played_1", category: "gamesPlayed", threshold: 1, title: "Початок покладено", description: "Зіграй свою першу гру", emoji: "🌱", tier: "bronze" },
+  { id: "games_played_10", category: "gamesPlayed", threshold: 10, title: "Поціновувач ігор", description: "Зіграй 10 ігор", emoji: "🎲", tier: "silver" },
+  { id: "games_played_50", category: "gamesPlayed", threshold: 50, title: "Хранитель пригод", description: "Зіграй 50 ігор", emoji: "🗺️", tier: "gold" },
+  { id: "games_played_100", category: "gamesPlayed", threshold: 100, title: "Легенда за столом", description: "Зіграй 100 ігор", emoji: "👑", tier: "platinum" },
+  { id: "feedback_given_1", category: "feedbackGiven", threshold: 1, title: "Перший відгук", description: "Залиш свій перший розгорнутий фідбек", emoji: "✍️", tier: "bronze" },
+  { id: "feedback_given_10", category: "feedbackGiven", threshold: 10, title: "Голос спільноти", description: "Залиш 10 розгорнутих фідбеків", emoji: "📣", tier: "silver" },
+  { id: "feedback_given_20", category: "feedbackGiven", threshold: 20, title: "Уважний слухач", description: "Залиш 20 розгорнутих фідбеків", emoji: "👂", tier: "gold" },
+  { id: "feedback_given_50", category: "feedbackGiven", threshold: 50, title: "Майстер фідбеку", description: "Залиш 50 розгорнутих фідбеків", emoji: "🖋️", tier: "platinum" },
+  { id: "max_level", category: "level", threshold: MAX_PLAYER_LEVEL, title: "Вершина шляху", description: "Досягни 10 рівня", emoji: "🏔️", tier: "platinum" },
 ];
