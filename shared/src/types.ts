@@ -172,6 +172,24 @@ export interface TelegramGameDetail extends TelegramGameSummary {
   voters: TelegramGameVoter[];
 }
 
+/** Same shape as TelegramGameVoter, but for the public (unauthenticated) game log — no reason to expose a raw Telegram user ID there. */
+export interface PublicGameVoter {
+  displayName: string;
+  rating: number;
+  answeredAt: string;
+}
+
+/** The public site's Game Log detail view — reuses TelegramGameSummary (myRating always null: an anonymous viewer has no rating of their own). */
+export interface PublicGameDetail extends TelegramGameSummary {
+  voters: PublicGameVoter[];
+}
+
+/** One month's session count, for the Game Log page's bar chart. `month` is "YYYY-MM". */
+export interface GameLogMonthlyCount {
+  month: string;
+  count: number;
+}
+
 /** One row in a leaderboard list. */
 export interface TelegramLeaderboardEntry {
   telegramUserId: number;

@@ -1,10 +1,30 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 export const ddb = DynamoDBDocumentClient.from(client, {
   marshallOptions: { removeUndefinedValues: true },
 });
+
+/**
+ * A DynamoDB Scan returns at most 1MB per call, so a single ScanCommand silently
+ * truncates once a table outgrows that — which would quietly under-count whatever's
+ * reading it rather than fail. Page through until LastEvaluatedKey is exhausted.
+ */
+export async function scanAll<T>(tableName: string): Promise<T[]> {
+  const items: T[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+
+  do {
+    const result = await ddb.send(
+      new ScanCommand({ TableName: tableName, ExclusiveStartKey: exclusiveStartKey })
+    );
+    items.push(...((result.Items ?? []) as T[]));
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+
+  return items;
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name];
