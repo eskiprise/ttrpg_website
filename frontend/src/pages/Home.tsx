@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { Game, GameSystem, PublicGameMaster } from "@ttrpg-club/shared";
+import type { Game, GameSystem, PublicGameMaster, TelegramGameSummary } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
+import { formatGameTitle } from "../lib/gameTitle";
+
+const RECENT_SESSIONS_COUNT = 3;
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -10,9 +14,11 @@ function initials(firstName: string, lastName: string) {
 
 export function Home() {
   const { t, i18n } = useTranslation();
+  const { idToken } = useAuth();
   const [systems, setSystems] = useState<GameSystem[]>([]);
   const [gms, setGms] = useState<PublicGameMaster[]>([]);
   const [games, setGames] = useState<Game[]>([]);
+  const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);
 
   useEffect(() => {
     apiFetch<{ systems: GameSystem[] }>("/game-systems").then((d) => setSystems(d.systems));
@@ -20,8 +26,16 @@ export function Home() {
     apiFetch<{ games: Game[] }>("/games").then((d) => setGames(d.games));
   }, []);
 
+  // Real session history lives in the Telegram-sourced tables (see /game-log), not the
+  // site's own (empty, unused) games table above — same data source, just the 3 most
+  // recent, reusing the endpoint built for the Game Log page.
+  useEffect(() => {
+    apiFetch<{ games: TelegramGameSummary[] }>(`/game-log?limit=${RECENT_SESSIONS_COUNT}&offset=0`, {
+      token: idToken,
+    }).then((d) => setRecentSessions(d.games));
+  }, [idToken]);
+
   const latestGame = games[0];
-  const recentGames = games.slice(0, 4);
 
   return (
     <div>
@@ -157,25 +171,27 @@ export function Home() {
               {t("home.seeAllGameLog")} →
             </Link>
           </div>
-          {recentGames.length === 0 ? (
+          {recentSessions.length === 0 ? (
             <p className="text-ink-muted">{t("home.noSessionsYet")}</p>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-border bg-surface">
-              {recentGames.map((game) => (
+            <div className="grid gap-6 sm:grid-cols-3">
+              {recentSessions.map((game) => (
                 <Link
-                  key={game.gameId}
-                  to={`/game-log/${game.gameId}`}
-                  className="flex flex-col gap-1 border-b border-border px-6 py-4 last:border-b-0 hover:bg-surface-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                  key={game.pollId}
+                  to={`/game-log/${game.pollId}`}
+                  className="block rounded-lg border border-border bg-surface p-6 hover:bg-surface-2"
                 >
-                  <div>
-                    <strong className="text-ink">{game.title}</strong>
-                    <p className="text-sm text-ink-muted">
-                      {game.date} · {game.systemName} · {t("gameLog.dm")} {game.dmDisplayName}
-                    </p>
-                  </div>
-                  <span className="font-mono text-xs tabular-nums text-ink-muted">
-                    {new Date(game.date).toLocaleDateString(i18n.language, { month: "short", day: "numeric" })}
-                  </span>
+                  <p className="text-xs font-bold tracking-wide text-ink-muted uppercase">
+                    {new Date(game.createdAt).toLocaleDateString(i18n.language, { month: "short", day: "numeric" })}
+                  </p>
+                  <h3 className="mt-2 font-semibold">{formatGameTitle(game.questionText)}</h3>
+                  <p className="mt-2 text-sm text-ink-muted">
+                    {t("gameLog.dm")} {game.gmDisplayName}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-muted">
+                    {t("gameLog.playerCount", { count: game.playerCount })}
+                    {game.averageScore !== null && ` · ${t("gameLog.average")} ${game.averageScore.toFixed(1)} / 10`}
+                  </p>
                 </Link>
               ))}
             </div>
