@@ -31,10 +31,17 @@ export function GamesPerMonthChart({ data }: { data: GameLogMonthlyCount[] }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-6">
       <h2 className="text-sm font-semibold text-ink-muted">{t("gameLog.chartTitle")}</h2>
+      {/*
+        No preserveAspectRatio="none" here: the container is much wider than the
+        viewBox's own 2.5:1 ratio, and "none" stretches X and Y by different factors to
+        fill it — squashing every bar and glyph vertically. Instead the container's CSS
+        aspect ratio is locked to match the viewBox exactly (aspect-[5/2] = 300:120), so
+        the default uniform scaling ("xMidYMid meet") fills the box with zero distortion
+        and no letterboxing.
+      */}
       <svg
         viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-        preserveAspectRatio="none"
-        className="mt-4 h-32 w-full"
+        className="mt-4 aspect-[5/2] w-full"
         role="img"
         aria-label={t("gameLog.chartTitle")}
       >
