@@ -184,6 +184,12 @@ export interface PublicGameDetail extends TelegramGameSummary {
   voters: PublicGameVoter[];
 }
 
+/** One month's session count, for the Game Log page's bar chart. `month` is "YYYY-MM". */
+export interface GameLogMonthlyCount {
+  month: string;
+  count: number;
+}
+
 /** One row in a leaderboard list. */
 export interface TelegramLeaderboardEntry {
   telegramUserId: number;

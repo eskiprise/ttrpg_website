@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { TelegramGameSummary } from "@ttrpg-club/shared";
+import type { GameLogMonthlyCount, TelegramGameSummary } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { formatGameTitle } from "../lib/gameTitle";
+import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
 
 const PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 
@@ -11,6 +13,7 @@ export function GameLog() {
   const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
   const [games, setGames] = useState<TelegramGameSummary[]>([]);
+  const [gamesPerMonth, setGamesPerMonth] = useState<GameLogMonthlyCount[]>([]);
   const [limit, setLimit] = useState(PAGE_SIZE_OPTIONS[0]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,13 +22,14 @@ export function GameLog() {
   const load = useCallback(
     (offset: number, pageSize: number, replace: boolean) => {
       setLoading(true);
-      apiFetch<{ games: TelegramGameSummary[]; hasMore: boolean }>(
+      apiFetch<{ games: TelegramGameSummary[]; hasMore: boolean; gamesPerMonth: GameLogMonthlyCount[] }>(
         `/game-log?limit=${pageSize}&offset=${offset}`,
         { token: idToken }
       )
         .then((data) => {
           setGames((prev) => (replace ? data.games : [...prev, ...data.games]));
           setHasMore(data.hasMore);
+          setGamesPerMonth(data.gamesPerMonth);
           setError(null);
         })
         .catch((err) => setError(err instanceof Error ? err.message : t("common.somethingWrong")))
@@ -61,6 +65,13 @@ export function GameLog() {
       </div>
 
       {error && <p className="mt-4 text-accent">{error}</p>}
+
+      {gamesPerMonth.length > 0 && (
+        <div className="mt-8">
+          <GamesPerMonthChart data={gamesPerMonth} />
+        </div>
+      )}
+
       {!loading && games.length === 0 && !error && <p className="mt-4 text-ink-muted">{t("gameLog.none")}</p>}
 
       <div className="mt-8 overflow-hidden rounded-lg border border-border bg-surface">
@@ -70,7 +81,7 @@ export function GameLog() {
             to={`/game-log/${game.pollId}`}
             className="block border-b border-border px-6 py-4 last:border-b-0 hover:bg-surface-2"
           >
-            <h2 className="text-lg font-bold">{game.questionText}</h2>
+            <h2 className="text-lg font-bold">{formatGameTitle(game.questionText)}</h2>
             <p className="mt-1 text-sm text-ink-muted">
               {new Date(game.createdAt).toLocaleDateString(i18n.language)} · {t("gameLog.dm")} {game.gmDisplayName}
             </p>

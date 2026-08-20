@@ -56,7 +56,8 @@
     "pageSizeLabel": "Show:",
     "loadMore": "Load more",
     "playerCount": "Players: {{count}}",
-    "average": "Average score:"
+    "average": "Average score:",
+    "chartTitle": "Games per month"
   },
   "gameDetail": {
     "dm": "Dungeon Master:",

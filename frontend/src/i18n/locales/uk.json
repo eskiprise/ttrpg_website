@@ -58,7 +58,8 @@
     "pageSizeLabel": "Показувати по:",
     "loadMore": "Завантажити ще",
     "playerCount": "Гравців: {{count}}",
-    "average": "Середня оцінка:"
+    "average": "Середня оцінка:",
+    "chartTitle": "Ігор на місяць"
   },
   "gameDetail": {
     "dm": "Майстер гри:",

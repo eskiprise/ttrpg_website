@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import type { PublicGameDetail, PublicGameVoter, TelegramGameSummary } from "@ttrpg-club/shared";
+import type { GameLogMonthlyCount, PublicGameDetail, PublicGameVoter, TelegramGameSummary } from "@ttrpg-club/shared";
 import { ddb, Tables, scanAll } from "../../lib/dynamo.js";
 import { shouldAnonymizeFor } from "../../lib/settings.js";
 import { nicknameFor } from "../../lib/nicknames.js";
@@ -35,6 +35,18 @@ function anonymizeGameSummary(summary: TelegramGameSummary, poll: PollRecord): T
   return { ...summary, gmDisplayName: nicknameFor(String(poll.creatorUserId)) };
 }
 
+/** Tallies every poll (not just the current page) by "YYYY-MM" — reuses the same Scan listGameLog already does for sorting/pagination, so this is free (no extra DB read). Sorted oldest-first for a natural left-to-right chart. */
+function gamesPerMonth(polls: PollRecord[]): GameLogMonthlyCount[] {
+  const counts = new Map<string, number>();
+  for (const poll of polls) {
+    const month = poll.createdAt.slice(0, 7);
+    counts.set(month, (counts.get(month) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+}
+
 export async function listGameLog(event: APIGatewayProxyEventV2) {
   const limit = parseLimit(event.queryStringParameters?.limit);
   const offset = parseOffset(event.queryStringParameters?.offset);
@@ -57,7 +69,11 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
     })
   );
 
-  return json(200, { games, hasMore: offset + limit < sorted.length });
+  return json(200, {
+    games,
+    hasMore: offset + limit < sorted.length,
+    gamesPerMonth: gamesPerMonth(sorted),
+  });
 }
 
 export async function getGameLogDetail(event: APIGatewayProxyEventV2) {

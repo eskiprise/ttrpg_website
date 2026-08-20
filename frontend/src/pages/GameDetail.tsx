@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { PublicGameDetail } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { formatGameTitle } from "../lib/gameTitle";
 
 export function GameDetail() {
   const { t, i18n } = useTranslation();
@@ -34,7 +35,7 @@ export function GameDetail() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-bold">{game.questionText}</h1>
+      <h1 className="text-3xl font-bold">{formatGameTitle(game.questionText)}</h1>
       <p className="mt-1 text-ink-muted">{new Date(game.createdAt).toLocaleDateString(i18n.language)}</p>
 
       <div className="mt-6 rounded-lg border border-border bg-surface p-6">
