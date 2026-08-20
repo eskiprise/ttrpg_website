@@ -38,7 +38,7 @@ function App() {
         <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
         <Route path="/game-systems" element={<GameSystems />} />
         <Route path="/game-log" element={<GameLog />} />
-        <Route path="/game-log/:gameId" element={<GameDetail />} />
+        <Route path="/game-log/:pollId" element={<GameDetail />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/statistics" element={<RequireAuth><Statistics /></RequireAuth>} />

@@ -5,7 +5,7 @@ import { ddb, Tables } from "../../lib/dynamo.js";
 import { formatTelegramDisplayName, verifyTelegramInitData } from "../../lib/telegramAuth.js";
 import { HttpError, json } from "../../lib/response.js";
 
-interface PollRecord {
+export interface PollRecord {
   pollId: string;
   questionText: string;
   createdAt: string;
@@ -15,7 +15,7 @@ interface PollRecord {
   creatorUsername?: string;
 }
 
-interface VoteRecord {
+export interface VoteRecord {
   pollId: string;
   telegramUserId: number;
   rating: number;
@@ -25,7 +25,7 @@ interface VoteRecord {
   answeredAt: string;
 }
 
-async function fetchVotesForPoll(pollId: string): Promise<VoteRecord[]> {
+export async function fetchVotesForPoll(pollId: string): Promise<VoteRecord[]> {
   const result = await ddb.send(
     new QueryCommand({
       TableName: Tables.telegramRatingVotes(),
@@ -36,10 +36,11 @@ async function fetchVotesForPoll(pollId: string): Promise<VoteRecord[]> {
   return (result.Items ?? []) as VoteRecord[];
 }
 
-function summarize(poll: PollRecord, votes: VoteRecord[], callerUserId: number): TelegramGameSummary {
+/** `callerUserId` is null for a public (non-Telegram) caller, who has no "my rating" of their own. */
+export function summarize(poll: PollRecord, votes: VoteRecord[], callerUserId: number | null): TelegramGameSummary {
   const ratings = votes.map((v) => v.rating);
   const averageScore = ratings.length ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null;
-  const myVote = votes.find((v) => v.telegramUserId === callerUserId);
+  const myVote = callerUserId !== null ? votes.find((v) => v.telegramUserId === callerUserId) : undefined;
 
   // Polls created before this feature shipped have no creator fields recorded.
   const gmDisplayName = poll.creatorUserId

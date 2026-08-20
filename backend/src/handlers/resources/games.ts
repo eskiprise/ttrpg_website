@@ -10,8 +10,8 @@ import {
 import type { Game, GameParticipantRef } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { HttpError, json } from "../../lib/response.js";
-import { optionalAuth, requireAuth, type AuthContext } from "../../lib/auth.js";
-import { getSettings } from "../../lib/settings.js";
+import { requireAuth, type AuthContext } from "../../lib/auth.js";
+import { shouldAnonymizeFor } from "../../lib/settings.js";
 import { nicknameFor } from "../../lib/nicknames.js";
 import { getUser, displayName } from "../../lib/users.js";
 
@@ -42,14 +42,6 @@ async function requireGameEditAccess(
     return auth;
   }
   throw new HttpError(403, "Only an admin, or the game's own DM, can do this");
-}
-
-async function shouldAnonymizeFor(
-  event: APIGatewayProxyEventV2
-): Promise<boolean> {
-  const settings = await getSettings();
-  if (!settings.anonymizeLoggedOutView) return false;
-  return (await optionalAuth(event)) === null;
 }
 
 export async function listGames(

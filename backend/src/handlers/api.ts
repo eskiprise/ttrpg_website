@@ -19,6 +19,7 @@ import {
   updateGame,
   deleteGame,
 } from "./resources/games.js";
+import { listGameLog, getGameLogDetail } from "./resources/gameLog.js";
 import { castVote, getPollResults, getPollVoters } from "./resources/poll.js";
 import { listComments, postComment, deleteComment } from "./resources/comments.js";
 import {
@@ -69,6 +70,8 @@ const routes: Record<string, RouteHandler> = {
 
   "GET /games": listGames,
   "GET /games/{gameId}": getGameDetail,
+  "GET /game-log": listGameLog,
+  "GET /game-log/{pollId}": getGameLogDetail,
   "POST /admin/games": createGame,
   "PATCH /admin/games/{gameId}": updateGame,
   "DELETE /admin/games/{gameId}": deleteGame,

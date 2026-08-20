@@ -52,12 +52,17 @@
   "gameLog": {
     "title": "Game Log",
     "none": "No games logged yet.",
-    "dm": "DM:"
+    "dm": "DM:",
+    "pageSizeLabel": "Show:",
+    "loadMore": "Load more",
+    "playerCount": "Players: {{count}}",
+    "average": "Average score:"
   },
   "gameDetail": {
     "dm": "Dungeon Master:",
-    "players": "Players:",
-    "noneRecorded": "None recorded"
+    "average": "Average score:",
+    "voters": "Who voted",
+    "noVotes": "No one has voted yet."
   },
   "poll": {
     "title": "Rate this session",

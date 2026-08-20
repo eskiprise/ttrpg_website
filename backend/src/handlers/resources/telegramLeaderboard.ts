@@ -1,7 +1,6 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import type { TelegramLeaderboardEntry, TelegramLeaderboards } from "@ttrpg-club/shared";
-import { ddb, Tables } from "../../lib/dynamo.js";
+import { Tables, scanAll } from "../../lib/dynamo.js";
 import { formatTelegramDisplayName, verifyTelegramInitData } from "../../lib/telegramAuth.js";
 import { HttpError, json } from "../../lib/response.js";
 
@@ -34,26 +33,6 @@ function withinRange(createdAt: string, from?: string | null, to?: string | null
   if (from && date < from) return false;
   if (to && date > to) return false;
   return true;
-}
-
-/**
- * A DynamoDB Scan returns at most 1MB per call, so a single ScanCommand silently
- * truncates once these tables outgrow that — which would quietly under-count the
- * leaderboard rather than fail. Page through until LastEvaluatedKey is exhausted.
- */
-async function scanAll<T>(tableName: string): Promise<T[]> {
-  const items: T[] = [];
-  let exclusiveStartKey: Record<string, unknown> | undefined;
-
-  do {
-    const result = await ddb.send(
-      new ScanCommand({ TableName: tableName, ExclusiveStartKey: exclusiveStartKey })
-    );
-    items.push(...((result.Items ?? []) as T[]));
-    exclusiveStartKey = result.LastEvaluatedKey;
-  } while (exclusiveStartKey);
-
-  return items;
 }
 
 interface Tally {
