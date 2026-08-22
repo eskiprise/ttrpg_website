@@ -112,16 +112,35 @@ const routes: Record<string, RouteHandler> = {
   "POST /telegram/achievements": getTelegramAchievements,
 };
 
+// Comma-separated (Lambda env vars are flat strings, not lists) — set by Terraform
+// from cors_allowed_origins. Dev has two real origins (the deployed dev domain and
+// localhost:5173 for local development); prod has one.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+/** Reflects the caller's own Origin back only if it's on the allowlist — the correct pattern for supporting more than one allowed origin, since the header must exactly match the requester's Origin. */
+function resolveAllowedOrigin(requestOrigin: string | undefined): string {
+  if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) return requestOrigin;
+  return ALLOWED_ORIGINS[0] ?? "*";
+}
+
 export const handler: APIGatewayProxyHandlerV2 = async (
   event
 ) => {
+  let result: APIGatewayProxyStructuredResultV2;
   try {
     const route = routes[event.routeKey];
-    if (!route) {
-      return json(404, { error: `No route for ${event.routeKey}` });
-    }
-    return await route(event);
+    result = route ? await route(event) : json(404, { error: `No route for ${event.routeKey}` });
   } catch (err) {
-    return errorResponse(err);
+    result = errorResponse(err);
   }
+  return {
+    ...result,
+    headers: {
+      ...result.headers,
+      "Access-Control-Allow-Origin": resolveAllowedOrigin(event.headers?.origin),
+    },
+  };
 };

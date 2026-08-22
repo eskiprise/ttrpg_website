@@ -166,8 +166,12 @@ Grouped by area:
 
 Two fully independent, symmetric stacks — **dev** and **prod** — nothing is shared
 (separate DynamoDB tables, Cognito pools, S3 buckets, CloudFront distributions, API
-Gateways). No custom domain yet; both use bare CloudFront/execute-api URLs. Full apply
-order and one-time infra setup: `../aws_infra/README.md`'s "Website stack" section.
+Gateways) except the domain itself: prod is `dnaclub.com.ua` (`www.` redirects to it),
+dev is `dev.dnaclub.com.ua`, both TLS via free auto-renewing ACM certificates — see
+`../aws_infra/dns/dnaclub_com_ua`. The API's `cors_allowed_origins` is locked to each
+environment's real domain (dev also allows `http://localhost:5173` for local frontend
+development). Full apply order and one-time infra setup: `../aws_infra/README.md`'s
+"Website stack" section.
 
 **Branch → environment promotion**, via `.github/workflows/deploy-backend.yml` /
 `deploy-frontend.yml`:
