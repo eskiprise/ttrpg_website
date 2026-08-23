@@ -30,7 +30,10 @@ export function NavBar() {
   );
 
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-surface">
+    // will-change-transform forces this sticky header onto its own compositing layer —
+    // works around an iOS Safari bug where the toolbar's collapse/expand animation
+    // otherwise leaves a stale rendered frame briefly showing above the header.
+    <header className="sticky top-0 z-10 border-b border-border bg-surface will-change-transform">
       <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-8 px-6">
         <NavLink to="/" className="flex min-w-0 items-center gap-2 font-display text-base font-bold sm:text-xl">
           <span className="relative h-6 w-6 flex-shrink-0 rounded border-[1.5px] border-ink">
