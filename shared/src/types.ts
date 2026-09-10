@@ -2,11 +2,15 @@ import type { AchievementCategory, AchievementTier } from "./gamification";
 
 export type Role = "player" | "dm" | "admin";
 
+export const POLL_RATING_MIN = 1;
+export const POLL_RATING_MAX = 10;
+
 export interface User {
-  userId: string; // Cognito sub
+  userId: string; // Telegram user id, as a string
   firstName: string;
   lastName: string;
-  email: string;
+  /** Not collected via Telegram login — only ever set for a record created via the old signup flow. */
+  email?: string;
   telegramOrViberContact: string;
   roles: Role[];
   bio?: string;
@@ -46,60 +50,14 @@ export interface GameSystem {
   displayIndex: number;
 }
 
-export interface GameParticipantRef {
-  userId: string;
-  displayName: string;
-}
-
-export interface Game {
-  gameId: string;
-  title: string;
-  date: string; // ISO date
-  systemId: string;
-  systemName: string;
-  dmUserId: string;
-  dmDisplayName: string;
-  participants: GameParticipantRef[];
-}
-
-/** Same shape as Game, but names may be replaced with generated nicknames for logged-out viewers. */
-export type PublicGame = Game;
-
+/** A comment on a Telegram-sourced game session (see TelegramGameSummary). */
 export interface GameComment {
   commentId: string;
-  gameId: string;
-  userId: string;
+  pollId: string;
+  userId: string; // Telegram user id, as a string
   displayName: string;
   text: string;
   createdAt: string;
-}
-
-export const POLL_RATING_MIN = 1;
-export const POLL_RATING_MAX = 10;
-
-export interface PollVoteRequest {
-  rating: number; // 1-10
-}
-
-export interface PollResults {
-  gameId: string;
-  totalVotes: number;
-  /** counts[i] = number of votes for rating i+1 (index 0 -> rating 1) */
-  counts: number[];
-  yourRating: number;
-}
-
-export interface PollVoterEntry {
-  userId: string;
-  displayName: string;
-  rating: number;
-  votedAt: string;
-}
-
-export interface PersonalStats {
-  userId: string;
-  gamesDmd: Game[];
-  gamesPlayed: Game[];
 }
 
 export interface SiteSettings {
@@ -240,22 +198,15 @@ export interface TelegramFeedbackEligibility {
   alreadySubmitted: boolean;
 }
 
-export interface SystemStat {
-  systemId: string;
-  systemName: string;
-  gamesPlayed: number;
-  averageScore: number | null;
-}
-
 export interface LeaderboardEntry {
-  userId: string;
+  telegramUserId: number;
   displayName: string;
   count: number;
 }
 
 export interface GameSpotlight {
-  gameId: string;
-  title: string;
+  pollId: string;
+  questionText: string;
   averageScore: number;
 }
 
@@ -265,6 +216,10 @@ export interface RatingDistribution {
   totalVotes: number;
 }
 
+/**
+ * No system breakdown: Telegram polls carry a free-text questionText, not a
+ * game-system id, so there's no source to build one from.
+ */
 export interface ClubStatistics {
   from: string | null;
   to: string | null;
@@ -272,7 +227,6 @@ export interface ClubStatistics {
   /** Mean of each game's own average rating (games with no votes are excluded, not counted as 0) */
   averageScore: number | null;
   ratingDistribution: RatingDistribution;
-  systemStats: SystemStat[];
   topGameMasters: LeaderboardEntry[];
   topPlayers: LeaderboardEntry[];
   highestRatedGame: GameSpotlight | null;

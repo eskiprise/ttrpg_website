@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { Game, GameSystem, PublicGameMaster, TelegramGameSummary } from "@ttrpg-club/shared";
+import type {
+  GameLogMonthlyCount,
+  GameSystem,
+  PublicGameMaster,
+  TelegramGameSummary,
+} from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { formatGameTitle } from "../lib/gameTitle";
@@ -17,25 +22,30 @@ export function Home() {
   const { idToken } = useAuth();
   const [systems, setSystems] = useState<GameSystem[]>([]);
   const [gms, setGms] = useState<PublicGameMaster[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
   const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);
+  const [gamesPerMonth, setGamesPerMonth] = useState<GameLogMonthlyCount[]>([]);
 
   useEffect(() => {
     apiFetch<{ systems: GameSystem[] }>("/game-systems").then((d) => setSystems(d.systems));
     apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters").then((d) => setGms(d.gameMasters));
-    apiFetch<{ games: Game[] }>("/games").then((d) => setGames(d.games));
   }, []);
 
-  // Real session history lives in the Telegram-sourced tables (see /game-log), not the
-  // site's own (empty, unused) games table above — same data source, just the 3 most
-  // recent, reusing the endpoint built for the Game Log page.
+  // Real session history lives in the Telegram-sourced tables — the 3 most recent,
+  // reusing the endpoint built for the Game Log page. gamesPerMonth covers every
+  // session ever logged (not just this page), so summing it gives the total count
+  // for free, with no extra request.
   useEffect(() => {
-    apiFetch<{ games: TelegramGameSummary[] }>(`/game-log?limit=${RECENT_SESSIONS_COUNT}&offset=0`, {
-      token: idToken,
-    }).then((d) => setRecentSessions(d.games));
+    apiFetch<{ games: TelegramGameSummary[]; gamesPerMonth: GameLogMonthlyCount[] }>(
+      `/game-log?limit=${RECENT_SESSIONS_COUNT}&offset=0`,
+      { token: idToken }
+    ).then((d) => {
+      setRecentSessions(d.games);
+      setGamesPerMonth(d.gamesPerMonth);
+    });
   }, [idToken]);
 
-  const latestGame = games[0];
+  const totalSessions = gamesPerMonth.reduce((sum, m) => sum + m.count, 0);
+  const latestGame = recentSessions[0];
 
   return (
     <div>
@@ -54,10 +64,10 @@ export function Home() {
       <section className="px-6 py-16 sm:py-20">
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            {games.length > 0 && (
+            {totalSessions > 0 && (
               <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-bold text-accent">
-                <span className="font-mono tabular-nums">{games.length}</span>
-                {t("home.eyebrow", { count: games.length })}
+                <span className="font-mono tabular-nums">{totalSessions}</span>
+                {t("home.eyebrow", { count: totalSessions })}
               </span>
             )}
             <h1 className="mt-4 max-w-[20ch] text-4xl leading-tight font-bold text-balance sm:text-5xl">
@@ -77,21 +87,20 @@ export function Home() {
           {latestGame && (
             <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
               <p className="text-xs font-bold tracking-wide text-ink-muted uppercase">{t("home.latestSession")}</p>
-              <p className="mt-2 text-xs font-bold tracking-wide text-accent-2 uppercase">{latestGame.systemName}</p>
-              <h3 className="mt-1 font-display text-xl font-bold">{latestGame.title}</h3>
+              <h3 className="mt-1 font-display text-xl font-bold">{formatGameTitle(latestGame.questionText)}</h3>
               <p className="mt-1 text-sm text-ink-muted">
-                {latestGame.date} · {t("gameLog.dm")} {latestGame.dmDisplayName}
+                {new Date(latestGame.createdAt).toLocaleDateString(i18n.language)} · {t("gameLog.dm")} {latestGame.gmDisplayName}
               </p>
             </div>
           )}
         </div>
       </section>
 
-      {(games.length > 0 || gms.length > 0 || systems.length > 0) && (
+      {(totalSessions > 0 || gms.length > 0 || systems.length > 0) && (
         <div className="border-y border-border bg-surface">
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-4 px-6 py-8 sm:grid-cols-3">
             <div className="text-center">
-              <div className="font-mono text-3xl font-bold tabular-nums">{games.length}</div>
+              <div className="font-mono text-3xl font-bold tabular-nums">{totalSessions}</div>
               <div className="mt-1 text-sm text-ink-muted">{t("home.statSessions")}</div>
             </div>
             <div className="border-l border-border text-center">

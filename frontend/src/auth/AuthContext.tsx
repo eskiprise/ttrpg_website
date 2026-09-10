@@ -1,10 +1,4 @@
 import {
-  CognitoUser,
-  CognitoUserPool,
-  AuthenticationDetails,
-  type CognitoUserSession,
-} from "amazon-cognito-identity-js";
-import {
   createContext,
   useContext,
   useEffect,
@@ -15,144 +9,103 @@ import {
 import type { Role, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 
-const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
-const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-
-// Not yet configured (e.g. local dev before infra is deployed) — public pages should
-// still render; auth-dependent actions fail with a clear error instead of a blank page.
-const userPool =
-  userPoolId && clientId
-    ? new CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId })
-    : null;
-
-function requirePool(): CognitoUserPool {
-  if (!userPool) {
-    throw new Error(
-      "Authentication isn't configured yet (missing VITE_COGNITO_USER_POOL_ID / VITE_COGNITO_CLIENT_ID)."
-    );
-  }
-  return userPool;
-}
+const SESSION_STORAGE_KEY = "ttrpg_session_token";
 
 interface AuthState {
   loading: boolean;
   idToken: string | null;
   isAdmin: boolean;
   userId: string | null;
-  email: string | null;
   roles: Role[];
 }
 
-interface NewPasswordChallenge {
-  cognitoUser: CognitoUser;
+interface DevLoginPayload {
+  secret: string;
+  id: number;
+  firstName: string;
+  lastName?: string;
+  username?: string;
 }
 
 interface AuthContextValue extends AuthState {
-  isDm: boolean;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<{ ok: true } | { ok: false; challenge: NewPasswordChallenge }>;
-  completeNewPassword: (
-    challenge: NewPasswordChallenge,
-    newPassword: string
-  ) => Promise<void>;
+  /** Called with the object Telegram's Login Widget passes to its onauth callback. */
+  loginWithTelegram: (widgetPayload: Record<string, unknown>) => Promise<void>;
+  /** Dev-only escape hatch — the Login Widget can't authenticate on localhost. See /auth/dev-login on the backend. */
+  loginDev: (payload: DevLoginPayload) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function sessionToState(session: CognitoUserSession): AuthState {
-  const idToken = session.getIdToken();
-  const payload = idToken.decodePayload() as Record<string, unknown>;
-  const groups = (payload["cognito:groups"] as string[] | undefined) ?? [];
-  return {
-    loading: false,
-    idToken: idToken.getJwtToken(),
-    isAdmin: groups.includes("admin"),
-    userId: (payload.sub as string) ?? null,
-    email: (payload.email as string) ?? null,
-    roles: [],
-  };
-}
 
 const EMPTY_STATE: AuthState = {
   loading: false,
   idToken: null,
   isAdmin: false,
   userId: null,
-  email: null,
   roles: [],
 };
 
-/** Roles (player/dm) live in DynamoDB, not the Cognito token, so fetch them separately. */
-async function fetchRoles(idToken: string): Promise<Role[]> {
-  try {
-    const data = await apiFetch<{ user: User }>("/me", { token: idToken });
-    return data.user.roles ?? [];
-  } catch {
-    return [];
-  }
+interface LoginResponse {
+  token: string;
+  user: User;
+  isAdmin: boolean;
+}
+
+function applyLoginResponse(data: LoginResponse): AuthState {
+  localStorage.setItem(SESSION_STORAGE_KEY, data.token);
+  return {
+    loading: false,
+    idToken: data.token,
+    isAdmin: data.isAdmin,
+    userId: data.user.userId,
+    roles: data.user.roles ?? [],
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ ...EMPTY_STATE, loading: true });
 
-  async function applySession(session: CognitoUserSession) {
-    const base = sessionToState(session);
-    setState(base);
-    const roles = await fetchRoles(base.idToken!);
-    setState((prev) => (prev.idToken === base.idToken ? { ...prev, roles } : prev));
-  }
-
   useEffect(() => {
-    const currentUser = userPool?.getCurrentUser();
-    if (!currentUser) {
+    const token = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!token) {
       setState({ ...EMPTY_STATE, loading: false });
       return;
     }
-    currentUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
-      if (err || !session || !session.isValid()) {
+    apiFetch<{ user: User; isAdmin: boolean }>("/me", { token })
+      .then((data) => {
+        setState({
+          loading: false,
+          idToken: token,
+          isAdmin: data.isAdmin,
+          userId: data.user.userId,
+          roles: data.user.roles ?? [],
+        });
+      })
+      .catch(() => {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         setState({ ...EMPTY_STATE, loading: false });
-        return;
-      }
-      void applySession(session);
-    });
+      });
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
-      isDm: state.roles.includes("dm"),
-      login: (email, password) =>
-        new Promise((resolve, reject) => {
-          const cognitoUser = new CognitoUser({ Username: email, Pool: requirePool() });
-          cognitoUser.authenticateUser(
-            new AuthenticationDetails({ Username: email, Password: password }),
-            {
-              onSuccess: (session) => {
-                void applySession(session);
-                resolve({ ok: true });
-              },
-              onFailure: reject,
-              newPasswordRequired: () => {
-                resolve({ ok: false, challenge: { cognitoUser } });
-              },
-            }
-          );
-        }),
-      completeNewPassword: (challenge, newPassword) =>
-        new Promise((resolve, reject) => {
-          challenge.cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
-            onSuccess: (session) => {
-              void applySession(session);
-              resolve();
-            },
-            onFailure: reject,
-          });
-        }),
+      loginWithTelegram: async (widgetPayload) => {
+        const data = await apiFetch<LoginResponse>("/auth/telegram", {
+          method: "POST",
+          body: widgetPayload,
+        });
+        setState(applyLoginResponse(data));
+      },
+      loginDev: async (payload) => {
+        const data = await apiFetch<LoginResponse>("/auth/dev-login", {
+          method: "POST",
+          body: payload,
+        });
+        setState(applyLoginResponse(data));
+      },
       logout: () => {
-        userPool?.getCurrentUser()?.signOut();
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         setState({ ...EMPTY_STATE, loading: false });
       },
     }),

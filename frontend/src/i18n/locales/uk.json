@@ -67,20 +67,6 @@
     "voters": "Хто голосував",
     "noVotes": "Ще ніхто не проголосував."
   },
-  "poll": {
-    "title": "Оцініть цю сесію",
-    "loginPrompt": "Увійдіть як учасник клубу, щоб проголосувати та побачити результати.",
-    "viewResults": "Переглянути результати",
-    "voteToSeeResults": "Проголосуйте вище, щоб побачити, як інші оцінили цю сесію.",
-    "votes_one": "{{count}} голос",
-    "votes_few": "{{count}} голоси",
-    "votes_many": "{{count}} голосів",
-    "votes_other": "{{count}} голосів",
-    "edit": "Редагувати",
-    "cancel": "Скасувати",
-    "whoVoted": "Хто голосував",
-    "hideVoters": "Сховати голоси"
-  },
   "comments": {
     "title": "Коментарі",
     "none": "Коментарів поки немає.",
@@ -101,15 +87,9 @@
   },
   "login": {
     "title": "Увійти",
-    "email": "Ел. пошта",
-    "password": "Пароль",
-    "submit": "Увійти",
-    "newPasswordTitle": "Встановіть пароль",
-    "newPasswordIntro": "Це ваш перший вхід — оберіть постійний пароль.",
-    "newPassword": "Новий пароль",
-    "newPasswordSubmit": "Встановити пароль і увійти",
-    "loginFailed": "Не вдалося увійти",
-    "passwordSetFailed": "Не вдалося встановити новий пароль"
+    "intro": "Увійдіть через свій акаунт Telegram, щоб бачити все і брати участь в обговоренні.",
+    "notConfigured": "Вхід через Telegram ще не налаштовано.",
+    "loginFailed": "Не вдалося увійти"
   },
   "profile": {
     "title": "Мій профіль",
@@ -121,21 +101,6 @@
     "updated": "Профіль оновлено.",
     "avatarUpdated": "Фото профілю оновлено.",
     "uploadFailed": "Не вдалося завантажити файл"
-  },
-  "logGame": {
-    "title": "Додати гру",
-    "titleField": "Назва",
-    "titlePlaceholder": "напр. Гра №1 - Початок",
-    "date": "Дата",
-    "system": "Система",
-    "selectSystem": "Оберіть систему…",
-    "dm": "Майстер гри",
-    "selectDm": "Оберіть майстра гри…",
-    "youAreDm": "Майстер гри: ви ({{email}})",
-    "participants": "Учасники:",
-    "missingFields": "Назва, дата, система та майстер гри є обов'язковими",
-    "logged": "Гру додано!",
-    "submit": "Додати гру"
   },
   "admin": {
     "title": "Адміністрування",
@@ -150,10 +115,7 @@
     "addSystemTitle": "Додати систему гри",
     "systemNamePlaceholder": "Назва (напр. D&D 5e)",
     "descriptionPlaceholder": "Опис",
-    "addSystem": "Додати систему",
-    "logGameTitle": "Додати гру",
-    "logGameMoved": "Додавання ігор перенесено на окрему сторінку, щоб майстри гри теж могли додавати свої сесії.",
-    "goToLogGame": "Перейти до додавання гри"
+    "addSystem": "Додати систему"
   },
   "statistics": {
     "title": "Статистика клубу",
@@ -164,9 +126,11 @@
     "totalGames": "Всього ігор",
     "averageScore": "Середня оцінка",
     "noGamesInPeriod": "У цей період не зафіксовано жодної гри.",
-    "systemsPlayed": "Зіграні системи",
-    "systemBreakdown": "Середня оцінка за системою",
     "ratingDistribution": "Розподіл оцінок",
+    "votes_one": "{{count}} голос",
+    "votes_few": "{{count}} голоси",
+    "votes_many": "{{count}} голосів",
+    "votes_other": "{{count}} голосів",
     "topGameMasters": "Найактивніші майстри гри",
     "topPlayers": "Найактивніші гравці",
     "highestRated": "Найвище оцінена",

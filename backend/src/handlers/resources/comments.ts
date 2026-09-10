@@ -5,43 +5,49 @@ import type { GameComment } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { requireAdmin, requireAuth } from "../../lib/auth.js";
 import { HttpError, json } from "../../lib/response.js";
-import { getUser, displayName } from "../../lib/users.js";
+import { shouldAnonymizeFor } from "../../lib/settings.js";
+import { nicknameFor } from "../../lib/nicknames.js";
 
 export async function listComments(
   event: APIGatewayProxyEventV2
 ) {
-  const gameId = event.pathParameters?.gameId;
-  if (!gameId) throw new HttpError(400, "Missing gameId");
+  const pollId = event.pathParameters?.pollId;
+  if (!pollId) throw new HttpError(400, "Missing pollId");
 
+  const anonymize = await shouldAnonymizeFor(event);
   const result = await ddb.send(
     new QueryCommand({
       TableName: Tables.gameComments(),
-      KeyConditionExpression: "gameId = :gameId",
-      ExpressionAttributeValues: { ":gameId": gameId },
+      KeyConditionExpression: "pollId = :pollId",
+      ExpressionAttributeValues: { ":pollId": pollId },
       ScanIndexForward: true,
     })
   );
-  return json(200, { comments: (result.Items ?? []) as GameComment[] });
+  const comments = (result.Items ?? []) as GameComment[];
+  return json(200, {
+    comments: anonymize
+      ? comments.map((c) => ({ ...c, displayName: nicknameFor(c.userId) }))
+      : comments,
+  });
 }
 
 export async function postComment(
   event: APIGatewayProxyEventV2
 ) {
   const auth = await requireAuth(event);
-  const gameId = event.pathParameters?.gameId;
-  if (!gameId) throw new HttpError(400, "Missing gameId");
+  const pollId = event.pathParameters?.pollId;
+  if (!pollId) throw new HttpError(400, "Missing pollId");
 
   const body = JSON.parse(event.body ?? "{}") as { text?: string };
   const text = body.text?.trim();
   if (!text) throw new HttpError(400, "text is required");
   if (text.length > 2000) throw new HttpError(400, "Comment too long");
 
-  const user = await getUser(auth.userId);
   const comment: GameComment = {
     commentId: ulid(),
-    gameId,
+    pollId,
     userId: auth.userId,
-    displayName: displayName(user),
+    displayName: auth.displayName,
     text,
     createdAt: new Date().toISOString(),
   };
@@ -54,14 +60,14 @@ export async function deleteComment(
   event: APIGatewayProxyEventV2
 ) {
   await requireAdmin(event);
-  const gameId = event.pathParameters?.gameId;
+  const pollId = event.pathParameters?.pollId;
   const commentId = event.pathParameters?.commentId;
-  if (!gameId || !commentId) throw new HttpError(400, "Missing gameId or commentId");
+  if (!pollId || !commentId) throw new HttpError(400, "Missing pollId or commentId");
 
   await ddb.send(
     new DeleteCommand({
       TableName: Tables.gameComments(),
-      Key: { gameId, commentId },
+      Key: { pollId, commentId },
     })
   );
   return json(204, {});

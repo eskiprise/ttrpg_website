@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import type { ClubStatistics } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
-import { PieChart } from "../components/PieChart";
 
 export function Statistics() {
   const { t } = useTranslation();
@@ -87,38 +86,10 @@ export function Statistics() {
             <p className="mt-6 text-ink-muted">{t("statistics.noGamesInPeriod")}</p>
           ) : (
             <>
-              <div className="mt-6 rounded-lg border border-border bg-surface p-6">
-                <h2 className="text-xl font-bold">{t("statistics.systemsPlayed")}</h2>
-                <div className="mt-4">
-                  <PieChart
-                    slices={stats.systemStats.map((s) => ({
-                      key: s.systemId,
-                      label: s.systemName,
-                      value: s.gamesPlayed,
-                    }))}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-lg border border-border bg-surface p-6">
-                <h2 className="text-xl font-bold">{t("statistics.systemBreakdown")}</h2>
-                <div className="mt-3 flex flex-col">
-                  {stats.systemStats.map((s) => (
-                    <div key={s.systemId} className="flex justify-between border-b border-border py-2 last:border-b-0">
-                      <span>{s.systemName}</span>
-                      <span className="text-ink-muted">
-                        {t("statistics.gamesSuffix", { count: s.gamesPlayed })}
-                        {s.averageScore !== null ? ` · ${s.averageScore.toFixed(1)} / 10` : ""}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {stats.ratingDistribution.totalVotes > 0 && (
                 <div className="mt-6 rounded-lg border border-border bg-surface p-6">
                   <h2 className="text-xl font-bold">{t("statistics.ratingDistribution")}</h2>
-                  <p className="mt-1 text-ink-muted">{t("poll.votes", { count: stats.ratingDistribution.totalVotes })}</p>
+                  <p className="mt-1 text-ink-muted">{t("statistics.votes", { count: stats.ratingDistribution.totalVotes })}</p>
                   <div className="mt-3 flex flex-col gap-1.5">
                     {stats.ratingDistribution.counts.map((count, i) => {
                       const pct = Math.round((count / maxRatingCount) * 100);
@@ -142,7 +113,7 @@ export function Statistics() {
                   <div className="mt-3 flex flex-col gap-1">
                     {stats.topGameMasters.length === 0 && <p className="text-ink-muted">{t("statistics.noData")}</p>}
                     {stats.topGameMasters.map((entry, i) => (
-                      <div key={entry.userId} className="flex items-center gap-2">
+                      <div key={entry.telegramUserId} className="flex items-center gap-2">
                         <span className="text-ink-muted">{i + 1}.</span>
                         <span className="flex-1">{entry.displayName}</span>
                         <span className="text-ink-muted">{t("statistics.gamesSuffix", { count: entry.count })}</span>
@@ -155,7 +126,7 @@ export function Statistics() {
                   <div className="mt-3 flex flex-col gap-1">
                     {stats.topPlayers.length === 0 && <p className="text-ink-muted">{t("statistics.noData")}</p>}
                     {stats.topPlayers.map((entry, i) => (
-                      <div key={entry.userId} className="flex items-center gap-2">
+                      <div key={entry.telegramUserId} className="flex items-center gap-2">
                         <span className="text-ink-muted">{i + 1}.</span>
                         <span className="flex-1">{entry.displayName}</span>
                         <span className="text-ink-muted">{t("statistics.gamesSuffix", { count: entry.count })}</span>
@@ -169,21 +140,21 @@ export function Statistics() {
                 <div className="mt-6 flex flex-wrap gap-4">
                   {stats.highestRatedGame && (
                     <Link
-                      to={`/game-log/${stats.highestRatedGame.gameId}`}
+                      to={`/game-log/${stats.highestRatedGame.pollId}`}
                       className="min-w-[240px] flex-1 rounded-lg border border-border bg-surface p-6 hover:bg-surface-2"
                     >
                       <h2 className="text-xl font-bold">{t("statistics.highestRated")}</h2>
-                      <p className="mt-2">{stats.highestRatedGame.title}</p>
+                      <p className="mt-2">{stats.highestRatedGame.questionText}</p>
                       <p className="text-ink-muted">{stats.highestRatedGame.averageScore.toFixed(1)} / 10</p>
                     </Link>
                   )}
                   {stats.lowestRatedGame && (
                     <Link
-                      to={`/game-log/${stats.lowestRatedGame.gameId}`}
+                      to={`/game-log/${stats.lowestRatedGame.pollId}`}
                       className="min-w-[240px] flex-1 rounded-lg border border-border bg-surface p-6 hover:bg-surface-2"
                     >
                       <h2 className="text-xl font-bold">{t("statistics.lowestRated")}</h2>
-                      <p className="mt-2">{stats.lowestRatedGame.title}</p>
+                      <p className="mt-2">{stats.lowestRatedGame.questionText}</p>
                       <p className="text-ink-muted">{stats.lowestRatedGame.averageScore.toFixed(1)} / 10</p>
                     </Link>
                   )}

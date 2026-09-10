@@ -1,16 +1,11 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
-import type {
-  ClubStatistics,
-  Game,
-  GameSpotlight,
-  LeaderboardEntry,
-  SystemStat,
-} from "@ttrpg-club/shared";
-import { ddb, Tables } from "../../lib/dynamo.js";
+import type { ClubStatistics, GameSpotlight, LeaderboardEntry } from "@ttrpg-club/shared";
+import { Tables, scanAll } from "../../lib/dynamo.js";
 import { requireAuth } from "../../lib/auth.js";
 import { json } from "../../lib/response.js";
+import { formatTelegramDisplayName } from "../../lib/telegramAuth.js";
+import type { PollRecord, VoteRecord } from "./telegramGames.js";
 
 const LEADERBOARD_SIZE = 5;
 
@@ -19,110 +14,140 @@ function average(values: number[]): number | null {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-function topEntries(
-  counts: Map<string, { displayName: string; count: number }>
-): LeaderboardEntry[] {
-  return Array.from(counts.entries())
-    .map(([userId, v]) => ({ userId, displayName: v.displayName, count: v.count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, LEADERBOARD_SIZE);
+function withinRange(createdAt: string, from: string | null, to: string | null): boolean {
+  const date = createdAt.slice(0, 10);
+  if (from && date < from) return false;
+  if (to && date > to) return false;
+  return true;
 }
 
+interface Tally {
+  telegramUserId: number;
+  count: number;
+  /** Newest record seen for this person, so the name shown is their current one. */
+  latestAt: string;
+  displayName: string;
+}
+
+function upsert(byUser: Map<number, Tally>, userId: number, at: string, displayName: string): void {
+  const existing = byUser.get(userId);
+  if (!existing) {
+    byUser.set(userId, { telegramUserId: userId, count: 1, latestAt: at, displayName });
+    return;
+  }
+  existing.count += 1;
+  // People rename themselves and add/remove usernames over time — prefer whatever the
+  // most recent record calls them instead of whichever row happened to arrive first.
+  if (at > existing.latestAt) {
+    existing.latestAt = at;
+    existing.displayName = displayName;
+  }
+}
+
+function topEntries(byUser: Map<number, Tally>): LeaderboardEntry[] {
+  return Array.from(byUser.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, LEADERBOARD_SIZE)
+    .map(({ telegramUserId, displayName, count }) => ({ telegramUserId, displayName, count }));
+}
+
+/**
+ * Rebuilt on the Telegram-sourced poll/vote tables — the site's own games table is
+ * gone. There's no system breakdown here (see ClubStatistics): a Telegram poll's
+ * questionText is free text, not a game-system id, so there's nothing to group by.
+ */
 export async function getClubStatistics(event: APIGatewayProxyEventV2) {
   await requireAuth(event);
   const from = event.queryStringParameters?.from || null;
   const to = event.queryStringParameters?.to || null;
 
-  const result = await ddb.send(new ScanCommand({ TableName: Tables.games() }));
-  const games = ((result.Items ?? []) as Game[]).filter(
-    (g) => (!from || g.date >= from) && (!to || g.date <= to)
-  );
+  const [allPolls, allVotes] = await Promise.all([
+    scanAll<PollRecord>(Tables.telegramRatingPolls()),
+    scanAll<VoteRecord>(Tables.telegramRatingVotes()),
+  ]);
 
-  // One vote query per game — fine at this scale (a hobby club, not thousands of games).
-  const gameAverages = new Map<string, number>();
+  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
+  const pollIds = new Set(polls.map((p) => p.pollId));
+  const votesByPoll = new Map<string, VoteRecord[]>();
+  for (const vote of allVotes) {
+    if (!pollIds.has(vote.pollId)) continue;
+    const forPoll = votesByPoll.get(vote.pollId) ?? [];
+    forPoll.push(vote);
+    votesByPoll.set(vote.pollId, forPoll);
+  }
+
   const ratingCounts = new Array(POLL_RATING_MAX - POLL_RATING_MIN + 1).fill(0);
   let totalVotes = 0;
+  const pollAverages = new Map<string, number>();
 
-  await Promise.all(
-    games.map(async (game) => {
-      const votesResult = await ddb.send(
-        new QueryCommand({
-          TableName: Tables.gamePollVotes(),
-          KeyConditionExpression: "gameId = :gameId",
-          ExpressionAttributeValues: { ":gameId": game.gameId },
+  for (const poll of polls) {
+    const votes = votesByPoll.get(poll.pollId) ?? [];
+    if (votes.length === 0) continue;
+    const avg = average(votes.map((v) => v.rating))!;
+    pollAverages.set(poll.pollId, avg);
+    for (const vote of votes) {
+      ratingCounts[vote.rating - POLL_RATING_MIN] += 1;
+      totalVotes += 1;
+    }
+  }
+
+  const averageScore = average(Array.from(pollAverages.values()));
+
+  const gmsByUser = new Map<number, Tally>();
+  for (const poll of polls) {
+    if (typeof poll.creatorUserId !== "number") continue;
+    upsert(
+      gmsByUser,
+      poll.creatorUserId,
+      poll.createdAt,
+      formatTelegramDisplayName({
+        firstName: poll.creatorFirstName ?? "",
+        lastName: poll.creatorLastName,
+        username: poll.creatorUsername,
+      })
+    );
+  }
+
+  const playersByUser = new Map<number, Tally>();
+  for (const poll of polls) {
+    for (const vote of votesByPoll.get(poll.pollId) ?? []) {
+      // Running a session isn't playing it — exclude a GM's own vote on their poll,
+      // matching the same convention the Telegram leaderboard uses.
+      if (poll.creatorUserId === vote.telegramUserId) continue;
+      upsert(
+        playersByUser,
+        vote.telegramUserId,
+        vote.answeredAt,
+        formatTelegramDisplayName({
+          firstName: vote.firstName,
+          lastName: vote.lastName,
+          username: vote.username,
         })
       );
-      const ratings = (votesResult.Items ?? []).map((v) => v.rating as number);
-      if (ratings.length === 0) return;
-
-      const avg = average(ratings);
-      if (avg !== null) gameAverages.set(game.gameId, avg);
-      for (const rating of ratings) {
-        ratingCounts[rating - POLL_RATING_MIN] += 1;
-        totalVotes += 1;
-      }
-    })
-  );
-
-  const gamesWithScores = games.filter((g) => gameAverages.has(g.gameId));
-  const averageScore = average(gamesWithScores.map((g) => gameAverages.get(g.gameId)!));
-
-  const systemGroups = new Map<string, { systemName: string; games: Game[] }>();
-  for (const game of games) {
-    const group = systemGroups.get(game.systemId) ?? {
-      systemName: game.systemName,
-      games: [],
-    };
-    group.games.push(game);
-    systemGroups.set(game.systemId, group);
-  }
-  const systemStats: SystemStat[] = Array.from(systemGroups.entries())
-    .map(([systemId, group]) => ({
-      systemId,
-      systemName: group.systemName,
-      gamesPlayed: group.games.length,
-      averageScore: average(
-        group.games.filter((g) => gameAverages.has(g.gameId)).map((g) => gameAverages.get(g.gameId)!)
-      ),
-    }))
-    .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
-
-  const dmCounts = new Map<string, { displayName: string; count: number }>();
-  const playerCounts = new Map<string, { displayName: string; count: number }>();
-  for (const game of games) {
-    const dm = dmCounts.get(game.dmUserId) ?? { displayName: game.dmDisplayName, count: 0 };
-    dm.count += 1;
-    dmCounts.set(game.dmUserId, dm);
-
-    for (const p of game.participants) {
-      if (p.userId === game.dmUserId) continue;
-      const player = playerCounts.get(p.userId) ?? { displayName: p.displayName, count: 0 };
-      player.count += 1;
-      playerCounts.set(p.userId, player);
     }
   }
 
   let highestRatedGame: GameSpotlight | null = null;
   let lowestRatedGame: GameSpotlight | null = null;
-  for (const game of gamesWithScores) {
-    const avg = gameAverages.get(game.gameId)!;
+  for (const poll of polls) {
+    const avg = pollAverages.get(poll.pollId);
+    if (avg === undefined) continue;
     if (!highestRatedGame || avg > highestRatedGame.averageScore) {
-      highestRatedGame = { gameId: game.gameId, title: game.title, averageScore: avg };
+      highestRatedGame = { pollId: poll.pollId, questionText: poll.questionText, averageScore: avg };
     }
     if (!lowestRatedGame || avg < lowestRatedGame.averageScore) {
-      lowestRatedGame = { gameId: game.gameId, title: game.title, averageScore: avg };
+      lowestRatedGame = { pollId: poll.pollId, questionText: poll.questionText, averageScore: avg };
     }
   }
 
   const statistics: ClubStatistics = {
     from,
     to,
-    totalGames: games.length,
+    totalGames: polls.length,
     averageScore,
     ratingDistribution: { counts: ratingCounts, totalVotes },
-    systemStats,
-    topGameMasters: topEntries(dmCounts),
-    topPlayers: topEntries(playerCounts),
+    topGameMasters: topEntries(gmsByUser),
+    topPlayers: topEntries(playersByUser),
     highestRatedGame,
     lowestRatedGame,
   };

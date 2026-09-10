@@ -1,28 +1,24 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { HttpError } from "./response.js";
+import { verifySession } from "./session.js";
 
 export interface AuthContext {
-  userId: string; // Cognito sub
-  email: string;
+  userId: string; // Telegram user id, as a string — the `users` table partition key
+  displayName: string;
   isAdmin: boolean;
 }
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing required environment variable ${name}`);
-  return value;
-}
+/** Comma-separated Telegram user ids, set by Terraform from an admin allowlist variable. */
+const ADMIN_TELEGRAM_IDS = new Set(
+  (process.env.ADMIN_TELEGRAM_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean)
+);
 
-let verifier: ReturnType<typeof CognitoJwtVerifier.create> | undefined;
-
-function getVerifier() {
-  verifier ??= CognitoJwtVerifier.create({
-    userPoolId: requireEnv("COGNITO_USER_POOL_ID"),
-    tokenUse: "id",
-    clientId: requireEnv("COGNITO_CLIENT_ID"),
-  });
-  return verifier;
+/** Exported so login handlers (which mint a session rather than verify one) can report isAdmin without duplicating the allowlist parsing. */
+export function isAdminId(userId: string): boolean {
+  return ADMIN_TELEGRAM_IDS.has(userId);
 }
 
 function extractBearerToken(event: APIGatewayProxyEventV2): string | null {
@@ -36,7 +32,11 @@ function extractBearerToken(event: APIGatewayProxyEventV2): string | null {
  * Lambda can decide, per-route, whether a caller merely being logged in is required versus
  * needing to distinguish "logged out" from "logged in" for the same public route (e.g. the
  * anonymized Game Log). HTTP API's built-in JWT authorizer can't express that "optional"
- * case, so the Lambda verifies the Cognito ID token itself instead.
+ * case, so the Lambda verifies the session token itself instead.
+ *
+ * isAdmin is evaluated fresh from the allowlist on every call rather than baked into the
+ * token at login time, so revoking admin access takes effect immediately instead of
+ * waiting out a 30-day session.
  */
 export async function requireAuth(
   event: APIGatewayProxyEventV2
@@ -44,20 +44,13 @@ export async function requireAuth(
   const token = extractBearerToken(event);
   if (!token) throw new HttpError(401, "Authentication required");
 
-  let payload;
-  try {
-    payload = await getVerifier().verify(token);
-  } catch {
-    throw new HttpError(401, "Invalid or expired session");
-  }
-
-  const groupsClaim = payload["cognito:groups"];
-  const groups = Array.isArray(groupsClaim) ? groupsClaim : [];
+  const payload = await verifySession(token);
+  if (!payload) throw new HttpError(401, "Invalid or expired session");
 
   return {
     userId: payload.sub,
-    email: String(payload.email ?? ""),
-    isAdmin: groups.includes("admin"),
+    displayName: payload.name,
+    isAdmin: isAdminId(payload.sub),
   };
 }
 

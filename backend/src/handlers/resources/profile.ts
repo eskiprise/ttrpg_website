@@ -3,12 +3,11 @@ import { randomUUID } from "node:crypto";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import type { AvatarUploadUrlResponse, PersonalStats } from "@ttrpg-club/shared";
+import type { AvatarUploadUrlResponse } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { requireAuth } from "../../lib/auth.js";
 import { HttpError, json } from "../../lib/response.js";
 import { getUser } from "../../lib/users.js";
-import { listGamesForUser } from "./games.js";
 
 const s3 = new S3Client({});
 const UPLOAD_EXPIRY_SECONDS = 300;
@@ -18,16 +17,7 @@ export async function getMyProfile(
 ) {
   const auth = await requireAuth(event);
   const user = await getUser(auth.userId);
-  return json(200, { user });
-}
-
-export async function getMyStats(
-  event: APIGatewayProxyEventV2
-) {
-  const auth = await requireAuth(event);
-  const { gamesDmd, gamesPlayed } = await listGamesForUser(auth.userId);
-  const stats: PersonalStats = { userId: auth.userId, gamesDmd, gamesPlayed };
-  return json(200, { stats });
+  return json(200, { user, isAdmin: auth.isAdmin });
 }
 
 export async function updateMyProfile(
