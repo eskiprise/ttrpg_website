@@ -65,18 +65,6 @@
     "voters": "Who voted",
     "noVotes": "No one has voted yet."
   },
-  "poll": {
-    "title": "Rate this session",
-    "loginPrompt": "Log in as a club member to vote and see results.",
-    "viewResults": "View Results",
-    "voteToSeeResults": "Cast your vote above to see how everyone else rated this session.",
-    "votes_one": "{{count}} vote",
-    "votes_other": "{{count}} votes",
-    "edit": "Edit",
-    "cancel": "Cancel",
-    "whoVoted": "Who voted",
-    "hideVoters": "Hide voters"
-  },
   "comments": {
     "title": "Comments",
     "none": "No comments yet.",
@@ -97,15 +85,9 @@
   },
   "login": {
     "title": "Log In",
-    "email": "Email",
-    "password": "Password",
-    "submit": "Log In",
-    "newPasswordTitle": "Set Your Password",
-    "newPasswordIntro": "This is your first login — choose a permanent password.",
-    "newPassword": "New password",
-    "newPasswordSubmit": "Set Password & Log In",
-    "loginFailed": "Login failed",
-    "passwordSetFailed": "Could not set new password"
+    "intro": "Log in with your Telegram account to see everything and join the conversation.",
+    "notConfigured": "Telegram login isn't configured yet.",
+    "loginFailed": "Login failed"
   },
   "profile": {
     "title": "My Profile",
@@ -117,21 +99,6 @@
     "updated": "Profile updated.",
     "avatarUpdated": "Profile picture updated.",
     "uploadFailed": "Upload failed"
-  },
-  "logGame": {
-    "title": "Log a Game",
-    "titleField": "Title",
-    "titlePlaceholder": "e.g. Game #1 - The Beginning",
-    "date": "Date",
-    "system": "System",
-    "selectSystem": "Select system…",
-    "dm": "DM",
-    "selectDm": "Select DM…",
-    "youAreDm": "DM: you ({{email}})",
-    "participants": "Participants:",
-    "missingFields": "Title, date, system and DM are required",
-    "logged": "Game logged!",
-    "submit": "Log Game"
   },
   "admin": {
     "title": "Admin",
@@ -146,10 +113,7 @@
     "addSystemTitle": "Add Game System",
     "systemNamePlaceholder": "Name (e.g. D&D 5e)",
     "descriptionPlaceholder": "Description",
-    "addSystem": "Add System",
-    "logGameTitle": "Log a Game",
-    "logGameMoved": "Game logging moved to its own page so Game Masters can log their own sessions too.",
-    "goToLogGame": "Go to Log a Game"
+    "addSystem": "Add System"
   },
   "statistics": {
     "title": "Club Statistics",
@@ -160,9 +124,9 @@
     "totalGames": "Total Games",
     "averageScore": "Average Score",
     "noGamesInPeriod": "No games logged in this period.",
-    "systemsPlayed": "Systems Played",
-    "systemBreakdown": "Average Score by System",
     "ratingDistribution": "Rating Distribution",
+    "votes_one": "{{count}} vote",
+    "votes_other": "{{count}} votes",
     "topGameMasters": "Most Active Game Masters",
     "topPlayers": "Most Active Players",
     "highestRated": "Highest Rated",

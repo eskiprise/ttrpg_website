@@ -19,12 +19,3 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
-
-export function RequireGameMaster({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
-  const { loading, idToken, isAdmin, isDm } = useAuth();
-  if (loading) return <div className="mx-auto max-w-3xl px-6 py-16 text-ink-muted">{t("common.loading")}</div>;
-  if (!idToken) return <Navigate to="/login" replace />;
-  if (!isAdmin && !isDm) return <Navigate to="/" replace />;
-  return <>{children}</>;
-}

@@ -5,6 +5,7 @@ import type {
 } from "aws-lambda";
 import { errorResponse, json } from "../lib/response.js";
 import { createSignupRequest } from "./resources/signup.js";
+import { loginWithTelegram, devLogin } from "./resources/auth.js";
 import {
   listGameSystems,
   createGameSystem,
@@ -12,22 +13,9 @@ import {
   deleteGameSystem,
 } from "./resources/gameSystems.js";
 import { listGameMasters, getGameMasterDetail } from "./resources/gameMasters.js";
-import {
-  listGames,
-  getGameDetail,
-  createGame,
-  updateGame,
-  deleteGame,
-} from "./resources/games.js";
 import { listGameLog, getGameLogDetail } from "./resources/gameLog.js";
-import { castVote, getPollResults, getPollVoters } from "./resources/poll.js";
 import { listComments, postComment, deleteComment } from "./resources/comments.js";
-import {
-  getMyProfile,
-  getMyStats,
-  updateMyProfile,
-  getAvatarUploadUrl,
-} from "./resources/profile.js";
+import { getMyProfile, updateMyProfile, getAvatarUploadUrl } from "./resources/profile.js";
 import {
   listSignupRequests,
   approveSignupRequest,
@@ -60,6 +48,8 @@ const routes: Record<string, RouteHandler> = {
 
   "POST /signup": createSignupRequest,
 
+  "POST /auth/telegram": loginWithTelegram,
+
   "GET /game-systems": async () => listGameSystems(),
   "POST /admin/game-systems": createGameSystem,
   "PATCH /admin/game-systems/{systemId}": updateGameSystem,
@@ -68,27 +58,17 @@ const routes: Record<string, RouteHandler> = {
   "GET /game-masters": async () => listGameMasters(),
   "GET /game-masters/{userId}": getGameMasterDetail,
 
-  "GET /games": listGames,
-  "GET /games/{gameId}": getGameDetail,
   "GET /game-log": listGameLog,
   "GET /game-log/{pollId}": getGameLogDetail,
-  "POST /admin/games": createGame,
-  "PATCH /admin/games/{gameId}": updateGame,
-  "DELETE /admin/games/{gameId}": deleteGame,
 
-  "POST /games/{gameId}/poll-vote": castVote,
-  "GET /games/{gameId}/poll-results": getPollResults,
-  "GET /games/{gameId}/poll-voters": getPollVoters,
-
-  "GET /games/{gameId}/comments": listComments,
-  "POST /games/{gameId}/comments": postComment,
-  "DELETE /admin/games/{gameId}/comments/{commentId}": deleteComment,
+  "GET /game-log/{pollId}/comments": listComments,
+  "POST /game-log/{pollId}/comments": postComment,
+  "DELETE /admin/game-log/{pollId}/comments/{commentId}": deleteComment,
 
   "GET /members": listMembers,
   "GET /statistics": getClubStatistics,
 
   "GET /me": getMyProfile,
-  "GET /me/stats": getMyStats,
   "PATCH /me/profile": updateMyProfile,
   "POST /me/avatar-upload-url": getAvatarUploadUrl,
 
@@ -110,6 +90,10 @@ const routes: Record<string, RouteHandler> = {
   "POST /telegram/games/{pollId}/voters": getTelegramGameVoters,
   "POST /telegram/leaderboard": getTelegramLeaderboard,
   "POST /telegram/achievements": getTelegramAchievements,
+
+  // Only registered when DEV_LOGIN_SECRET is set — deliberately unset in prod, so
+  // this route doesn't exist there at all rather than merely rejecting requests.
+  ...(process.env.DEV_LOGIN_SECRET ? { "POST /auth/dev-login": devLogin } : {}),
 };
 
 // Comma-separated (Lambda env vars are flat strings, not lists) — set by Terraform

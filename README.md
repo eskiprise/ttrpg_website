@@ -4,7 +4,7 @@ The website for a tabletop RPG club: a public site (game log, game masters, game
 systems, member signup) plus an admin dashboard, and a Telegram Mini App that's
 embedded inside the club's Telegram bot (see [`../ttrpg_poll_bot`](../ttrpg_poll_bot)).
 
-All AWS infrastructure (Lambda, API Gateway, DynamoDB, Cognito, S3/CloudFront) is
+All AWS infrastructure (Lambda, API Gateway, DynamoDB, S3/CloudFront) is
 defined in the sibling [`../aws_infra`](../aws_infra) repo, not here — this repo is
 application code only. **Two fully independent, symmetric environments exist — dev and
 prod** — see [Deployment](#deployment).
@@ -12,15 +12,16 @@ prod** — see [Deployment](#deployment).
 ## What's here
 
 - **Public pages**: Home, About, Game Masters (+ per-GM detail/stats), Game Systems,
-  Game Log (session list → detail with rating poll results + comments), Signup, Login.
-- **Member pages** (login required): Statistics (club-wide), Profile.
-- **Game Master pages** (dm or admin role): Log a Game session.
-- **Admin dashboard** (admin role): approve/reject signup requests, manage game
-  systems/games/comments, manage members' roles, settings.
+  Game Log (session list → detail with rating poll results + comments), Signup, Login
+  (Telegram Login Widget).
+- **Member pages** (logged in via Telegram): Statistics (club-wide), Profile.
+- **Admin dashboard** (Telegram id on the admin allowlist): approve/reject signup
+  requests, manage game systems, moderate comments, manage members' roles, settings.
 - **Telegram Mini App** (`/telegram/*`, no site nav — renders inside Telegram's own
   WebView chrome): personal rating stats, a leaderboard, per-session "who voted what",
-  and a private session-feedback form. Authenticated via Telegram's signed `initData`,
-  not Cognito — see [Data Model](#data-model-dynamodb) and
+  and a private session-feedback form. Authenticated via Telegram's signed `initData`
+  (a separate flow from the site's own Login Widget auth — see [Architecture](#architecture))
+  — see [Data Model](#data-model-dynamodb) and
   [`../ttrpg_poll_bot/README_LAMBDA.md`](../ttrpg_poll_bot/README_LAMBDA.md).
 
 ## Monorepo layout
@@ -30,7 +31,7 @@ npm workspaces, three packages:
 | Workspace | What |
 |---|---|
 | `frontend/` | React + TypeScript + Vite + Tailwind CSS v4. Static SPA, deployed to S3 + CloudFront. |
-| `backend/` | Node.js/TypeScript. **One** Lambda function that routes 40 endpoints internally (see [API](#api)) — bundled with esbuild, not a per-route Lambda. |
+| `backend/` | Node.js/TypeScript. **One** Lambda function that routes ~35 endpoints internally (see [API](#api)) — bundled with esbuild, not a per-route Lambda. |
 | `shared/` | Types shared between frontend and backend (`Role`, `TelegramLeaderboardEntry`, etc.) — imported as `@ttrpg-club/shared`. |
 
 ## Prerequisites
@@ -63,15 +64,21 @@ npm run build:backend    # esbuild bundle into backend/dist/api.js
 
 ### Frontend environment variables
 
-All four come from Terraform outputs in `../aws_infra` — use the **dev** stack's
-outputs for local development (`frontend/.env` is gitignored):
+All three come from Terraform outputs / config in `../aws_infra` — use the **dev**
+stack's for local development (`frontend/.env` is gitignored):
 
 | Variable | Source |
 |---|---|
 | `VITE_API_BASE_URL` | `aws_infra/lambda/ttrpg_club_api_dev` → `terraform output api_base_url` |
-| `VITE_COGNITO_USER_POOL_ID` | `aws_infra/cognito/ttrpg_club_dev` → `terraform output user_pool_id` |
-| `VITE_COGNITO_CLIENT_ID` | `aws_infra/cognito/ttrpg_club_dev` → `terraform output web_client_id` |
+| `VITE_TELEGRAM_BOT_USERNAME` | The dev bot's `@username` (`ttrpgpolltestbot`) |
 | `VITE_AVATAR_CDN_BASE_URL` | `https://` + `aws_infra/s3/ttrpg_club_avatars_dev` → `terraform output distribution_domain_name` |
+
+The Telegram Login Widget only authorizes on the domain registered with BotFather via
+`/setdomain`, so it can never work against `localhost:5173` — local dev instead uses
+`POST /auth/dev-login`, a dev-only escape hatch gated on the `DEV_LOGIN_SECRET` Lambda
+env var (see `aws_infra/lambda/ttrpg_club_api_dev`'s `dev_login_secret` variable; unset
+in prod, so the route doesn't exist there). The Login page renders a small dev-login
+form automatically when running under `vite dev`.
 
 ## Architecture
 
@@ -81,14 +88,26 @@ outputs for local development (`frontend/.env` is gitignored):
   Every route has authorization type `NONE` — there's deliberately no API Gateway JWT
   authorizer, because several public routes (e.g. the Game Log) need to behave
   differently for logged-in vs anonymous callers, which an authorizer can't express as
-  "optional". The Lambda verifies the Cognito ID token itself when a route needs one.
-- **Auth**: Cognito User Pool, admin-provisioned members only (no public self-signup —
-  see [Roles](#roles)). The frontend sends the ID token as a Bearer header.
-- **Telegram auth**: separate from Cognito entirely. `/telegram/*` routes verify
-  Telegram's own signed `initData` (HMAC against the poll bot's token, fetched from
-  SSM) — see `backend/src/lib/telegramAuth.ts`. People who vote in the Telegram chat
-  don't need a website account at all; Mini App stats are keyed purely by Telegram user
-  ID.
+  "optional". The Lambda verifies the session token itself when a route needs one.
+- **Auth**: Telegram-based, no Cognito. `POST /auth/telegram` verifies a payload from
+  the site's Telegram Login Widget (HMAC keyed by `SHA256(bot token)` — see
+  `backend/src/lib/telegramAuth.ts`'s `verifyTelegramLoginWidget`), creates a `users`
+  row on first login, and returns a session JWT the frontend stores and sends as a
+  Bearer header (`backend/src/lib/session.ts`). The signing key is itself derived from
+  the bot token (`HMAC-SHA256(botToken, "ttrpg-club-session-v1")`) rather than a
+  separate secret — the bot token is already the root of trust for identity here.
+  **Admin** is a Telegram-id allowlist (`ADMIN_TELEGRAM_IDS`, a Terraform variable),
+  checked fresh on every request rather than baked into the token, so granting/revoking
+  it takes effect immediately without anyone needing to log out and back in — see
+  `../aws_infra/README.md`'s "First admin".
+- **Telegram Mini App auth**: a separate flow from the above, using Telegram's own
+  signed `initData` (HMAC keyed by `HMAC-SHA256("WebAppData", bot token)` — see
+  `verifyTelegramInitData` in the same file) sent in the request body rather than a
+  Bearer header, since every `/telegram/*` route is `POST` for that reason. People who
+  vote in the Telegram chat don't need a website login at all; Mini App stats are keyed
+  purely by Telegram user ID — the same identity the website login now uses, so a
+  logged-in website user and their Telegram chat activity are the same person, not two
+  disconnected identities.
 - **Data**: 11 DynamoDB tables — see [Data Model](#data-model-dynamodb).
 - **Avatars**: presigned PUT uploads go straight from the browser to S3 (not through
   the API Lambda), then served read-only via a separate CloudFront distribution.
@@ -96,33 +115,37 @@ outputs for local development (`frontend/.env` is gitignored):
 ## Roles
 
 `Role = "player" | "dm" | "admin"`, stored as an array on each user (`users.roles` —
-someone can be both `dm` and `admin`). No role means logged out / not yet a member.
+someone can be both `dm` and `admin`). A `users` row is created automatically on first
+Telegram login, with `roles: ["player"]`; there's no "not yet a member" state to gate on
+beyond simply not being logged in.
 
 | Role | Grants |
 |---|---|
-| *(none)* | Public pages only |
+| *(logged out)* | Public pages only |
 | `player` | + Statistics, Profile |
-| `dm` (Game Master) | + Log a Game (`/games/log`) |
-| `admin` | + Admin Dashboard (`/admin`): signup approvals, game system/game/comment management, user role management, settings |
+| `dm` (Game Master) | Appears on the Game Masters page; a "shown on your public GM page" hint in Profile's bio field. Not a route guard — being a GM doesn't unlock any page a `player` can't already reach. |
 
-The very first admin has to be created manually — there's no admin until one exists.
-See `../aws_infra/README.md`'s "Website stack" section.
+Admin is **not** a role — it's a separate Telegram-id allowlist (`admin_telegram_ids`
+in Terraform), checked per-request, independent of `users.roles`. Grants the Admin
+Dashboard (`/admin`): signup approvals, game system management, comment moderation,
+user role management, settings. See `../aws_infra/README.md`'s "First admin".
 
 ## Data Model (DynamoDB)
 
-Owned by `aws_infra/dynamodb/ttrpg_club/<env>` — one Terraform state, all 14 tables,
+Owned by `aws_infra/dynamodb/ttrpg_club/<env>` — one Terraform state, all 11 tables,
 dev and prod fully separate (`ttrpg_club_dev_*` / `ttrpg_club_prod_*` names). Point-in-time
 recovery is enabled on all prod tables.
 
+There's no site-native "games" table — all session data comes from the Telegram-sourced
+tables below, keyed by `pollId`. `users.userId` is a Telegram user id (as a string), not
+a Cognito sub — see [Architecture](#architecture).
+
 | Table | Key | Purpose |
 |---|---|---|
-| `users` | `userId` | Member accounts — profile fields, `roles`, avatar URL. |
-| `signup_requests` | `requestId` (+ `status-index` GSI) | Pending club membership applications; admin approves/rejects. Has a DynamoDB Stream → triggers `notifySignup` in `ttrpg_poll_bot`, DMing the admin. |
+| `users` | `userId` (Telegram id) | Member accounts — profile fields, `roles`, avatar URL. Row created on first Telegram login. |
+| `signup_requests` | `requestId` (+ `status-index` GSI) | Pending club membership applications (a "get in touch" lead-capture form, not account registration); admin approves/rejects. Has a DynamoDB Stream → triggers `notifySignup` in `ttrpg_poll_bot`, DMing the admin. |
 | `game_systems` | `systemId` | The TTRPG systems the club plays (D&D, Blades in the Dark, etc.) — admin-managed reference data. |
-| `games` | `gameId` | Logged session records — system, GM, date, description. |
-| `game_participants` | `userId` + `gameId` | Who played in which session (site-side attendance, distinct from the Telegram poll-vote data below). |
-| `game_poll_votes` | `gameId` + `userId` | Website's own in-session rating poll (separate feature from the Telegram `/rate` polls). |
-| `game_comments` | `gameId` + `commentId` | Comments on a logged session. |
+| `game_comments` | `pollId` + `commentId` | Comments on a Telegram-sourced game session. |
 | `settings` | `pk` | Site-wide settings (e.g. an anonymize toggle for public stats). |
 | `telegram_rating_polls` | `pollId` (+ `creatorUserId-index` GSI) | One row per `/rate` poll created in the Telegram chat — question text, GM (`creatorUserId`). Written by `ttrpg_poll_bot`, read by this backend for the Mini App. |
 | `telegram_rating_votes` | `pollId` + `telegramUserId` (+ `telegramUserId-index` GSI) | One row per person's rating on a poll — the row's mere existence is the vote; a retraction deletes it. Same pipeline as above. |
@@ -144,20 +167,20 @@ section for why). See that same doc for exactly how/when each table gets written
 One Lambda, routed internally by `event.routeKey` (see `backend/src/handlers/api.ts`).
 Grouped by area:
 
-**Public / member**: `GET /health`, `POST /signup`, `GET /game-systems`,
-`GET /game-masters(/:userId)`, `GET /games(/:gameId)`,
-`POST /games/:gameId/poll-vote`, `GET /games/:gameId/poll-results`,
-`GET /games/:gameId/poll-voters`, `GET|POST /games/:gameId/comments`, `GET /members`,
-`GET /statistics`, `GET /me(/stats)`, `PATCH /me/profile`, `POST /me/avatar-upload-url`.
+**Public / member**: `GET /health`, `POST /signup`, `POST /auth/telegram`,
+`GET /game-systems`, `GET /game-masters(/:userId)`, `GET /game-log(/:pollId)`,
+`GET|POST /game-log/:pollId/comments`, `GET /members`, `GET /statistics`, `GET /me`,
+`PATCH /me/profile`, `POST /me/avatar-upload-url`. Dev only, when `DEV_LOGIN_SECRET` is
+set: `POST /auth/dev-login`.
 
 **Admin only**: `POST|PATCH|DELETE /admin/game-systems(/:systemId)`,
-`POST|PATCH|DELETE /admin/games(/:gameId)`,
-`DELETE /admin/games/:gameId/comments/:commentId`, `GET /admin/signup-requests`,
+`DELETE /admin/game-log/:pollId/comments/:commentId`, `GET /admin/signup-requests`,
 `POST /admin/signup-requests/:requestId/approve|reject`,
 `PATCH /admin/settings/anonymize-toggle`, `GET /admin/users`,
 `PATCH /admin/users/:userId/roles`.
 
-**Telegram Mini App** (`initData`-authenticated, no Cognito token):
+**Telegram Mini App** (`initData`-authenticated in the request body, a separate scheme
+from the site's own session token):
 `POST /telegram/stats`, `POST /telegram/feedback`, `POST /telegram/feedback/eligibility`,
 `POST /telegram/games/played|conducted|all`, `POST /telegram/games/:pollId/voters`,
 `POST /telegram/leaderboard`, `POST /telegram/achievements`.
@@ -165,8 +188,8 @@ Grouped by area:
 ## Deployment
 
 Two fully independent, symmetric stacks — **dev** and **prod** — nothing is shared
-(separate DynamoDB tables, Cognito pools, S3 buckets, CloudFront distributions, API
-Gateways) except the domain itself: prod is `dnaclub.com.ua` (`www.` redirects to it),
+(separate DynamoDB tables, S3 buckets, CloudFront distributions, API Gateways, Telegram
+bots) except the domain itself: prod is `dnaclub.com.ua` (`www.` redirects to it),
 dev is `dev.dnaclub.com.ua`, both TLS via free auto-renewing ACM certificates — see
 `../aws_infra/dns/dnaclub_com_ua`. The API's `cors_allowed_origins` is locked to each
 environment's real domain (dev also allows `http://localhost:5173` for local frontend
@@ -184,9 +207,9 @@ development). Full apply order and one-time infra setup: `../aws_infra/README.md
 Each workflow picks a GitHub **Environment** (`development` / `production`) by branch
 name, and reads that environment's own variables — `LAMBDA_FUNCTION_NAME`,
 `FRONTEND_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`, `VITE_API_BASE_URL`,
-`VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID`, `VITE_AVATAR_CDN_BASE_URL` — set
-these per-environment in *Settings → Environments* to point at each stack's Terraform
-outputs. `AWS_DEPLOY_ROLE_ARN` is a single shared repo secret (one broadened OIDC role
+`VITE_TELEGRAM_BOT_USERNAME`, `VITE_AVATAR_CDN_BASE_URL` — set these per-environment in
+*Settings → Environments* to point at each stack's Terraform outputs / bot config.
+`AWS_DEPLOY_ROLE_ARN` is a single shared repo secret (one broadened OIDC role
 covers both stacks' exact resource ARNs — see `aws_infra/iam/github_actions_ttrpg_club`).
 
 Routine code changes need nothing beyond a push to the right branch — CI builds, zips,
@@ -196,6 +219,6 @@ No CloudFormation, no Serverless Framework involved.
 ## Related repos
 
 - [`../aws_infra`](../aws_infra) — all Terraform for this site and the poll bot
-  (DynamoDB, Lambda, API Gateway, Cognito, S3/CloudFront, IAM, monitoring/alerting).
+  (DynamoDB, Lambda, API Gateway, S3/CloudFront, IAM, monitoring/alerting).
 - [`../ttrpg_poll_bot`](../ttrpg_poll_bot) — the Telegram bot that creates the `/rate`
   polls this site's Mini App reads, and that embeds the Mini App itself.

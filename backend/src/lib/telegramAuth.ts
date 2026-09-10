@@ -1,10 +1,10 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
 const ssm = new SSMClient({});
 let cachedBotToken: string | undefined;
 
-async function getBotToken(): Promise<string> {
+export async function getBotToken(): Promise<string> {
   if (cachedBotToken) return cachedBotToken;
   const paramName = process.env.TELEGRAM_BOT_TOKEN_PARAM ?? "/telegram/poll_bot/token";
   const result = await ssm.send(
@@ -91,4 +91,59 @@ export async function verifyTelegramInitData(
   } catch {
     return null;
   }
+}
+
+export interface TelegramLoginWidgetUser extends TelegramInitDataUser {
+  photoUrl?: string;
+}
+
+/**
+ * Verifies a payload from the website's Telegram Login Widget
+ * (https://core.telegram.org/widgets/login#checking-authorization).
+ *
+ * Deliberately a sibling of verifyTelegramInitData rather than a shared helper: the
+ * two schemes derive the HMAC key differently — the Mini App uses
+ * HMAC-SHA256("WebAppData", botToken), the Login Widget uses plain SHA256(botToken) —
+ * and collapsing them into one parameterized function would make it far too easy to
+ * later "simplify" one into the other and silently accept forged logins.
+ */
+export async function verifyTelegramLoginWidget(
+  payload: Record<string, unknown>
+): Promise<TelegramLoginWidgetUser | null> {
+  const receivedHash = payload.hash;
+  if (typeof receivedHash !== "string") return null;
+
+  // Telegram signs the string forms of the values it sent, so numbers (id, auth_date)
+  // must be rendered back exactly as they arrived rather than re-formatted.
+  const dataCheckString = Object.keys(payload)
+    .filter((key) => key !== "hash" && payload[key] !== undefined && payload[key] !== null)
+    .sort()
+    .map((key) => `${key}=${String(payload[key])}`)
+    .join("\n");
+
+  const secretKey = createHash("sha256").update(await getBotToken()).digest();
+  const computedHash = createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
+
+  const receivedBuf = Buffer.from(receivedHash, "hex");
+  const computedBuf = Buffer.from(computedHash, "hex");
+  if (receivedBuf.length !== computedBuf.length || !timingSafeEqual(receivedBuf, computedBuf)) {
+    return null;
+  }
+
+  const authDate = Number(payload.auth_date);
+  if (!authDate || Date.now() / 1000 - authDate > MAX_INIT_DATA_AGE_SECONDS) {
+    return null;
+  }
+
+  const id = Number(payload.id);
+  const firstName = payload.first_name;
+  if (!id || typeof firstName !== "string") return null;
+
+  return {
+    id,
+    firstName,
+    lastName: typeof payload.last_name === "string" ? payload.last_name : undefined,
+    username: typeof payload.username === "string" ? payload.username : undefined,
+    photoUrl: typeof payload.photo_url === "string" ? payload.photo_url : undefined,
+  };
 }

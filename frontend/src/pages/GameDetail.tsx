@@ -5,6 +5,7 @@ import type { PublicGameDetail } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { formatGameTitle } from "../lib/gameTitle";
+import { Comments } from "../components/Comments";
 
 export function GameDetail() {
   const { t, i18n } = useTranslation();
@@ -64,6 +65,8 @@ export function GameDetail() {
           ))}
         </div>
       )}
+
+      {pollId && <Comments pollId={pollId} />}
     </div>
   );
 }

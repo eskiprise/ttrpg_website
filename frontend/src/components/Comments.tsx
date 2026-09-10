@@ -4,7 +4,7 @@ import type { GameComment } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
-export function Comments({ gameId }: { gameId: string }) {
+export function Comments({ pollId }: { pollId: string }) {
   const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
   const [comments, setComments] = useState<GameComment[] | null>(null);
@@ -13,19 +13,19 @@ export function Comments({ gameId }: { gameId: string }) {
   const [posting, setPosting] = useState(false);
 
   function load() {
-    apiFetch<{ comments: GameComment[] }>(`/games/${gameId}/comments`)
+    apiFetch<{ comments: GameComment[] }>(`/game-log/${pollId}/comments`)
       .then((data) => setComments(data.comments))
       .catch((err) => setError(err.message));
   }
 
-  useEffect(load, [gameId]);
+  useEffect(load, [pollId]);
 
   async function submit() {
     if (!draft.trim()) return;
     setPosting(true);
     setError(null);
     try {
-      await apiFetch(`/games/${gameId}/comments`, {
+      await apiFetch(`/game-log/${pollId}/comments`, {
         method: "POST",
         token: idToken,
         body: { text: draft.trim() },

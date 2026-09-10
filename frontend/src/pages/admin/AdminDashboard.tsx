@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { SignupRequest, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
@@ -125,7 +124,7 @@ function Members({ token }: { token: string | null }) {
       <div className="mt-3 flex flex-col">
         {users?.map((u) => (
           <div key={u.userId} className="flex justify-between gap-3 border-b border-border py-2 last:border-b-0">
-            <span>{u.firstName} {u.lastName} — {u.email}</span>
+            <span>{u.firstName} {u.lastName} — {u.telegramOrViberContact}</span>
             <label className="flex flex-shrink-0 items-center gap-2">
               <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> {t("admin.gameMasterCheckbox")}
             </label>
@@ -184,11 +183,6 @@ export function AdminDashboard() {
       <AnonymizeToggle token={idToken} />
       <Members token={idToken} />
       <AddGameSystem token={idToken} onAdded={reload} />
-      <div className="rounded-lg border border-border bg-surface p-6">
-        <h2 className="text-xl font-bold">{t("admin.logGameTitle")}</h2>
-        <p className="mt-2 text-ink-muted">{t("admin.logGameMoved")}</p>
-        <Link to="/games/log"><button type="button" className="mt-3">{t("admin.goToLogGame")}</button></Link>
-      </div>
     </div>
   );
 }

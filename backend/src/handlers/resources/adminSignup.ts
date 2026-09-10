@@ -1,10 +1,9 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import type { SignupRequest, User } from "@ttrpg-club/shared";
+import type { SignupRequest } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { requireAdmin } from "../../lib/auth.js";
 import { HttpError, json } from "../../lib/response.js";
-import { provisionMember } from "../../lib/cognito.js";
 
 export async function listSignupRequests(
   event: APIGatewayProxyEventV2
@@ -30,6 +29,11 @@ async function getRequestOrThrow(requestId: string): Promise<SignupRequest> {
   return result.Item as SignupRequest;
 }
 
+/**
+ * A user account is no longer provisioned here — anyone logging in with Telegram
+ * gets a `users` row automatically on first login, independent of this form. Approval
+ * is now just an acknowledgement that the club has seen and accepted the request.
+ */
 export async function approveSignupRequest(
   event: APIGatewayProxyEventV2
 ) {
@@ -42,31 +46,10 @@ export async function approveSignupRequest(
     throw new HttpError(409, `Request already ${request.status.toLowerCase()}`);
   }
 
-  const userId = await provisionMember({
-    email: request.email,
-    firstName: request.firstName,
-    lastName: request.lastName,
-  });
+  const updated: SignupRequest = { ...request, status: "APPROVED" };
+  await ddb.send(new PutCommand({ TableName: Tables.signupRequests(), Item: updated }));
 
-  const user: User = {
-    userId,
-    firstName: request.firstName,
-    lastName: request.lastName,
-    email: request.email,
-    telegramOrViberContact: request.telegramOrViberContact,
-    roles: ["player"],
-    createdAt: new Date().toISOString(),
-  };
-  await ddb.send(new PutCommand({ TableName: Tables.users(), Item: user }));
-
-  await ddb.send(
-    new PutCommand({
-      TableName: Tables.signupRequests(),
-      Item: { ...request, status: "APPROVED" },
-    })
-  );
-
-  return json(200, { user });
+  return json(200, { request: updated });
 }
 
 export async function rejectSignupRequest(

@@ -1,6 +1,6 @@
 import { Route, Routes, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
-import { RequireAdmin, RequireAuth, RequireGameMaster } from "./components/RequireAuth";
+import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
 import { GameMasters } from "./pages/GameMasters";
@@ -12,7 +12,6 @@ import { Statistics } from "./pages/Statistics";
 import { Signup } from "./pages/Signup";
 import { Login } from "./pages/Login";
 import { Profile } from "./pages/Profile";
-import { LogGame } from "./pages/LogGame";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { TelegramMiniAppRoot } from "./pages/telegram/TelegramMiniAppRoot";
 import { TelegramStatsHome } from "./pages/telegram/TelegramStatsHome";
@@ -43,7 +42,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/statistics" element={<RequireAuth><Statistics /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-        <Route path="/games/log" element={<RequireGameMaster><LogGame /></RequireGameMaster>} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
         <Route path="/telegram" element={<TelegramMiniAppRoot />}>
           <Route index element={<TelegramStatsHome />} />
