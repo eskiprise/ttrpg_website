@@ -55,6 +55,13 @@ export function NavBar() {
             ) : (
               <NavLink to="/login" className={linkClass}>{t("nav.logIn")}</NavLink>
             )}
+            {/* Below lg, this dropdown is the only nav surface — without this row,
+                language/theme controls (desktop-only further down) would be
+                completely unreachable on mobile and tablet. */}
+            <div className="mt-2 flex items-center gap-3 border-t border-border pt-2">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
           </div>
         </details>
 

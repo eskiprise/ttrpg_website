@@ -10,6 +10,7 @@ import type {
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { formatGameTitle } from "../lib/gameTitle";
+import { truncate } from "../lib/text";
 
 const RECENT_SESSIONS_COUNT = 3;
 
@@ -145,7 +146,7 @@ export function Home() {
                 )}
                 <h3 className="font-semibold">{gm.firstName} {gm.lastName}</h3>
                 <p className="mt-2 text-sm text-ink-muted">
-                  {gm.bio ? gm.bio.slice(0, 100) : t("gameMasters.noBio")}
+                  {gm.bio ? truncate(gm.bio, 100) : t("gameMasters.noBio")}
                 </p>
               </Link>
             ))}
@@ -159,11 +160,14 @@ export function Home() {
             <h2 className="text-2xl font-bold">{t("home.upcomingSessions")}</h2>
           </div>
           <div className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-border bg-surface p-2">
+            {/* Agenda mode renders a single vertical list instead of a month grid — the
+                grid's narrow day cells truncate event titles mid-word at every width,
+                agenda mode just doesn't have that failure mode. */}
             <iframe
-              src="https://calendar.google.com/calendar/embed?src=a06e3c9e0ef67ca9738ad9bb2143afbd4403677de38d1fda8ff7a658b9886734%40group.calendar.google.com&ctz=Europe%2FKiev"
+              src="https://calendar.google.com/calendar/embed?src=a06e3c9e0ef67ca9738ad9bb2143afbd4403677de38d1fda8ff7a658b9886734%40group.calendar.google.com&ctz=Europe%2FKiev&mode=AGENDA"
               title={t("home.upcomingSessions")}
               width="100%"
-              height={600}
+              height={420}
               style={{ border: 0 }}
               frameBorder="0"
               scrolling="no"

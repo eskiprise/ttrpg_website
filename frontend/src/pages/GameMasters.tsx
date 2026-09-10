@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { PublicGameMaster } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
+import { truncate } from "../lib/text";
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -48,7 +49,7 @@ export function GameMasters() {
             <div>
               <strong className="text-ink">{gm.firstName} {gm.lastName}</strong>
               <p className="mt-1 text-sm text-ink-muted">
-                {gm.bio ? gm.bio.slice(0, 100) : t("gameMasters.noBio")}
+                {gm.bio ? truncate(gm.bio, 100) : t("gameMasters.noBio")}
               </p>
             </div>
           </Link>
