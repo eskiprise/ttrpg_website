@@ -40,6 +40,7 @@
     "statSeats": "seats filled at tables",
     "statSystems": "different systems",
     "growthTitle": "Games per month",
+    "growthLegend": "From {{from}} to {{peak}} games a month",
     "fearsEyebrow": "First time at the table?",
     "fearsTitle": "The usual reasons not to come — and what's wrong with them",
     "fear1Title": "\"I've never played\"",

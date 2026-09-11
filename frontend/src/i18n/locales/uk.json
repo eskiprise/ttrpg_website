@@ -42,6 +42,7 @@
     "statSeats": "місць за столом",
     "statSystems": "різних систем",
     "growthTitle": "Ігор на місяць",
+    "growthLegend": "Від {{from}} до {{peak}} ігор на місяць",
     "fearsEyebrow": "Вперше за столом?",
     "fearsTitle": "Найчастіші причини не прийти — і що з ними не так",
     "fear1Title": "«Я ніколи не грав»",

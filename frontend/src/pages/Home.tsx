@@ -166,6 +166,10 @@ export function Home() {
               maxMonths={18}
               tone="band"
               title={t("home.growthTitle")}
+              legend={t("home.growthLegend", {
+                from: gamesPerMonth[0]?.count ?? 0,
+                peak: Math.max(...gamesPerMonth.map((m) => m.count)),
+              })}
             />
           </div>
         </Band>
