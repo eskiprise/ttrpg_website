@@ -9,6 +9,10 @@ function useReload() {
   return { tick, reload: () => setTick((t) => t + 1) };
 }
 
+function initials(firstName: string, lastName: string) {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+}
+
 function SignupRequests({ token }: { token: string | null }) {
   const { t } = useTranslation();
   const { tick, reload } = useReload();
@@ -41,9 +45,13 @@ function SignupRequests({ token }: { token: string | null }) {
       {requests?.length === 0 && <p className="mt-3 text-ink-muted">{t("admin.noPendingRequests")}</p>}
       <div className="mt-3 flex flex-col">
         {requests?.map((r) => (
-          <div key={r.requestId} className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0">
-            <div>
-              <strong>{r.firstName} {r.lastName}</strong> — {r.email} — {r.telegramOrViberContact}
+          <div
+            key={r.requestId}
+            className="flex flex-col gap-2 border-b border-border py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0">
+              <p className="font-medium">{r.firstName} {r.lastName}</p>
+              <p className="truncate text-sm text-ink-muted">{r.email} · {r.telegramOrViberContact}</p>
             </div>
             <div className="flex flex-shrink-0 gap-2">
               <button type="button" onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
@@ -123,10 +131,19 @@ function Members({ token }: { token: string | null }) {
       {error && <p className="mt-3 text-accent">{error}</p>}
       <div className="mt-3 flex flex-col">
         {users?.map((u) => (
-          <div key={u.userId} className="flex justify-between gap-3 border-b border-border py-2 last:border-b-0">
-            <span>{u.firstName} {u.lastName} — {u.telegramOrViberContact}</span>
-            <label className="flex flex-shrink-0 items-center gap-2">
-              <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> {t("admin.gameMasterCheckbox")}
+          <div key={u.userId} className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-b-0">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-surface-2 font-display text-sm font-bold text-accent">
+                {initials(u.firstName, u.lastName)}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-medium">{u.firstName} {u.lastName}</p>
+                <p className="truncate text-sm text-ink-muted">{u.telegramOrViberContact}</p>
+              </div>
+            </div>
+            <label className="flex flex-shrink-0 items-center gap-2 text-sm">
+              <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} />
+              {t("admin.gameMasterCheckbox")}
             </label>
           </div>
         ))}
@@ -161,7 +178,7 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
   return (
     <div className="rounded-lg border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.addSystemTitle")}</h2>
-      <div className="mt-3 flex max-w-[420px] flex-col gap-2">
+      <div className="mt-3 flex flex-col gap-2">
         <input placeholder={t("admin.systemNamePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
         <textarea placeholder={t("admin.descriptionPlaceholder")} value={description} onChange={(e) => setDescription(e.target.value)} />
         {error && <p className="text-accent">{error}</p>}
@@ -177,12 +194,21 @@ export function AdminDashboard() {
   const { reload } = useReload();
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-16">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-16">
       <h1 className="text-3xl font-bold">{t("admin.title")}</h1>
-      <SignupRequests token={idToken} />
-      <AnonymizeToggle token={idToken} />
-      <Members token={idToken} />
-      <AddGameSystem token={idToken} onAdded={reload} />
+      {/* Left column: things with lists that grow (people). Right column: settings and
+          one-off actions, which stay short regardless of data volume — pairing them
+          this way keeps both columns roughly balanced instead of one giant stack. */}
+      <div className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="flex flex-col gap-6">
+          <SignupRequests token={idToken} />
+          <Members token={idToken} />
+        </div>
+        <div className="flex flex-col gap-6">
+          <AnonymizeToggle token={idToken} />
+          <AddGameSystem token={idToken} onAdded={reload} />
+        </div>
+      </div>
     </div>
   );
 }
