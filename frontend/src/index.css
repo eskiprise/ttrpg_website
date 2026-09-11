@@ -11,8 +11,20 @@
   --color-accent-2: var(--accent-2);
   --color-border: var(--border);
 
-  --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* The full-bleed dark sections (evidence band, closing CTA). These are their own
+     token set rather than a reuse of --surface because the band is always the
+     *deepest* surface on the page: in Day it's dark against bone, and in Night it
+     has to go darker still rather than becoming lighter than the page around it. */
+  --color-band: var(--band);
+  --color-band-raised: var(--band-raised);
+  --color-band-edge: var(--band-edge);
+  --color-band-ink: var(--band-ink);
+  --color-band-ink-muted: var(--band-ink-muted);
+  --color-band-accent: var(--band-accent);
+
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-body: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-numeric: "Unbounded", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
 }
 
@@ -21,19 +33,29 @@
 :root {
   color-scheme: light;
 
-  --bg: #eef0ea;
-  --surface: #ffffff;
-  --surface-2: #e5e8df;
-  --ink: #20241f;
-  --ink-muted: #4b5245;
-  --accent: #8c2f39;
-  --accent-ink: #fbf3f0;
-  --accent-2: #a9793a;
-  --border: #d8dbcf;
+  --bg: #ededE6;
+  --surface: #f7f7f2;
+  --surface-2: #e3e5db;
+  --ink: #19211c;
+  --ink-muted: #5c675f;
+  /* Clay, not brass. Brass (#c99a46) only reaches ~2.3:1 as text on the bone
+     surface; clay clears AA. Brass appears only on the dark band, never on bone. */
+  --accent: #9b4a33;
+  --accent-ink: #fbf6ee;
+  --accent-2: #8a6520;
+  --border: #d9dacf;
 
-  /* Categorical chart palette — re-validated (dataviz skill's validate_palette.js)
-     against both the Day surface (#ffffff) and Night surface (#221d19); all checks
-     pass for both, so the same 8 colors carry over unchanged. */
+  --band: #16241d;
+  --band-raised: #1e3329;
+  --band-edge: #2c4638;
+  --band-ink: #ededE6;
+  --band-ink-muted: #9cafa3;
+  --band-accent: #e0b865;
+
+  /* Categorical chart palette. NOTE: these were contrast-validated against the
+     previous surfaces (#ffffff / #221d19), which the palette above replaced — only
+     --series-1 is still consumed (the Statistics rating bars) and it is scheduled to
+     be re-keyed to a clay→brass ramp. Revalidate or retire before reusing any other. */
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
@@ -47,15 +69,22 @@
 .dark {
   color-scheme: dark;
 
-  --bg: #1a1613;
-  --surface: #221d19;
-  --surface-2: #2b241f;
-  --ink: #efe7dd;
-  --ink-muted: #b9ae9f;
-  --accent: #c24b4b;
-  --accent-ink: #1a1613;
-  --accent-2: #d9a94a;
-  --border: #3a322b;
+  --bg: #131b16;
+  --surface: #1a241e;
+  --surface-2: #223028;
+  --ink: #e8ede7;
+  --ink-muted: #9cafa3;
+  --accent: #d98368;
+  --accent-ink: #1a120c;
+  --accent-2: #e0b865;
+  --border: #2c3a31;
+
+  --band: #0e1712;
+  --band-raised: #16241d;
+  --band-edge: #233a2e;
+  --band-ink: #e8ede7;
+  --band-ink-muted: #8a9e92;
+  --band-accent: #e0b865;
 }
 
 /* Wrapped in Tailwind's cascade layers so plain utility classes (e.g. bg-accent
@@ -75,7 +104,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: var(--font-body);
-    line-height: 1.5;
+    line-height: 1.6;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
@@ -84,6 +113,14 @@
       transition: none !important;
       animation: none !important;
     }
+  }
+
+  /* Keyboard focus had no visible state at all before — every control fell back to
+     whatever the UA drew, which on a custom palette is often invisible. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
   a {
@@ -98,6 +135,7 @@
     color: var(--ink);
     font-family: var(--font-display);
     font-weight: 700;
+    text-wrap: balance;
   }
 
   button, input, textarea, select {
@@ -109,8 +147,10 @@
     background: var(--ink);
     color: var(--bg);
     border: none;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
+    /* 8px to match rounded-lg on cards — these used to disagree at 6px vs 8px. */
+    border-radius: 8px;
+    padding: 0.6rem 1.1rem;
+    font-weight: 600;
     cursor: pointer;
   }
   button:hover {
@@ -136,8 +176,8 @@
     background: var(--surface);
     color: var(--ink);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem;
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
   }
 
   form label {

@@ -224,6 +224,8 @@ export interface ClubStatistics {
   from: string | null;
   to: string | null;
   totalGames: number;
+  /** Total seats filled across every session in range — one per rating cast. */
+  totalSeats: number;
   /** Mean of each game's own average rating (games with no votes are excluded, not counted as 0) */
   averageScore: number | null;
   ratingDistribution: RatingDistribution;

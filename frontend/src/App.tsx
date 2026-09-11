@@ -40,7 +40,9 @@ function App() {
         <Route path="/game-log/:pollId" element={<GameDetail />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/statistics" element={<RequireAuth><Statistics /></RequireAuth>} />
+        {/* Public: the club's activity is the pitch to a stranger, and every figure
+            here already shows per-session on the Game Log. */}
+        <Route path="/statistics" element={<Statistics />} />
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
         <Route path="/telegram" element={<TelegramMiniAppRoot />}>
