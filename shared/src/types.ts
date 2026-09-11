@@ -226,6 +226,10 @@ export interface ClubStatistics {
   totalGames: number;
   /** Total seats filled across every session in range — one per rating cast. */
   totalSeats: number;
+  /** Distinct people who sat at a table in range (unlike totalSeats, counts each once). */
+  totalPlayers: number;
+  /** Sessions per month across the selected range, oldest first. */
+  gamesPerMonth: GameLogMonthlyCount[];
   /** Mean of each game's own average rating (games with no votes are excluded, not counted as 0) */
   averageScore: number | null;
   ratingDistribution: RatingDistribution;

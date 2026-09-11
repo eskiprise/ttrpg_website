@@ -152,8 +152,10 @@ export function Home() {
                 label={t("home.statAverage")}
               />
             )}
-            {stats != null && stats.totalSeats > 0 && (
-              <StatTile tone="band" value={stats.totalSeats} label={t("home.statSeats")} />
+            {/* `> 0` also covers the field being absent entirely, which it is when a
+                newer frontend is live against a backend that predates totalSeats. */}
+            {(stats?.totalSeats ?? 0) > 0 && (
+              <StatTile tone="band" value={stats!.totalSeats} label={t("home.statSeats")} />
             )}
             {systems.length > 0 && (
               <StatTile tone="band" value={systems.length} label={t("home.statSystems")} />

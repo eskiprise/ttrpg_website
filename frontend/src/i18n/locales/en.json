@@ -130,8 +130,19 @@
     "submittedBody": "Thanks! An admin will review your request and reach out once you're approved."
   },
   "login": {
-    "title": "Log In",
-    "intro": "Log in with your Telegram account to see everything and join the conversation.",
+    "eyebrow": "Telegram sign-in",
+    "title": "Log in and see the club from the inside",
+    "intro": "No passwords: sign in with the same Telegram account you rate sessions with in the chat.",
+    "benefit1Title": "Real names instead of nicknames",
+    "benefit1Body": "Visitors see players under generated nicknames. Logged in, you see who was actually at the table.",
+    "benefit2Title": "Comment on sessions",
+    "benefit2Body": "Leave your take on any game — and read what everyone else made of it.",
+    "benefit3Title": "Your own profile",
+    "benefit3Body": "Photo and bio. If you run games, that's exactly what shows on your public Game Master page.",
+    "widgetTitle": "Sign in",
+    "widgetHint": "Telegram will ask you to confirm. We only receive your name and @username.",
+    "notMemberYet": "Not with us yet?",
+    "writeToUs": "Message us and come play",
     "notConfigured": "Telegram login isn't configured yet.",
     "loginFailed": "Login failed"
   },
@@ -162,13 +173,16 @@
     "addSystem": "Add System"
   },
   "statistics": {
+    "eyebrow": "Club numbers",
     "title": "Club Statistics",
+    "intro": "Players rate every session in Telegram right after it ends. Everything below comes out of those ratings.",
     "from": "From",
     "to": "To",
     "apply": "Apply",
     "reset": "Reset",
     "totalGames": "Total Games",
     "averageScore": "Average Score",
+    "totalPlayers": "different players",
     "noGamesInPeriod": "No games logged in this period.",
     "ratingDistribution": "Rating Distribution",
     "votes_one": "{{count}} vote",

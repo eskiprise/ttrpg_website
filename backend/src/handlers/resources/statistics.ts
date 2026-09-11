@@ -1,6 +1,11 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
-import type { ClubStatistics, GameSpotlight, LeaderboardEntry } from "@ttrpg-club/shared";
+import type {
+  ClubStatistics,
+  GameLogMonthlyCount,
+  GameSpotlight,
+  LeaderboardEntry,
+} from "@ttrpg-club/shared";
 import { Tables, scanAll } from "../../lib/dynamo.js";
 import { json } from "../../lib/response.js";
 import { formatTelegramDisplayName } from "../../lib/telegramAuth.js";
@@ -43,6 +48,19 @@ function upsert(byUser: Map<number, Tally>, userId: number, at: string, displayN
     existing.latestAt = at;
     existing.displayName = displayName;
   }
+}
+
+/** Tally by "YYYY-MM", oldest first — the same shape the Game Log chart consumes,
+ *  but over the selected range rather than all of history. */
+function gamesPerMonth(polls: PollRecord[]): GameLogMonthlyCount[] {
+  const counts = new Map<string, number>();
+  for (const poll of polls) {
+    const month = poll.createdAt.slice(0, 7);
+    counts.set(month, (counts.get(month) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 function topEntries(byUser: Map<number, Tally>): LeaderboardEntry[] {
@@ -157,6 +175,14 @@ export async function getClubStatistics(event: APIGatewayProxyEventV2) {
     to,
     totalGames: polls.length,
     totalSeats: polls.reduce((sum, poll) => sum + (votesByPoll.get(poll.pollId)?.length ?? 0), 0),
+    // Distinct humans, not attendances — deliberately a different figure from
+    // totalSeats, which counts every seat taken across every session.
+    totalPlayers: new Set(
+      polls.flatMap((poll) =>
+        (votesByPoll.get(poll.pollId) ?? []).map((vote) => vote.telegramUserId)
+      )
+    ).size,
+    gamesPerMonth: gamesPerMonth(polls),
     averageScore,
     ratingDistribution: { counts: ratingCounts, totalVotes },
     topGameMasters: topEntries(gmsByUser),
