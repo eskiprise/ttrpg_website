@@ -1,5 +1,6 @@
 import { Route, Routes, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
+import { SiteFooter } from "./components/SiteFooter";
 import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
@@ -56,6 +57,7 @@ function App() {
           <Route path="achievements" element={<TelegramAchievements />} />
         </Route>
       </Routes>
+      {!isTelegramApp && <SiteFooter />}
     </>
   );
 }

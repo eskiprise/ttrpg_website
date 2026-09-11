@@ -51,19 +51,31 @@
   --band-ink: #ededE6;
   --band-ink-muted: #9cafa3;
   --band-accent: #e0b865;
+}
 
-  /* Categorical chart palette. NOTE: these were contrast-validated against the
-     previous surfaces (#ffffff / #221d19), which the palette above replaced — only
-     --series-1 is still consumed (the Statistics rating bars) and it is scheduled to
-     be re-keyed to a clay→brass ramp. Revalidate or retire before reusing any other. */
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-5: #d55181;
-  --series-6: #008300;
-  --series-7: #9085e9;
-  --series-8: #e66767;
+/* The page's type scale, as utilities so eight pages don't each carry the same
+   clamp() string inline. */
+@utility page-title {
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.2rem);
+  line-height: 1.06;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+@utility section-title {
+  font-size: clamp(1.6rem, 1.2rem + 1.8vw, 2.4rem);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+@utility eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .dark {

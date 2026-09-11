@@ -39,7 +39,7 @@ function SignupRequests({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.signupRequestsTitle")}</h2>
       {error && <p className="mt-3 text-accent">{error}</p>}
       {requests?.length === 0 && <p className="mt-3 text-ink-muted">{t("admin.noPendingRequests")}</p>}
@@ -85,7 +85,7 @@ function AnonymizeToggle({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.anonymizeTitle")}</h2>
       <label className="mt-3 flex items-center gap-2">
         <input type="checkbox" checked={checked} onChange={toggle} />
@@ -126,7 +126,7 @@ function Members({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.membersTitle")}</h2>
       {error && <p className="mt-3 text-accent">{error}</p>}
       <div className="mt-3 flex flex-col">
@@ -176,7 +176,7 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.addSystemTitle")}</h2>
       <div className="mt-3 flex flex-col gap-2">
         <input placeholder={t("admin.systemNamePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
@@ -194,8 +194,8 @@ export function AdminDashboard() {
   const { reload } = useReload();
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-16">
-      <h1 className="text-3xl font-bold">{t("admin.title")}</h1>
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 sm:py-16">
+      <h1 className="page-title">{t("admin.title")}</h1>
       {/* Left column: things with lists that grow (people). Right column: settings and
           one-off actions, which stay short regardless of data volume — pairing them
           this way keeps both columns roughly balanced instead of one giant stack. */}

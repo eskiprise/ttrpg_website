@@ -87,13 +87,15 @@
   "gameMasters": {
     "title": "Game Masters",
     "noneListed": "No game masters listed yet.",
-    "noBio": "No bio yet."
+    "noBio": "No bio yet.",
+    "intro": "The people who run our games. Tap through to read more."
   },
   "gameMasterDetail": {
     "noBio": "This game master hasn't written a bio yet."
   },
   "gameSystems": {
-    "title": "Games We Play"
+    "title": "Games We Play",
+    "none": "No systems added yet."
   },
   "gameLog": {
     "title": "Game Log",
@@ -103,7 +105,8 @@
     "loadMore": "Load more",
     "playerCount": "Players: {{count}}",
     "average": "Average score:",
-    "chartTitle": "Games per month"
+    "chartTitle": "Games per month",
+    "intro": "Every session we've played, with the rating its players gave it."
   },
   "gameDetail": {
     "dm": "Dungeon Master:",
@@ -116,7 +119,8 @@
     "none": "No comments yet.",
     "placeholder": "Share your thoughts on this session…",
     "post": "Post Comment",
-    "loginPrompt": "Log in as a club member to post a comment."
+    "loginPrompt": "Log in as a club member to post a comment.",
+    "loginLink": "Log in"
   },
   "signup": {
     "title": "Join the Club",
@@ -127,7 +131,9 @@
     "contact": "Telegram or Viber contact",
     "submit": "Submit Request",
     "submittedTitle": "Request Submitted",
-    "submittedBody": "Thanks! An admin will review your request and reach out once you're approved."
+    "submittedBody": "Thanks! An admin will review your request and reach out once you're approved.",
+    "preferTelegram": "Not a fan of forms?",
+    "telegramLink": "Just message us on Telegram"
   },
   "login": {
     "eyebrow": "Telegram sign-in",
@@ -155,7 +161,8 @@
     "save": "Save Profile",
     "updated": "Profile updated.",
     "avatarUpdated": "Profile picture updated.",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "gmIntro": "Your photo and bio appear on the public Game Masters page — they're what someone choosing a table actually sees."
   },
   "admin": {
     "title": "Admin",
@@ -248,5 +255,9 @@
     "leaderboardCustomRange": "Custom range",
     "leaderboardThisMonth": "This month",
     "leaderboardLastMonth": "Previous month"
+  },
+  "footer": {
+    "blurb": "Tabletop roleplaying club in Vinnytsia. Games every week, newcomers welcome.",
+    "telegram": "Message us on Telegram"
   }
 }
