@@ -28,37 +28,41 @@ function App() {
   // the normal site nav doesn't belong there.
   const isTelegramApp = location.pathname.startsWith("/telegram");
 
+  // Column that's at least one viewport tall, with <main> absorbing the slack, so on a
+  // short page the footer sits at the bottom of the screen instead of mid-page.
   return (
-    <>
+    <div className="flex min-h-dvh flex-col">
       {!isTelegramApp && <NavBar />}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/game-masters" element={<GameMasters />} />
-        <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
-        <Route path="/game-systems" element={<GameSystems />} />
-        <Route path="/game-log" element={<GameLog />} />
-        <Route path="/game-log/:pollId" element={<GameDetail />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        {/* Public: the club's activity is the pitch to a stranger, and every figure
-            here already shows per-session on the Game Log. */}
-        <Route path="/statistics" element={<Statistics />} />
-        <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-        <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-        <Route path="/telegram" element={<TelegramMiniAppRoot />}>
-          <Route index element={<TelegramStatsHome />} />
-          <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
-          <Route path="games/played" element={<TelegramGamesList kind="played" />} />
-          <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />
-          <Route path="games/all" element={<TelegramGamesList kind="all" />} />
-          <Route path="game/:pollId" element={<TelegramGameDetail />} />
-          <Route path="leaderboard" element={<TelegramLeaderboard />} />
-          <Route path="achievements" element={<TelegramAchievements />} />
-        </Route>
-      </Routes>
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/game-masters" element={<GameMasters />} />
+          <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
+          <Route path="/game-systems" element={<GameSystems />} />
+          <Route path="/game-log" element={<GameLog />} />
+          <Route path="/game-log/:pollId" element={<GameDetail />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          {/* Public: the club's activity is the pitch to a stranger, and every figure
+              here already shows per-session on the Game Log. */}
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          <Route path="/telegram" element={<TelegramMiniAppRoot />}>
+            <Route index element={<TelegramStatsHome />} />
+            <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
+            <Route path="games/played" element={<TelegramGamesList kind="played" />} />
+            <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />
+            <Route path="games/all" element={<TelegramGamesList kind="all" />} />
+            <Route path="game/:pollId" element={<TelegramGameDetail />} />
+            <Route path="leaderboard" element={<TelegramLeaderboard />} />
+            <Route path="achievements" element={<TelegramAchievements />} />
+          </Route>
+        </Routes>
+      </main>
       {!isTelegramApp && <SiteFooter />}
-    </>
+    </div>
   );
 }
 
