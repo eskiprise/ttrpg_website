@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import type { SignupRequest } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
@@ -34,30 +34,36 @@ export async function acknowledgeSignupRequest(
   const requestId = event.pathParameters?.requestId;
   if (!requestId) throw new HttpError(400, "Missing requestId");
 
+  const alreadyHandled = new HttpError(409, "Signup request not found or already handled");
+
+  // Get + conditional Put rather than UpdateItem: the Lambda's IAM policy only grants
+  // Get/Put/Delete/Query/Scan, and this keeps it that way.
+  const result = await ddb.send(
+    new GetCommand({ TableName: Tables.signupRequests(), Key: { requestId } })
+  );
+  const request = result.Item as SignupRequest | undefined;
+  if (!request || request.status !== "PENDING") throw alreadyHandled;
+
+  const updated: SignupRequest = {
+    ...request,
+    status: "ACKNOWLEDGED",
+    acknowledgedAt: new Date().toISOString(),
+    acknowledgedBy: auth.displayName,
+  };
   try {
-    const result = await ddb.send(
-      new UpdateCommand({
+    await ddb.send(
+      new PutCommand({
         TableName: Tables.signupRequests(),
-        Key: { requestId },
-        // Conditional so a missing id doesn't upsert a phantom row, and two admins
-        // clicking at once can't both "win" and overwrite each other's name.
+        Item: updated,
+        // Two admins clicking at once can't both "win" and overwrite each other's name.
         ConditionExpression: "#status = :pending",
-        UpdateExpression: "SET #status = :acknowledged, acknowledgedAt = :now, acknowledgedBy = :by",
         ExpressionAttributeNames: { "#status": "status" },
-        ExpressionAttributeValues: {
-          ":pending": "PENDING",
-          ":acknowledged": "ACKNOWLEDGED",
-          ":now": new Date().toISOString(),
-          ":by": auth.displayName,
-        },
-        ReturnValues: "ALL_NEW",
+        ExpressionAttributeValues: { ":pending": "PENDING" },
       })
     );
-    return json(200, { request: result.Attributes as SignupRequest });
   } catch (err) {
-    if (err instanceof ConditionalCheckFailedException) {
-      throw new HttpError(409, "Signup request not found or already handled");
-    }
+    if (err instanceof ConditionalCheckFailedException) throw alreadyHandled;
     throw err;
   }
+  return json(200, { request: updated });
 }
