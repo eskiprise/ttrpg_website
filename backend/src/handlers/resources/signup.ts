@@ -16,23 +16,25 @@ export async function createSignupRequest(
   event: APIGatewayProxyEventV2
 ) {
   const body = JSON.parse(event.body ?? "{}") as SignupBody;
-  const { firstName, lastName, email, telegramOrViberContact } = body;
+  const firstName = body.firstName?.trim();
+  const lastName = body.lastName?.trim();
+  const email = body.email?.trim();
+  const telegramOrViberContact = body.telegramOrViberContact?.trim();
 
-  if (!firstName || !lastName || !email || !telegramOrViberContact) {
-    throw new HttpError(
-      400,
-      "firstName, lastName, email and telegramOrViberContact are all required"
-    );
+  // Only what an admin needs to reach the person is mandatory — every extra required
+  // field is one more reason for a newcomer to close the tab.
+  if (!firstName || !telegramOrViberContact) {
+    throw new HttpError(400, "firstName and telegramOrViberContact are required");
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new HttpError(400, "Invalid email address");
   }
 
   const request: SignupRequest = {
     requestId: randomUUID(),
     firstName,
-    lastName,
-    email,
+    ...(lastName && { lastName }),
+    ...(email && { email }),
     telegramOrViberContact,
     status: "PENDING",
     createdAt: new Date().toISOString(),

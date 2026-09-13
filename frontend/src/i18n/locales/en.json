@@ -133,7 +133,8 @@
     "submittedTitle": "Request Submitted",
     "submittedBody": "Thanks! An admin will review your request and reach out once you're approved.",
     "preferTelegram": "Not a fan of forms?",
-    "telegramLink": "Just message us on Telegram"
+    "telegramLink": "Just message us on Telegram",
+    "requiredHint": "required fields"
   },
   "login": {
     "eyebrow": "Telegram sign-in",

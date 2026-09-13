@@ -4,6 +4,15 @@ import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
 import { CLUB_TELEGRAM_URL } from "../lib/club";
 
+/** Visual-only — screen readers already announce the input's `required` attribute. */
+function RequiredMark() {
+  return (
+    <span aria-hidden="true" className="font-semibold text-accent">
+      *
+    </span>
+  );
+}
+
 export function Signup() {
   const { t } = useTranslation();
   const [firstName, setFirstName] = useState("");
@@ -59,20 +68,27 @@ export function Signup() {
           onSubmit={onSubmit}
           className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 lg:self-start"
         >
+          <p className="text-xs text-ink-muted">
+            <RequiredMark /> {t("signup.requiredHint")}
+          </p>
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("signup.firstName")}
+            <span>
+              {t("signup.firstName")} <RequiredMark />
+            </span>
             <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </label>
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
             {t("signup.lastName")}
-            <input required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </label>
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
             {t("signup.email")}
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("signup.contact")}
+            <span>
+              {t("signup.contact")} <RequiredMark />
+            </span>
             <input required value={contact} onChange={(e) => setContact(e.target.value)} />
           </label>
           {error && <p className="text-accent">{error}</p>}

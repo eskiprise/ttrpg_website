@@ -137,7 +137,8 @@
     "submittedTitle": "Заявку надіслано",
     "submittedBody": "Дякуємо! Адміністратор розгляне вашу заявку та зв'яжеться з вами після схвалення.",
     "preferTelegram": "Не любите форми?",
-    "telegramLink": "Просто напишіть нам у Telegram"
+    "telegramLink": "Просто напишіть нам у Telegram",
+    "requiredHint": "обов'язкові поля"
   },
   "login": {
     "eyebrow": "Вхід через Telegram",

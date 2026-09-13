@@ -36,8 +36,8 @@ export type SignupRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface SignupRequest {
   requestId: string;
   firstName: string;
-  lastName: string;
-  email: string;
+  lastName?: string;
+  email?: string;
   telegramOrViberContact: string;
   status: SignupRequestStatus;
   createdAt: string;

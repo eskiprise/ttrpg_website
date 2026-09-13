@@ -50,8 +50,10 @@ function SignupRequests({ token }: { token: string | null }) {
             className="flex flex-col gap-2 border-b border-border py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
-              <p className="font-medium">{r.firstName} {r.lastName}</p>
-              <p className="truncate text-sm text-ink-muted">{r.email} · {r.telegramOrViberContact}</p>
+              <p className="font-medium">{[r.firstName, r.lastName].filter(Boolean).join(" ")}</p>
+              <p className="truncate text-sm text-ink-muted">
+                {[r.email, r.telegramOrViberContact].filter(Boolean).join(" · ")}
+              </p>
             </div>
             <div className="flex flex-shrink-0 gap-2">
               <button type="button" onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
