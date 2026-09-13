@@ -17,8 +17,8 @@ export function Signup() {
   const { t } = useTranslation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
+  const [phone, setPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -30,7 +30,7 @@ export function Signup() {
     try {
       await apiFetch("/signup", {
         method: "POST",
-        body: { firstName, lastName, email, telegramOrViberContact: contact },
+        body: { firstName, lastName, telegramOrViberContact: contact, phone },
       });
       setSubmitted(true);
     } catch (err) {
@@ -81,16 +81,34 @@ export function Signup() {
             {t("signup.lastName")}
             <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("signup.email")}
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            <span>
-              {t("signup.contact")} <RequiredMark />
-            </span>
-            <input required value={contact} onChange={(e) => setContact(e.target.value)} />
-          </label>
+          {/* Either one is enough, so each is `required` only while the other is empty —
+              the browser then blocks submit until at least one is filled. */}
+          <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
+            <legend className="p-0 text-sm font-semibold text-ink">
+              {t("signup.reachGroup")} <RequiredMark />
+            </legend>
+            <p className="-mt-1 text-xs text-ink-muted">{t("signup.reachGroupHint")}</p>
+            <label className="flex flex-col gap-1 text-sm text-ink-muted">
+              {t("signup.contact")}
+              <input
+                required={!phone.trim()}
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-ink-muted">
+              {t("signup.phone")}
+              <input
+                required={!contact.trim()}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+380 …"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </label>
+          </fieldset>
           {error && <p className="text-accent">{error}</p>}
           <button disabled={busy} type="submit" className="mt-1">
             {t("signup.submit")}

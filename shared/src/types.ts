@@ -31,16 +31,23 @@ export interface PublicGameMaster {
   profilePictureUrl: string | null;
 }
 
-export type SignupRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+/** APPROVED/REJECTED are legacy values from the Cognito era — rows may still carry them. */
+export type SignupRequestStatus = "PENDING" | "ACKNOWLEDGED" | "APPROVED" | "REJECTED";
 
 export interface SignupRequest {
   requestId: string;
   firstName: string;
   lastName?: string;
+  /** No longer collected — only present on older requests. */
   email?: string;
-  telegramOrViberContact: string;
+  /** At least one of telegramOrViberContact / phone is always present. */
+  telegramOrViberContact?: string;
+  phone?: string;
   status: SignupRequestStatus;
   createdAt: string;
+  acknowledgedAt?: string;
+  /** Display name of the admin who acknowledged it. */
+  acknowledgedBy?: string;
 }
 
 export interface GameSystem {

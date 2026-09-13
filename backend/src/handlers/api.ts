@@ -18,8 +18,7 @@ import { listComments, postComment, deleteComment } from "./resources/comments.j
 import { getMyProfile, updateMyProfile, getAvatarUploadUrl } from "./resources/profile.js";
 import {
   listSignupRequests,
-  approveSignupRequest,
-  rejectSignupRequest,
+  acknowledgeSignupRequest,
 } from "./resources/adminSignup.js";
 import { updateAnonymizeToggle } from "./resources/settings.js";
 import { listUsers, updateUserRoles } from "./resources/adminUsers.js";
@@ -73,8 +72,7 @@ const routes: Record<string, RouteHandler> = {
   "POST /me/avatar-upload-url": getAvatarUploadUrl,
 
   "GET /admin/signup-requests": listSignupRequests,
-  "POST /admin/signup-requests/{requestId}/approve": approveSignupRequest,
-  "POST /admin/signup-requests/{requestId}/reject": rejectSignupRequest,
+  "POST /admin/signup-requests/{requestId}/acknowledge": acknowledgeSignupRequest,
 
   "PATCH /admin/settings/anonymize-toggle": updateAnonymizeToggle,
 

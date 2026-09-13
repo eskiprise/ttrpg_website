@@ -128,17 +128,19 @@
   },
   "signup": {
     "title": "Приєднатися до клубу",
-    "intro": "Членство надається після схвалення адміністратором. Заповніть форму, і ми з вами зв'яжемось.",
+    "intro": "Залиште контакти — ми напишемо вам і підберемо гру під ваш досвід і графік.",
     "firstName": "Ім'я",
     "lastName": "Прізвище",
-    "email": "Ел. пошта",
     "contact": "Контакт у Telegram або Viber",
     "submit": "Надіслати заявку",
     "submittedTitle": "Заявку надіслано",
-    "submittedBody": "Дякуємо! Адміністратор розгляне вашу заявку та зв'яжеться з вами після схвалення.",
+    "submittedBody": "Дякуємо! Ми зв'яжемося з вами найближчим часом.",
     "preferTelegram": "Не любите форми?",
     "telegramLink": "Просто напишіть нам у Telegram",
-    "requiredHint": "обов'язкові поля"
+    "requiredHint": "обов'язкові поля",
+    "reachGroup": "Як з вами зв'язатися",
+    "reachGroupHint": "Достатньо одного: Telegram/Viber або телефон.",
+    "phone": "Телефон"
   },
   "login": {
     "eyebrow": "Вхід через Telegram",
@@ -173,8 +175,6 @@
     "title": "Адміністрування",
     "signupRequestsTitle": "Заявки на реєстрацію",
     "noPendingRequests": "Немає заявок на розгляді.",
-    "approve": "Схвалити",
-    "reject": "Відхилити",
     "anonymizeTitle": "Анонімізація публічної історії ігор",
     "anonymizeLabel": "Замінювати імена гравців на псевдоніми для неавторизованих відвідувачів",
     "membersTitle": "Учасники",
@@ -182,7 +182,8 @@
     "addSystemTitle": "Додати систему гри",
     "systemNamePlaceholder": "Назва (напр. D&D 5e)",
     "descriptionPlaceholder": "Опис",
-    "addSystem": "Додати систему"
+    "addSystem": "Додати систему",
+    "acknowledge": "Опрацьовано"
   },
   "statistics": {
     "eyebrow": "Цифри клубу",

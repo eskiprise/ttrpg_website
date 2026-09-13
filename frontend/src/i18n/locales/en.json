@@ -124,17 +124,19 @@
   },
   "signup": {
     "title": "Join the Club",
-    "intro": "Membership is by admin approval. Fill this out and we'll get in touch.",
+    "intro": "Leave your details — we'll get in touch and find a game that fits your experience and schedule.",
     "firstName": "First name",
     "lastName": "Last name",
-    "email": "Email",
     "contact": "Telegram or Viber contact",
     "submit": "Submit Request",
     "submittedTitle": "Request Submitted",
-    "submittedBody": "Thanks! An admin will review your request and reach out once you're approved.",
+    "submittedBody": "Thanks! We'll be in touch soon.",
     "preferTelegram": "Not a fan of forms?",
     "telegramLink": "Just message us on Telegram",
-    "requiredHint": "required fields"
+    "requiredHint": "required fields",
+    "reachGroup": "How can we reach you",
+    "reachGroupHint": "Either one is enough: Telegram/Viber or phone.",
+    "phone": "Phone"
   },
   "login": {
     "eyebrow": "Telegram sign-in",
@@ -169,8 +171,6 @@
     "title": "Admin",
     "signupRequestsTitle": "Pending Signup Requests",
     "noPendingRequests": "No pending requests.",
-    "approve": "Approve",
-    "reject": "Reject",
     "anonymizeTitle": "Anonymize Public Game Log",
     "anonymizeLabel": "Replace player names with nicknames for logged-out visitors",
     "membersTitle": "Members",
@@ -178,7 +178,8 @@
     "addSystemTitle": "Add Game System",
     "systemNamePlaceholder": "Name (e.g. D&D 5e)",
     "descriptionPlaceholder": "Description",
-    "addSystem": "Add System"
+    "addSystem": "Add System",
+    "acknowledge": "Acknowledge"
   },
   "statistics": {
     "eyebrow": "Club numbers",

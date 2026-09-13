@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SignupRequest, User } from "@ttrpg-club/shared";
-import { apiFetch } from "../../lib/api";
+import { ApiError, apiFetch } from "../../lib/api";
 import { useAuth } from "../../auth/AuthContext";
 
 function useReload() {
@@ -25,17 +25,21 @@ function SignupRequests({ token }: { token: string | null }) {
       .catch((err) => setError(err.message));
   }, [token, tick]);
 
-  async function act(requestId: string, action: "approve" | "reject") {
+  async function acknowledge(requestId: string) {
     setError(null);
     try {
-      await apiFetch(`/admin/signup-requests/${requestId}/${action}`, {
+      await apiFetch(`/admin/signup-requests/${requestId}/acknowledge`, {
         method: "POST",
         token,
       });
-      reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+      // 409 = another admin already handled it — not worth an error, the reload below
+      // simply drops it from the list.
+      if (!(err instanceof ApiError && err.status === 409)) {
+        setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+      }
     }
+    reload();
   }
 
   return (
@@ -52,13 +56,12 @@ function SignupRequests({ token }: { token: string | null }) {
             <div className="min-w-0">
               <p className="font-medium">{[r.firstName, r.lastName].filter(Boolean).join(" ")}</p>
               <p className="truncate text-sm text-ink-muted">
-                {[r.email, r.telegramOrViberContact].filter(Boolean).join(" · ")}
+                {[r.telegramOrViberContact, r.phone, r.email].filter(Boolean).join(" · ")}
               </p>
             </div>
-            <div className="flex flex-shrink-0 gap-2">
-              <button type="button" onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
-              <button type="button" className="secondary" onClick={() => act(r.requestId, "reject")}>{t("admin.reject")}</button>
-            </div>
+            <button type="button" className="flex-shrink-0 self-start sm:self-auto" onClick={() => acknowledge(r.requestId)}>
+              {t("admin.acknowledge")}
+            </button>
           </div>
         ))}
       </div>

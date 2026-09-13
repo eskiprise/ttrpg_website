@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import type { SignupRequest } from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { requireAdmin } from "../../lib/auth.js";
@@ -21,50 +22,42 @@ export async function listSignupRequests(
   return json(200, { requests: (result.Items ?? []) as SignupRequest[] });
 }
 
-async function getRequestOrThrow(requestId: string): Promise<SignupRequest> {
-  const result = await ddb.send(
-    new GetCommand({ TableName: Tables.signupRequests(), Key: { requestId } })
-  );
-  if (!result.Item) throw new HttpError(404, "Signup request not found");
-  return result.Item as SignupRequest;
-}
-
 /**
- * A user account is no longer provisioned here — anyone logging in with Telegram
- * gets a `users` row automatically on first login, independent of this form. Approval
- * is now just an acknowledgement that the club has seen and accepted the request.
+ * There's no account to provision any more — anyone logging in with Telegram gets a
+ * `users` row automatically. A signup request is just someone asking to be contacted,
+ * so the only admin action is marking it handled, which drops it off the pending list.
  */
-export async function approveSignupRequest(
+export async function acknowledgeSignupRequest(
   event: APIGatewayProxyEventV2
 ) {
-  await requireAdmin(event);
+  const auth = await requireAdmin(event);
   const requestId = event.pathParameters?.requestId;
   if (!requestId) throw new HttpError(400, "Missing requestId");
 
-  const request = await getRequestOrThrow(requestId);
-  if (request.status !== "PENDING") {
-    throw new HttpError(409, `Request already ${request.status.toLowerCase()}`);
+  try {
+    const result = await ddb.send(
+      new UpdateCommand({
+        TableName: Tables.signupRequests(),
+        Key: { requestId },
+        // Conditional so a missing id doesn't upsert a phantom row, and two admins
+        // clicking at once can't both "win" and overwrite each other's name.
+        ConditionExpression: "#status = :pending",
+        UpdateExpression: "SET #status = :acknowledged, acknowledgedAt = :now, acknowledgedBy = :by",
+        ExpressionAttributeNames: { "#status": "status" },
+        ExpressionAttributeValues: {
+          ":pending": "PENDING",
+          ":acknowledged": "ACKNOWLEDGED",
+          ":now": new Date().toISOString(),
+          ":by": auth.displayName,
+        },
+        ReturnValues: "ALL_NEW",
+      })
+    );
+    return json(200, { request: result.Attributes as SignupRequest });
+  } catch (err) {
+    if (err instanceof ConditionalCheckFailedException) {
+      throw new HttpError(409, "Signup request not found or already handled");
+    }
+    throw err;
   }
-
-  const updated: SignupRequest = { ...request, status: "APPROVED" };
-  await ddb.send(new PutCommand({ TableName: Tables.signupRequests(), Item: updated }));
-
-  return json(200, { request: updated });
-}
-
-export async function rejectSignupRequest(
-  event: APIGatewayProxyEventV2
-) {
-  await requireAdmin(event);
-  const requestId = event.pathParameters?.requestId;
-  if (!requestId) throw new HttpError(400, "Missing requestId");
-
-  const request = await getRequestOrThrow(requestId);
-  await ddb.send(
-    new PutCommand({
-      TableName: Tables.signupRequests(),
-      Item: { ...request, status: "REJECTED" },
-    })
-  );
-  return json(200, { requestId, status: "REJECTED" });
 }
