@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameSystem } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
+import { PageShell } from "../components/PageShell";
+import { Card } from "../components/Card";
 
 export function GameSystems() {
   const { t } = useTranslation();
@@ -15,18 +17,19 @@ export function GameSystems() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-bold">{t("gameSystems.title")}</h1>
+    <PageShell width="wide">
+      <h1 className="page-title">{t("gameSystems.title")}</h1>
       {error && <p className="mt-4 text-accent">{error}</p>}
       {!systems && !error && <p className="mt-4 text-ink-muted">{t("common.loading")}</p>}
-      <div className="mt-8 flex flex-col gap-4">
+      {systems?.length === 0 && <p className="mt-4 text-ink-muted">{t("gameSystems.none")}</p>}
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
         {systems?.map((system) => (
-          <div key={system.systemId} className="rounded-lg border border-border bg-surface p-6">
+          <Card key={system.systemId}>
             <h2 className="text-xl font-bold">{system.name}</h2>
-            <p className="mt-2 text-ink-muted">{system.description}</p>
-          </div>
+            {system.description && <p className="mt-2 text-ink-muted">{system.description}</p>}
+          </Card>
         ))}
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,10 +1,16 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
-import type { ClubStatistics, GameSpotlight, LeaderboardEntry } from "@ttrpg-club/shared";
+import type {
+  ClubStatistics,
+  GameLogMonthlyCount,
+  GameSpotlight,
+  LeaderboardEntry,
+} from "@ttrpg-club/shared";
 import { Tables, scanAll } from "../../lib/dynamo.js";
-import { requireAuth } from "../../lib/auth.js";
 import { json } from "../../lib/response.js";
 import { formatTelegramDisplayName } from "../../lib/telegramAuth.js";
+import { shouldAnonymizeFor } from "../../lib/settings.js";
+import { nicknameFor } from "../../lib/nicknames.js";
 import type { PollRecord, VoteRecord } from "./telegramGames.js";
 
 const LEADERBOARD_SIZE = 5;
@@ -44,6 +50,19 @@ function upsert(byUser: Map<number, Tally>, userId: number, at: string, displayN
   }
 }
 
+/** Tally by "YYYY-MM", oldest first — the same shape the Game Log chart consumes,
+ *  but over the selected range rather than all of history. */
+function gamesPerMonth(polls: PollRecord[]): GameLogMonthlyCount[] {
+  const counts = new Map<string, number>();
+  for (const poll of polls) {
+    const month = poll.createdAt.slice(0, 7);
+    counts.set(month, (counts.get(month) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+}
+
 function topEntries(byUser: Map<number, Tally>): LeaderboardEntry[] {
   return Array.from(byUser.values())
     .sort((a, b) => b.count - a.count)
@@ -55,9 +74,12 @@ function topEntries(byUser: Map<number, Tally>): LeaderboardEntry[] {
  * Rebuilt on the Telegram-sourced poll/vote tables — the site's own games table is
  * gone. There's no system breakdown here (see ClubStatistics): a Telegram poll's
  * questionText is free text, not a game-system id, so there's nothing to group by.
+ *
+ * Public, deliberately: every figure here is already visible per-session on the Game
+ * Log, and the homepage leans on these numbers to show a stranger that the club is
+ * active. Player names are the one thing held back — see the topPlayers handling below.
  */
 export async function getClubStatistics(event: APIGatewayProxyEventV2) {
-  await requireAuth(event);
   const from = event.queryStringParameters?.from || null;
   const to = event.queryStringParameters?.to || null;
 
@@ -140,14 +162,31 @@ export async function getClubStatistics(event: APIGatewayProxyEventV2) {
     }
   }
 
+  // Game masters are public-facing club staff, so their names always show. Players
+  // are not — a logged-out visitor sees the same generated nicknames the Game Log
+  // uses, while a logged-in member sees real names.
+  const anonymize = await shouldAnonymizeFor(event);
+  const topPlayers = topEntries(playersByUser).map((entry) =>
+    anonymize ? { ...entry, displayName: nicknameFor(String(entry.telegramUserId)) } : entry
+  );
+
   const statistics: ClubStatistics = {
     from,
     to,
     totalGames: polls.length,
+    totalSeats: polls.reduce((sum, poll) => sum + (votesByPoll.get(poll.pollId)?.length ?? 0), 0),
+    // Distinct humans, not attendances — deliberately a different figure from
+    // totalSeats, which counts every seat taken across every session.
+    totalPlayers: new Set(
+      polls.flatMap((poll) =>
+        (votesByPoll.get(poll.pollId) ?? []).map((vote) => vote.telegramUserId)
+      )
+    ).size,
+    gamesPerMonth: gamesPerMonth(polls),
     averageScore,
     ratingDistribution: { counts: ratingCounts, totalVotes },
     topGameMasters: topEntries(gmsByUser),
-    topPlayers: topEntries(playersByUser),
+    topPlayers,
     highestRatedGame,
     lowestRatedGame,
   };

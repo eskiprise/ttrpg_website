@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SignupRequest, User } from "@ttrpg-club/shared";
-import { apiFetch } from "../../lib/api";
+import { ApiError, apiFetch } from "../../lib/api";
 import { useAuth } from "../../auth/AuthContext";
 
 function useReload() {
   const [tick, setTick] = useState(0);
   return { tick, reload: () => setTick((t) => t + 1) };
+}
+
+function initials(firstName: string, lastName: string) {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
 function SignupRequests({ token }: { token: string | null }) {
@@ -21,34 +25,43 @@ function SignupRequests({ token }: { token: string | null }) {
       .catch((err) => setError(err.message));
   }, [token, tick]);
 
-  async function act(requestId: string, action: "approve" | "reject") {
+  async function acknowledge(requestId: string) {
     setError(null);
     try {
-      await apiFetch(`/admin/signup-requests/${requestId}/${action}`, {
+      await apiFetch(`/admin/signup-requests/${requestId}/acknowledge`, {
         method: "POST",
         token,
       });
-      reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+      // 409 = another admin already handled it — not worth an error, the reload below
+      // simply drops it from the list.
+      if (!(err instanceof ApiError && err.status === 409)) {
+        setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+      }
     }
+    reload();
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.signupRequestsTitle")}</h2>
       {error && <p className="mt-3 text-accent">{error}</p>}
       {requests?.length === 0 && <p className="mt-3 text-ink-muted">{t("admin.noPendingRequests")}</p>}
       <div className="mt-3 flex flex-col">
         {requests?.map((r) => (
-          <div key={r.requestId} className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0">
-            <div>
-              <strong>{r.firstName} {r.lastName}</strong> — {r.email} — {r.telegramOrViberContact}
+          <div
+            key={r.requestId}
+            className="flex flex-col gap-2 border-b border-border py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0">
+              <p className="font-medium">{[r.firstName, r.lastName].filter(Boolean).join(" ")}</p>
+              <p className="truncate text-sm text-ink-muted">
+                {[r.telegramOrViberContact, r.phone, r.email].filter(Boolean).join(" · ")}
+              </p>
             </div>
-            <div className="flex flex-shrink-0 gap-2">
-              <button type="button" onClick={() => act(r.requestId, "approve")}>{t("admin.approve")}</button>
-              <button type="button" className="secondary" onClick={() => act(r.requestId, "reject")}>{t("admin.reject")}</button>
-            </div>
+            <button type="button" className="flex-shrink-0 self-start sm:self-auto" onClick={() => acknowledge(r.requestId)}>
+              {t("admin.acknowledge")}
+            </button>
           </div>
         ))}
       </div>
@@ -77,7 +90,7 @@ function AnonymizeToggle({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.anonymizeTitle")}</h2>
       <label className="mt-3 flex items-center gap-2">
         <input type="checkbox" checked={checked} onChange={toggle} />
@@ -118,15 +131,24 @@ function Members({ token }: { token: string | null }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.membersTitle")}</h2>
       {error && <p className="mt-3 text-accent">{error}</p>}
       <div className="mt-3 flex flex-col">
         {users?.map((u) => (
-          <div key={u.userId} className="flex justify-between gap-3 border-b border-border py-2 last:border-b-0">
-            <span>{u.firstName} {u.lastName} — {u.telegramOrViberContact}</span>
-            <label className="flex flex-shrink-0 items-center gap-2">
-              <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} /> {t("admin.gameMasterCheckbox")}
+          <div key={u.userId} className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-b-0">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-surface-2 font-display text-sm font-bold text-accent">
+                {initials(u.firstName, u.lastName)}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-medium">{u.firstName} {u.lastName}</p>
+                <p className="truncate text-sm text-ink-muted">{u.telegramOrViberContact}</p>
+              </div>
+            </div>
+            <label className="flex flex-shrink-0 items-center gap-2 text-sm">
+              <input type="checkbox" checked={u.roles.includes("dm")} onChange={() => toggleDm(u)} />
+              {t("admin.gameMasterCheckbox")}
             </label>
           </div>
         ))}
@@ -159,9 +181,9 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div className="rounded-xl border border-border bg-surface p-6">
       <h2 className="text-xl font-bold">{t("admin.addSystemTitle")}</h2>
-      <div className="mt-3 flex max-w-[420px] flex-col gap-2">
+      <div className="mt-3 flex flex-col gap-2">
         <input placeholder={t("admin.systemNamePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
         <textarea placeholder={t("admin.descriptionPlaceholder")} value={description} onChange={(e) => setDescription(e.target.value)} />
         {error && <p className="text-accent">{error}</p>}
@@ -177,12 +199,21 @@ export function AdminDashboard() {
   const { reload } = useReload();
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-16">
-      <h1 className="text-3xl font-bold">{t("admin.title")}</h1>
-      <SignupRequests token={idToken} />
-      <AnonymizeToggle token={idToken} />
-      <Members token={idToken} />
-      <AddGameSystem token={idToken} onAdded={reload} />
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 sm:py-16">
+      <h1 className="page-title">{t("admin.title")}</h1>
+      {/* Left column: things with lists that grow (people). Right column: settings and
+          one-off actions, which stay short regardless of data volume — pairing them
+          this way keeps both columns roughly balanced instead of one giant stack. */}
+      <div className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="flex flex-col gap-6">
+          <SignupRequests token={idToken} />
+          <Members token={idToken} />
+        </div>
+        <div className="flex flex-col gap-6">
+          <AnonymizeToggle token={idToken} />
+          <AddGameSystem token={idToken} onAdded={reload} />
+        </div>
+      </div>
     </div>
   );
 }

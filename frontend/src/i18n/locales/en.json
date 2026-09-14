@@ -1,6 +1,7 @@
 {
   "nav": {
     "brand": "Dice & Adventures Club",
+    "brandShort": "DnA Club",
     "home": "Home",
     "about": "About Us",
     "gameMasters": "Game Masters",
@@ -11,28 +12,73 @@
     "menu": "Menu",
     "profile": "Profile",
     "logIn": "Log In",
-    "logOut": "Log Out"
+    "logOut": "Log Out",
+    "joinCta": "Come play",
+    "themeDay": "Day",
+    "themeNight": "Night",
+    "themeToDay": "Switch to day theme",
+    "themeToNight": "Switch to night theme"
   },
   "common": {
     "loading": "Loading…",
     "somethingWrong": "Something went wrong"
   },
   "home": {
-    "eyebrow_one": "{{count}} session logged this season",
-    "eyebrow_other": "{{count}} sessions logged this season",
-    "heroTitle": "Every session, remembered.",
-    "intro": "We're a tabletop RPG club running D&D, Delta Green, and more. Browse our Game Masters, check the log of every session we've played, and join us at the table.",
-    "latestSession": "Latest session",
+    "eyebrow": "Tabletop roleplaying club · Vinnytsia",
+    "heroTitle": "We play several times a week. Come to the next one.",
+    "intro": "D&D, Delta Green, Dragonbane and two dozen more systems. Never played? We'll teach you at the table — bring nothing.",
+    "ctaPrimary": "Message us on Telegram",
+    "ctaSecondary": "See what we've played",
+    "reassure": "First game is free. Newcomers turn up every week.",
+    "justPlayed": "Just played",
+    "evidenceEyebrow": "Not just talk",
+    "evidenceTitle_one": "{{count}} session played — every one of them rated",
+    "evidenceTitle_other": "{{count}} sessions played — every one of them rated",
+    "evidenceSub": "We don't promise \"regular meetups\". Here's how many games actually happened, and how the players themselves rated them.",
+    "statSessions": "sessions played",
+    "statAverage": "average player rating",
+    "statSeats": "seats filled at tables",
+    "statSystems": "different systems",
+    "growthTitle": "Games per month",
+    "growthLegend": "From {{from}} to {{peak}} games a month",
+    "fearsEyebrow": "First time at the table?",
+    "fearsTitle": "The usual reasons not to come — and what's wrong with them",
+    "fear1Title": "\"I've never played\"",
+    "fear1Body": "Half the people who show up hadn't either. The GM explains the rules as you go — nobody reads a 300-page book first.",
+    "fear2Title": "\"I need to buy stuff\"",
+    "fear2Body": "You don't. Dice, rulebooks, character sheets and pencils are ours. Turn up empty-handed.",
+    "fear3Title": "\"I don't know anyone\"",
+    "fear3Body": "New faces at the table every week. Most people come on their own and meet everyone during the game.",
+    "fear4Title": "\"What if I don't like it\"",
+    "fear4Body": "Then you spent one evening. The first game is free, and nobody minds if you don't come back.",
+    "recentEyebrow": "Latest from the log",
+    "recentTitle": "What we played recently",
+    "recentSub": "Players rate every session in Telegram afterwards. We show all of them — the good and the not-so-good.",
     "noSessionsYet": "No sessions logged yet.",
-    "statSessions": "Sessions logged",
-    "statGameMasters": "Game Masters",
-    "statSystems": "Systems played",
-    "upcomingSessions": "Upcoming Sessions",
-    "recentSessions": "Recent sessions",
-    "seeAllGameMasters": "All Game Masters",
     "seeAllGameLog": "Full Game Log",
-    "exploreGameMasters": "Meet our Game Masters",
-    "exploreGameLog": "Browse the Game Log"
+    "seeAllGameMasters": "All Game Masters",
+    "systemsEyebrow_one": "{{count}} system",
+    "systemsEyebrow_other": "{{count}} systems",
+    "systemsTitle": "Fantasy, horror, pirates, vampires, cyberpunk",
+    "systemsSub": "If there's something specific you're after, chances are we've already run it.",
+    "systemsMore": "{{count}} more",
+    "gmsEyebrow": "Who runs the games",
+    "upcomingEyebrow": "Schedule",
+    "upcomingSessions": "Upcoming Sessions",
+    "upcomingSub": "The calendar updates whenever a GM schedules a new game.",
+    "joinEyebrow": "Join us",
+    "joinTitle": "Message us and we'll seat you at a table this week",
+    "joinSub": "Tell us whether you've played before and when suits you. We'll match you to a game for your level and schedule.",
+    "joinTelegram": "Message us on Telegram",
+    "joinForm": "Fill in the form",
+    "factWhen": "When",
+    "factWhenValue": "Evenings, 18:30",
+    "factWhere": "Where",
+    "factWhereValue": "Vinnytsia — add your address",
+    "factPrice": "Cost",
+    "factPriceValue": "First game free",
+    "factAge": "Age",
+    "factAgeValue": "16+"
   },
   "about": {
     "title": "About Us",
@@ -41,13 +87,15 @@
   "gameMasters": {
     "title": "Game Masters",
     "noneListed": "No game masters listed yet.",
-    "noBio": "No bio yet."
+    "noBio": "No bio yet.",
+    "intro": "The people who run our games. Tap through to read more."
   },
   "gameMasterDetail": {
     "noBio": "This game master hasn't written a bio yet."
   },
   "gameSystems": {
-    "title": "Games We Play"
+    "title": "Games We Play",
+    "none": "No systems added yet."
   },
   "gameLog": {
     "title": "Game Log",
@@ -57,7 +105,8 @@
     "loadMore": "Load more",
     "playerCount": "Players: {{count}}",
     "average": "Average score:",
-    "chartTitle": "Games per month"
+    "chartTitle": "Games per month",
+    "intro": "Every session we've played, with the rating its players gave it."
   },
   "gameDetail": {
     "dm": "Dungeon Master:",
@@ -70,22 +119,39 @@
     "none": "No comments yet.",
     "placeholder": "Share your thoughts on this session…",
     "post": "Post Comment",
-    "loginPrompt": "Log in as a club member to post a comment."
+    "loginPrompt": "Log in as a club member to post a comment.",
+    "loginLink": "Log in"
   },
   "signup": {
     "title": "Join the Club",
-    "intro": "Membership is by admin approval. Fill this out and we'll get in touch.",
+    "intro": "Leave your details — we'll get in touch and find a game that fits your experience and schedule.",
     "firstName": "First name",
     "lastName": "Last name",
-    "email": "Email",
     "contact": "Telegram or Viber contact",
     "submit": "Submit Request",
     "submittedTitle": "Request Submitted",
-    "submittedBody": "Thanks! An admin will review your request and reach out once you're approved."
+    "submittedBody": "Thanks! We'll be in touch soon.",
+    "preferTelegram": "Not a fan of forms?",
+    "telegramLink": "Just message us on Telegram",
+    "requiredHint": "required fields",
+    "reachGroup": "How can we reach you",
+    "reachGroupHint": "Either one is enough: Telegram/Viber or phone.",
+    "phone": "Phone"
   },
   "login": {
-    "title": "Log In",
-    "intro": "Log in with your Telegram account to see everything and join the conversation.",
+    "eyebrow": "Telegram sign-in",
+    "title": "Log in and see the club from the inside",
+    "intro": "No passwords: sign in with the same Telegram account you rate sessions with in the chat.",
+    "benefit1Title": "Real names instead of nicknames",
+    "benefit1Body": "Visitors see players under generated nicknames. Logged in, you see who was actually at the table.",
+    "benefit2Title": "Comment on sessions",
+    "benefit2Body": "Leave your take on any game — and read what everyone else made of it.",
+    "benefit3Title": "Your own profile",
+    "benefit3Body": "Photo and bio. If you run games, that's exactly what shows on your public Game Master page.",
+    "widgetTitle": "Sign in",
+    "widgetHint": "Telegram will ask you to confirm. We only receive your name and @username.",
+    "notMemberYet": "Not with us yet?",
+    "writeToUs": "Message us and come play",
     "notConfigured": "Telegram login isn't configured yet.",
     "loginFailed": "Login failed"
   },
@@ -98,14 +164,13 @@
     "save": "Save Profile",
     "updated": "Profile updated.",
     "avatarUpdated": "Profile picture updated.",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "gmIntro": "Your photo and bio appear on the public Game Masters page — they're what someone choosing a table actually sees."
   },
   "admin": {
     "title": "Admin",
     "signupRequestsTitle": "Pending Signup Requests",
     "noPendingRequests": "No pending requests.",
-    "approve": "Approve",
-    "reject": "Reject",
     "anonymizeTitle": "Anonymize Public Game Log",
     "anonymizeLabel": "Replace player names with nicknames for logged-out visitors",
     "membersTitle": "Members",
@@ -113,16 +178,20 @@
     "addSystemTitle": "Add Game System",
     "systemNamePlaceholder": "Name (e.g. D&D 5e)",
     "descriptionPlaceholder": "Description",
-    "addSystem": "Add System"
+    "addSystem": "Add System",
+    "acknowledge": "Acknowledge"
   },
   "statistics": {
+    "eyebrow": "Club numbers",
     "title": "Club Statistics",
+    "intro": "Players rate every session in Telegram right after it ends. Everything below comes out of those ratings.",
     "from": "From",
     "to": "To",
     "apply": "Apply",
     "reset": "Reset",
     "totalGames": "Total Games",
     "averageScore": "Average Score",
+    "totalPlayers": "different players",
     "noGamesInPeriod": "No games logged in this period.",
     "ratingDistribution": "Rating Distribution",
     "votes_one": "{{count}} vote",
@@ -188,5 +257,9 @@
     "leaderboardCustomRange": "Custom range",
     "leaderboardThisMonth": "This month",
     "leaderboardLastMonth": "Previous month"
+  },
+  "footer": {
+    "blurb": "Tabletop roleplaying club in Vinnytsia. Games every week, newcomers welcome.",
+    "telegram": "Message us on Telegram"
   }
 }

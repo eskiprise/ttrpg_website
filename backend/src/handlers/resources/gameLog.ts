@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import type { GameLogMonthlyCount, PublicGameDetail, PublicGameVoter, TelegramGameSummary } from "@ttrpg-club/shared";
+import type { GameLogMonthlyCount, PublicGameDetail, PublicGameVoter } from "@ttrpg-club/shared";
 import { ddb, Tables, scanAll } from "../../lib/dynamo.js";
 import { shouldAnonymizeFor } from "../../lib/settings.js";
 import { nicknameFor } from "../../lib/nicknames.js";
@@ -10,9 +10,12 @@ import { HttpError, json } from "../../lib/response.js";
 
 /**
  * The public site's Game Log — every session from every player, unlike the Telegram
- * Mini App's per-user "My Games" screens. No auth required; the site's anonymize
- * toggle (same one games.ts already respects) hides real names from logged-out
- * viewers here too, since this now shows real Telegram names to the public internet.
+ * Mini App's per-user "My Games" screens. No auth required.
+ *
+ * The anonymize toggle applies to *players*, not game masters. A GM runs public
+ * sessions on the club's behalf and their name is part of why someone joins, so
+ * gmDisplayName always shows; individual voters stay behind generated nicknames for
+ * logged-out visitors.
  */
 
 const DEFAULT_LIMIT = 15;
@@ -28,11 +31,6 @@ function parseOffset(raw: string | undefined): number {
   const n = raw ? parseInt(raw, 10) : 0;
   if (!Number.isFinite(n) || n < 0) return 0;
   return n;
-}
-
-function anonymizeGameSummary(summary: TelegramGameSummary, poll: PollRecord): TelegramGameSummary {
-  if (!poll.creatorUserId) return summary;
-  return { ...summary, gmDisplayName: nicknameFor(String(poll.creatorUserId)) };
 }
 
 /** Tallies every poll (not just the current page) by "YYYY-MM" — reuses the same Scan listGameLog already does for sorting/pagination, so this is free (no extra DB read). Sorted oldest-first for a natural left-to-right chart. */
@@ -59,14 +57,8 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   const sorted = polls.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const page = sorted.slice(offset, offset + limit);
 
-  const anonymize = await shouldAnonymizeFor(event);
-
   const games = await Promise.all(
-    page.map(async (poll) => {
-      const votes = await fetchVotesForPoll(poll.pollId);
-      const summary = summarize(poll, votes, null);
-      return anonymize ? anonymizeGameSummary(summary, poll) : summary;
-    })
+    page.map(async (poll) => summarize(poll, await fetchVotesForPoll(poll.pollId), null))
   );
 
   return json(200, {
@@ -101,9 +93,6 @@ export async function getGameLogDetail(event: APIGatewayProxyEventV2) {
       answeredAt: v.answeredAt,
     }));
 
-  const game: PublicGameDetail = {
-    ...(anonymize ? anonymizeGameSummary(summary, poll) : summary),
-    voters,
-  };
+  const game: PublicGameDetail = { ...summary, voters };
   return json(200, { game });
 }

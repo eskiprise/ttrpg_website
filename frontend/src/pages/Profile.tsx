@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { AvatarUploadUrlResponse, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { PageShell } from "../components/PageShell";
 
 const AVATAR_CDN_BASE_URL = import.meta.env.VITE_AVATAR_CDN_BASE_URL ?? "";
 
@@ -82,15 +83,23 @@ export function Profile() {
     }
   }
 
-  if (!user && !error) return <div className="mx-auto max-w-3xl px-6 py-16"><p className="text-ink-muted">{t("common.loading")}</p></div>;
+  if (!user && !error)
+    return (
+      <PageShell>
+        <p className="text-ink-muted">{t("common.loading")}</p>
+      </PageShell>
+    );
+
+  const isGm = user?.roles?.includes("dm");
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-bold">{t("profile.title")}</h1>
+    <PageShell>
+      <h1 className="page-title">{t("profile.title")}</h1>
+      {isGm && <p className="mt-4 max-w-[54ch] text-ink-muted">{t("profile.gmIntro")}</p>}
       {error && <p className="mt-4 text-accent">{error}</p>}
-      {status && <p className="mt-4 text-ink-muted">{status}</p>}
+      {status && <p className="mt-4 text-accent">{status}</p>}
 
-      <div className="mt-6 flex items-center gap-6 rounded-lg border border-border bg-surface p-6">
+      <div className="mt-8 flex flex-wrap items-center gap-6 rounded-xl border border-border bg-surface p-6">
         <img
           src={avatarUrl ?? "/default-avatar.svg"}
           alt=""
@@ -98,13 +107,14 @@ export function Profile() {
           height={96}
           className="h-24 w-24 flex-shrink-0 rounded-full object-cover"
         />
-        <div>
+        <div className="min-w-0">
           <input
             ref={fileInput}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={onAvatarSelected}
             disabled={busy}
+            className="max-w-full text-sm"
           />
           <p className="mt-2 text-sm text-ink-muted">{t("profile.avatarHint")}</p>
         </div>
@@ -112,18 +122,22 @@ export function Profile() {
 
       <form
         onSubmit={onSubmit}
-        className="mt-6 flex max-w-[480px] flex-col gap-4 rounded-lg border border-border bg-surface p-6"
+        className="mt-6 flex flex-col gap-4 rounded-xl border border-border bg-surface p-6"
       >
-        <label className="flex flex-col gap-1">
-          {t("profile.bio")} {user?.roles?.includes("dm") && <span className="text-sm text-ink-muted">{t("profile.bioGmHint")}</span>}
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          <span>
+            {t("profile.bio")} {isGm && <span>{t("profile.bioGmHint")}</span>}
+          </span>
           <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
           {t("profile.contact")}
           <input value={contact} onChange={(e) => setContact(e.target.value)} />
         </label>
-        <button disabled={busy} type="submit">{t("profile.save")}</button>
+        <button disabled={busy} type="submit" className="mt-1 self-start">
+          {t("profile.save")}
+        </button>
       </form>
-    </div>
+    </PageShell>
   );
 }

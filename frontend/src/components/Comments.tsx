@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GameComment } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
@@ -40,25 +41,33 @@ export function Comments({ pollId }: { pollId: string }) {
   }
 
   return (
-    <div className="mt-6 rounded-lg border border-border bg-surface p-6">
+    <section className="mt-12 border-t border-border pt-8">
       <h2 className="text-xl font-bold">{t("comments.title")}</h2>
       {error && <p className="mt-3 text-accent">{error}</p>}
       {!comments && <p className="mt-3 text-ink-muted">{t("common.loading")}</p>}
       {comments?.length === 0 && <p className="mt-3 text-ink-muted">{t("comments.none")}</p>}
-      <div className="mt-3 flex flex-col gap-4">
-        {comments?.map((comment) => (
-          <div key={comment.commentId}>
-            <strong>{comment.displayName}</strong>{" "}
-            <span className="text-sm text-ink-muted">
-              {new Date(comment.createdAt).toLocaleString(i18n.language)}
-            </span>
-            <p className="mt-1">{comment.text}</p>
-          </div>
-        ))}
-      </div>
+
+      {comments && comments.length > 0 && (
+        <div className="mt-5 flex flex-col gap-5">
+          {comments.map((comment) => (
+            <article key={comment.commentId} className="rounded-xl border border-border bg-surface p-5">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <strong className="font-semibold">{comment.displayName}</strong>
+                <span className="text-xs text-ink-muted">
+                  {new Date(comment.createdAt).toLocaleString(i18n.language, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </span>
+              </div>
+              <p className="mt-2 whitespace-pre-wrap">{comment.text}</p>
+            </article>
+          ))}
+        </div>
+      )}
 
       {idToken ? (
-        <div className="mt-4">
+        <div className="mt-6">
           <textarea
             rows={3}
             className="w-full"
@@ -66,15 +75,20 @@ export function Comments({ pollId }: { pollId: string }) {
             onChange={(e) => setDraft(e.target.value)}
             placeholder={t("comments.placeholder")}
           />
-          <div className="mt-2">
+          <div className="mt-3">
             <button type="button" disabled={posting || !draft.trim()} onClick={submit}>
               {t("comments.post")}
             </button>
           </div>
         </div>
       ) : (
-        <p className="mt-4 text-ink-muted">{t("comments.loginPrompt")}</p>
+        <p className="mt-6 rounded-xl border border-dashed border-border p-5 text-ink-muted">
+          <Link to="/login" className="font-semibold">
+            {t("comments.loginLink")}
+          </Link>{" "}
+          {t("comments.loginPrompt")}
+        </p>
       )}
-    </div>
+    </section>
   );
 }
