@@ -13,6 +13,14 @@ declare global {
 
 const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
 
+declare global {
+  interface Window {
+    onTelegramAuth?: (user: Record<string, unknown>) => void;
+  }
+}
+
+const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
+
 export function Login() {
   const { t } = useTranslation();
   const { loginWithTelegram, loginDev } = useAuth();
