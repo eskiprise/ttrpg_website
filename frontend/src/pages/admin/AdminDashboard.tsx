@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { SignupRequest, User } from "@ttrpg-club/shared";
+import type {
+  GameSystemListResponse,
+  GameSystemWithCount,
+  SignupRequest,
+  UnmatchedGame,
+  User,
+} from "@ttrpg-club/shared";
 import { ApiError, apiFetch } from "../../lib/api";
+import { uploadGameSystemCover } from "../../lib/uploads";
 import { useAuth } from "../../auth/AuthContext";
+import { SystemCover } from "../../components/SystemCover";
 
 function useReload() {
   const [tick, setTick] = useState(0);
@@ -157,26 +165,44 @@ function Members({ token }: { token: string | null }) {
   );
 }
 
+/** "D&D, DnD , ДнД" → ["D&D", "DnD", "ДнД"] — the API trims and de-duplicates too. */
+function parseAliases(text: string): string[] {
+  return text.split(",").map((a) => a.trim()).filter(Boolean);
+}
+
+const COVER_ACCEPT = "image/jpeg,image/png,image/webp";
+
 function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () => void }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [aliases, setAliases] = useState("");
+  const [cover, setCover] = useState<File | null>(null);
+  const [coverInputKey, setCoverInputKey] = useState(0);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     if (!name.trim()) return;
+    setBusy(true);
     setError(null);
     try {
+      const imageUrl = cover ? await uploadGameSystemCover(cover, token) : undefined;
       await apiFetch("/admin/game-systems", {
         method: "POST",
         token,
-        body: { name, description },
+        body: { name, description, aliases: parseAliases(aliases), imageUrl },
       });
       setName("");
       setDescription("");
+      setAliases("");
+      setCover(null);
+      setCoverInputKey((k) => k + 1); // file inputs can't be cleared by value
       onAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -186,9 +212,182 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
       <div className="mt-3 flex flex-col gap-2">
         <input placeholder={t("admin.systemNamePlaceholder")} value={name} onChange={(e) => setName(e.target.value)} />
         <textarea placeholder={t("admin.descriptionPlaceholder")} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <input placeholder={t("admin.aliasesPlaceholder")} value={aliases} onChange={(e) => setAliases(e.target.value)} />
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          {t("admin.coverLabel")}
+          <input
+            key={coverInputKey}
+            type="file"
+            accept={COVER_ACCEPT}
+            onChange={(e) => setCover(e.target.files?.[0] ?? null)}
+            className="max-w-full text-sm"
+          />
+        </label>
         {error && <p className="text-accent">{error}</p>}
-        <button type="button" onClick={submit}>{t("admin.addSystem")}</button>
+        <button type="button" onClick={submit} disabled={busy || !name.trim()}>
+          {t("admin.addSystem")}
+        </button>
       </div>
+    </div>
+  );
+}
+
+function GameSystemRow({
+  system,
+  token,
+  onChanged,
+}: {
+  system: GameSystemWithCount;
+  token: string | null;
+  onChanged: () => void;
+}) {
+  const { t } = useTranslation();
+  const [name, setName] = useState(system.name);
+  const [description, setDescription] = useState(system.description);
+  const [aliases, setAliases] = useState((system.aliases ?? []).join(", "));
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run(action: () => Promise<unknown>, doneMessage: string) {
+    setBusy(true);
+    setError(null);
+    setStatus(null);
+    try {
+      await action();
+      setStatus(doneMessage);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const patch = (body: object) =>
+    apiFetch(`/admin/game-systems/${system.systemId}`, { method: "PATCH", token, body });
+
+  function save() {
+    run(() => patch({ name, description, aliases: parseAliases(aliases) }), t("admin.saved"));
+  }
+
+  // A cover is saved as soon as it's uploaded — no second "remember to press Save" step.
+  function onCoverSelected(file: File | undefined) {
+    if (!file) return;
+    run(async () => patch({ imageUrl: await uploadGameSystemCover(file, token) }), t("admin.coverSaved"));
+  }
+
+  function remove() {
+    if (!window.confirm(t("admin.confirmDeleteSystem", { name: system.name }))) return;
+    run(() => apiFetch(`/admin/game-systems/${system.systemId}`, { method: "DELETE", token }), t("admin.saved"));
+  }
+
+  return (
+    <details className="group border-b border-border py-3 last:border-b-0">
+      <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
+        <span className="h-12 w-9 flex-shrink-0 overflow-hidden rounded-md border border-border">
+          <SystemCover system={system} size="thumb" />
+        </span>
+        <span className="min-w-0 flex-1 truncate font-medium">{system.name}</span>
+        <span className="flex-shrink-0 text-sm text-ink-muted">
+          {t("gameSystems.sessions", { count: system.sessionCount ?? 0 })}
+        </span>
+        <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-90">
+          ›
+        </span>
+      </summary>
+
+      <div className="mt-4 flex flex-col gap-3 sm:pl-12">
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          {t("admin.systemNameLabel")}
+          <input value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          {t("admin.descriptionPlaceholder")}
+          <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          {t("admin.aliasesLabel")}
+          <input value={aliases} placeholder={t("admin.aliasesPlaceholder")} onChange={(e) => setAliases(e.target.value)} />
+        </label>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-ink-muted">
+          <label className="flex flex-col gap-1">
+            {system.imageUrl ? t("admin.replaceCover") : t("admin.coverLabel")}
+            <input
+              type="file"
+              accept={COVER_ACCEPT}
+              disabled={busy}
+              onChange={(e) => onCoverSelected(e.target.files?.[0])}
+              className="max-w-full text-sm"
+            />
+          </label>
+          {system.imageUrl && (
+            <button type="button" className="secondary" disabled={busy} onClick={() => run(() => patch({ imageUrl: "" }), t("admin.saved"))}>
+              {t("admin.removeCover")}
+            </button>
+          )}
+        </div>
+        {error && <p className="text-sm text-accent">{error}</p>}
+        {status && <p className="text-sm text-accent">{status}</p>}
+        <div className="flex flex-wrap gap-2">
+          <button type="button" disabled={busy || !name.trim()} onClick={save}>
+            {t("admin.save")}
+          </button>
+          <button type="button" className="secondary" disabled={busy} onClick={remove}>
+            {t("admin.deleteSystem")}
+          </button>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function GameSystemsAdmin({ token, tick, reload }: { token: string | null; tick: number; reload: () => void }) {
+  const { t } = useTranslation();
+  const [systems, setSystems] = useState<GameSystemWithCount[] | null>(null);
+  const [unmatched, setUnmatched] = useState<UnmatchedGame[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiFetch<GameSystemListResponse>("/game-systems", { token })
+      .then((data) => {
+        setSystems(data.systems);
+        setUnmatched(data.unmatched ?? []);
+      })
+      .catch((err) => setError(err.message));
+  }, [token, tick]);
+
+  return (
+    <div className="rounded-xl border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.systemsTitle")}</h2>
+      <p className="mt-2 text-sm text-ink-muted">{t("admin.systemsHint")}</p>
+      {error && <p className="mt-3 text-accent">{error}</p>}
+      {systems?.length === 0 && <p className="mt-3 text-ink-muted">{t("gameSystems.none")}</p>}
+      <div className="mt-3 flex flex-col">
+        {systems?.map((system) => (
+          <GameSystemRow key={system.systemId} system={system} token={token} onChanged={reload} />
+        ))}
+      </div>
+
+      {unmatched.length > 0 && (
+        <div className="mt-6 border-t border-border pt-5">
+          <h3 className="font-bold">{t("admin.unmatchedTitle")}</h3>
+          <p className="mt-1 text-sm text-ink-muted">{t("admin.unmatchedHint")}</p>
+          <ul className="mt-3 flex flex-col gap-1.5 text-sm">
+            {unmatched.map((game) => (
+              <li key={game.prefix} className="flex gap-3">
+                <span className="w-6 flex-shrink-0 text-right font-numeric text-xs font-bold text-accent tabular-nums">
+                  {game.count}
+                </span>
+                <span className="min-w-0 [overflow-wrap:anywhere]">
+                  <span className="font-medium">{game.prefix}</span>
+                  {game.exampleTitle !== game.prefix && <span className="text-ink-muted"> — {game.exampleTitle}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -196,18 +395,19 @@ function AddGameSystem({ token, onAdded }: { token: string | null; onAdded: () =
 export function AdminDashboard() {
   const { t } = useTranslation();
   const { idToken } = useAuth();
-  const { reload } = useReload();
+  const { tick, reload } = useReload();
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 sm:py-16">
       <h1 className="page-title">{t("admin.title")}</h1>
-      {/* Left column: things with lists that grow (people). Right column: settings and
+      {/* Left column: things with lists that grow (people, systems). Right column: settings and
           one-off actions, which stay short regardless of data volume — pairing them
           this way keeps both columns roughly balanced instead of one giant stack. */}
       <div className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="flex flex-col gap-6">
           <SignupRequests token={idToken} />
           <Members token={idToken} />
+          <GameSystemsAdmin token={idToken} tick={tick} reload={reload} />
         </div>
         <div className="flex flex-col gap-6">
           <AnonymizeToggle token={idToken} />

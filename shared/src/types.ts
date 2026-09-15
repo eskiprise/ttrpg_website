@@ -55,6 +55,42 @@ export interface GameSystem {
   name: string;
   description: string;
   displayIndex: number;
+  /**
+   * Other spellings GMs use for this system in poll titles ("Каїрн" for Cairn) — see
+   * createSystemMatcher in gameSystems.ts. The name itself always counts; don't repeat it.
+   */
+  aliases?: string[];
+  /** Cover art / book cover, served from the avatars CDN like profile pictures. */
+  imageUrl?: string;
+}
+
+/** A system plus how many rated sessions were played in it (polls matched by title). */
+export interface GameSystemWithCount extends GameSystem {
+  sessionCount: number;
+}
+
+/** Poll titles no system claimed, grouped by their leading prefix — admin-only. */
+export interface UnmatchedGame {
+  prefix: string;
+  count: number;
+  exampleTitle: string;
+}
+
+export interface GameSystemListResponse {
+  /** Most-played first. */
+  systems: GameSystemWithCount[];
+  /** Only present for an admin caller. */
+  unmatched?: UnmatchedGame[];
+}
+
+export interface GameSystemDetail {
+  system: GameSystemWithCount;
+  /** Mean of each session's own average rating (unrated sessions excluded), or null. */
+  averageScore: number | null;
+  /** Who has run this system, most sessions first. GM names are public site-wide. */
+  gameMasters: { displayName: string; count: number }[];
+  /** Newest first. */
+  games: TelegramGameSummary[];
 }
 
 /** A comment on a Telegram-sourced game session (see TelegramGameSummary). */
@@ -71,11 +107,14 @@ export interface SiteSettings {
   anonymizeLoggedOutView: boolean;
 }
 
-export interface AvatarUploadUrlResponse {
+/** A presigned S3 PUT for an image (profile picture or game-system cover). */
+export interface ImageUploadUrlResponse {
   uploadUrl: string;
   objectKey: string;
   expiresInSeconds: number;
 }
+
+export type AvatarUploadUrlResponse = ImageUploadUrlResponse;
 
 export interface TelegramRecentRating {
   pollId: string;

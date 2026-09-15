@@ -60,8 +60,7 @@
     "systemsEyebrow_one": "{{count}} system",
     "systemsEyebrow_other": "{{count}} systems",
     "systemsTitle": "Fantasy, horror, pirates, vampires, cyberpunk",
-    "systemsSub": "If there's something specific you're after, chances are we've already run it.",
-    "systemsMore": "{{count}} more",
+    "systemsSub": "If there's something specific you're after, chances are we've already run it. The number is how many sessions we've played.",
     "gmsEyebrow": "Who runs the games",
     "upcomingEyebrow": "Schedule",
     "upcomingSessions": "Upcoming Sessions",
@@ -95,7 +94,24 @@
   },
   "gameSystems": {
     "title": "Games We Play",
-    "none": "No systems added yet."
+    "none": "No systems added yet.",
+    "intro": "Every system we've played — and how many sessions in each. Tap one to find out more.",
+    "sessions_one": "{{count}} session",
+    "sessions_other": "{{count}} sessions",
+    "notPlayedYet": "Not played yet"
+  },
+  "gameSystemDetail": {
+    "back": "All systems",
+    "notFound": "No such system — it may have been removed.",
+    "sessionsPlayed_one": "session played",
+    "sessionsPlayed_other": "sessions played",
+    "averageRating": "average player rating",
+    "gmsTitle": "Who runs it",
+    "gamesTitle": "Sessions played",
+    "noGames": "No sessions yet — you could be at the first table.",
+    "showAll": "Show all ({{count}})",
+    "ctaTitle": "Want to play {{name}}?",
+    "ctaBody": "Message us — we'll tell you when the next game is and whether there's a seat."
   },
   "gameLog": {
     "title": "Game Log",
@@ -179,7 +195,22 @@
     "systemNamePlaceholder": "Name (e.g. D&D 5e)",
     "descriptionPlaceholder": "Description",
     "addSystem": "Add System",
-    "acknowledge": "Acknowledge"
+    "acknowledge": "Acknowledge",
+    "systemsTitle": "Systems",
+    "systemsHint": "Sessions are counted by poll title: if it starts with the system's name or one of its aliases, it counts. Click a system to edit it.",
+    "systemNameLabel": "Name",
+    "aliasesLabel": "Aliases (comma-separated)",
+    "aliasesPlaceholder": "Aliases, comma-separated, e.g. Каїрн, Cairn RPG",
+    "coverLabel": "Cover",
+    "replaceCover": "Replace cover",
+    "removeCover": "Remove cover",
+    "coverSaved": "Cover saved.",
+    "save": "Save",
+    "saved": "Saved.",
+    "deleteSystem": "Delete",
+    "confirmDeleteSystem": "Delete the system “{{name}}”? Its sessions stay, but won't count toward it any more.",
+    "unmatchedTitle": "Unrecognised games",
+    "unmatchedHint": "Polls whose title didn't match any system. Add an alias to the right system and they'll count."
   },
   "statistics": {
     "eyebrow": "Club numbers",

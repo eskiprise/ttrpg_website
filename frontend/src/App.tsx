@@ -7,6 +7,7 @@ import { About } from "./pages/About";
 import { GameMasters } from "./pages/GameMasters";
 import { GameMasterDetail } from "./pages/GameMasterDetail";
 import { GameSystems } from "./pages/GameSystems";
+import { GameSystemDetail } from "./pages/GameSystemDetail";
 import { GameLog } from "./pages/GameLog";
 import { GameDetail } from "./pages/GameDetail";
 import { Statistics } from "./pages/Statistics";
@@ -40,6 +41,7 @@ function App() {
           <Route path="/game-masters" element={<GameMasters />} />
           <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
           <Route path="/game-systems" element={<GameSystems />} />
+          <Route path="/game-systems/:systemId" element={<GameSystemDetail />} />
           <Route path="/game-log" element={<GameLog />} />
           <Route path="/game-log/:pollId" element={<GameDetail />} />
           <Route path="/signup" element={<Signup />} />

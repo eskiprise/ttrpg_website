@@ -8,9 +8,11 @@ import { createSignupRequest } from "./resources/signup.js";
 import { loginWithTelegram, devLogin } from "./resources/auth.js";
 import {
   listGameSystems,
+  getGameSystemDetail,
   createGameSystem,
   updateGameSystem,
   deleteGameSystem,
+  getGameSystemImageUploadUrl,
 } from "./resources/gameSystems.js";
 import { listGameMasters, getGameMasterDetail } from "./resources/gameMasters.js";
 import { listGameLog, getGameLogDetail } from "./resources/gameLog.js";
@@ -49,8 +51,10 @@ const routes: Record<string, RouteHandler> = {
 
   "POST /auth/telegram": loginWithTelegram,
 
-  "GET /game-systems": async () => listGameSystems(),
+  "GET /game-systems": listGameSystems,
+  "GET /game-systems/{systemId}": getGameSystemDetail,
   "POST /admin/game-systems": createGameSystem,
+  "POST /admin/game-systems/image-upload-url": getGameSystemImageUploadUrl,
   "PATCH /admin/game-systems/{systemId}": updateGameSystem,
   "DELETE /admin/game-systems/{systemId}": deleteGameSystem,
 

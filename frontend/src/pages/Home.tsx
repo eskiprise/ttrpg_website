@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import type {
   ClubStatistics,
   GameLogMonthlyCount,
-  GameSystem,
+  GameSystemListResponse,
+  GameSystemWithCount,
   PublicGameMaster,
   TelegramGameSummary,
 } from "@ttrpg-club/shared";
@@ -19,7 +20,8 @@ import { CLUB_TELEGRAM_URL } from "../lib/club";
 
 const RECENT_SESSIONS_COUNT = 3;
 const GM_PREVIEW_COUNT = 3;
-const SYSTEM_TAG_LIMIT = 18;
+/** The most-played systems get the dark chip — the concept's "lead" row. */
+const LEAD_SYSTEMS = 5;
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -40,14 +42,14 @@ function Eyebrow({ children, onBand = false }: { children: React.ReactNode; onBa
 export function Home() {
   const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
-  const [systems, setSystems] = useState<GameSystem[]>([]);
+  const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
   const [gms, setGms] = useState<PublicGameMaster[]>([]);
   const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);
   const [gamesPerMonth, setGamesPerMonth] = useState<GameLogMonthlyCount[]>([]);
   const [stats, setStats] = useState<ClubStatistics | null>(null);
 
   useEffect(() => {
-    apiFetch<{ systems: GameSystem[] }>("/game-systems").then((d) => setSystems(d.systems));
+    apiFetch<GameSystemListResponse>("/game-systems").then((d) => setSystems(d.systems));
     apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters").then((d) => setGms(d.gameMasters));
     // Public since the redesign — the headline figures are the pitch to a stranger.
     // Tolerates failure: the two tiles it feeds simply don't render, rather than the
@@ -73,7 +75,9 @@ export function Home() {
     <div>
       {/* ── Hero ───────────────────────────────────────────────── */}
       <Band tone="page">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+        {/* grid-cols-1 = minmax(0, 1fr): without it the single mobile column sizes to the
+            longest one-line session title in the card and pushes the page sideways. */}
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div>
             <Eyebrow>{t("home.eyebrow")}</Eyebrow>
             <h1 className="mt-4 text-[clamp(2.25rem,1.3rem+4vw,4rem)] leading-[1.04] font-bold tracking-[-0.025em]">
@@ -253,23 +257,33 @@ export function Home() {
           </h2>
           <p className="mt-4 max-w-[52ch] text-ink-muted">{t("home.systemsSub")}</p>
           <div className="mt-8 flex flex-wrap gap-2">
-            {systems.slice(0, SYSTEM_TAG_LIMIT).map((s) => (
-              <Link
-                key={s.systemId}
-                to="/game-systems"
-                className="rounded-full border border-border bg-surface px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:no-underline"
-              >
-                {s.name}
-              </Link>
-            ))}
-            {systems.length > SYSTEM_TAG_LIMIT && (
-              <Link
-                to="/game-systems"
-                className="rounded-full border border-transparent px-3.5 py-2 text-sm font-semibold"
-              >
-                {t("home.systemsMore", { count: systems.length - SYSTEM_TAG_LIMIT })} →
-              </Link>
-            )}
+            {systems.map((s, index) => {
+              // sessionCount is missing if the backend predates it — then it's just names.
+              const count = s.sessionCount ?? 0;
+              const lead = index < LEAD_SYSTEMS && count > 0;
+              return (
+                <Link
+                  key={s.systemId}
+                  to={`/game-systems/${s.systemId}`}
+                  className={`inline-flex items-baseline gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors hover:no-underline ${
+                    lead
+                      ? "border-band bg-band text-band-ink hover:border-band-accent"
+                      : "border-border bg-surface text-ink hover:border-accent"
+                  }`}
+                >
+                  {s.name}
+                  {count > 0 && (
+                    <span
+                      className={`font-numeric text-xs font-bold tabular-nums ${
+                        lead ? "text-band-accent" : "text-accent"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </Band>
       )}
