@@ -216,6 +216,14 @@ Routine code changes need nothing beyond a push to the right branch — CI build
 and calls `aws lambda update-function-code` / `aws s3 sync` + CloudFront invalidation.
 No CloudFormation, no Serverless Framework involved.
 
+**Content doesn't travel with code.** Game systems are rows in each stack's own table,
+with covers in its own bucket served by its own CDN, so a release doesn't carry them
+over. `scripts/copy_game_systems.py` copies them between environments (dev → prod): it
+reads the source's public `/game-systems`, copies the cover objects between the avatars
+buckets, rewrites `imageUrl` to the target's CDN, and matches systems by name so a
+re-run updates rather than duplicates. Dry-run by default; `--apply` writes. Nothing is
+deleted — a system that exists only in the target is reported for you to remove by hand.
+
 ## Related repos
 
 - [`../aws_infra`](../aws_infra) — all Terraform for this site and the poll bot
