@@ -17,6 +17,7 @@ import { Profile } from "./pages/Profile";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { TelegramMiniAppRoot } from "./pages/telegram/TelegramMiniAppRoot";
 import { TelegramStatsHome } from "./pages/telegram/TelegramStatsHome";
+import { TelegramCreatePoll } from "./pages/telegram/TelegramCreatePoll";
 import { TelegramGamesList } from "./pages/telegram/TelegramGamesList";
 import { TelegramGameDetail } from "./pages/telegram/TelegramGameDetail";
 import { TelegramFeedbackForm } from "./pages/telegram/TelegramFeedbackForm";
@@ -53,6 +54,7 @@ function App() {
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/telegram" element={<TelegramMiniAppRoot />}>
             <Route index element={<TelegramStatsHome />} />
+            <Route path="create-poll" element={<TelegramCreatePoll />} />
             <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
             <Route path="games/played" element={<TelegramGamesList kind="played" />} />
             <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />

@@ -84,6 +84,12 @@ export function TelegramStatsHome() {
 
       <div className="flex flex-col gap-2">
         <Link
+          to="/telegram/create-poll"
+          className="rounded-lg border border-accent bg-surface p-4 font-semibold text-accent hover:bg-surface-2"
+        >
+          📊 {t("telegramApp.createPoll")} →
+        </Link>
+        <Link
           to="/telegram/games/played"
           className="rounded-lg border border-border bg-surface p-4 font-semibold hover:bg-surface-2"
         >

@@ -39,6 +39,7 @@ import {
   getTelegramGameVoters,
 } from "./resources/telegramGames.js";
 import { getTelegramLeaderboard } from "./resources/telegramLeaderboard.js";
+import { createTelegramPoll } from "./resources/telegramPolls.js";
 
 type RouteHandler = (
   event: APIGatewayProxyEventV2
@@ -84,6 +85,7 @@ const routes: Record<string, RouteHandler> = {
   "PATCH /admin/users/{userId}/roles": updateUserRoles,
 
   "POST /telegram/stats": getTelegramStats,
+  "POST /telegram/polls": createTelegramPoll,
   "POST /telegram/feedback": postTelegramFeedback,
   "POST /telegram/feedback/eligibility": getTelegramFeedbackEligibility,
   "POST /telegram/games/played": getTelegramGamesPlayed,
