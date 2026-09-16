@@ -101,6 +101,10 @@ export async function getTelegramGamesPlayed(event: APIGatewayProxyEventV2) {
         await ddb.send(new GetCommand({ TableName: Tables.telegramRatingPolls(), Key: { pollId: vote.pollId } }))
       ).Item as PollRecord | undefined;
       if (!poll) return null;
+      // Running a session isn't playing it. GMs routinely rate their own poll, which
+      // would otherwise list every session they ran here as well — those belong in
+      // "My Games Conducted" only, as on the leaderboard and the statistics page.
+      if (poll.creatorUserId === user.id) return null;
       const votes = await fetchVotesForPoll(vote.pollId);
       return summarize(poll, votes, user.id);
     })

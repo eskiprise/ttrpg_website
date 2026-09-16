@@ -33,7 +33,17 @@ export function formatTelegramDisplayName(user: {
   return user.firstName;
 }
 
-const MAX_INIT_DATA_AGE_SECONDS = 3600; // 1 hour — initData is freshly signed every app open
+/**
+ * Telegram signs initData once, when the Mini App is opened, and never refreshes it
+ * while it stays open — so this is really "how long may the app stay open before its
+ * requests start failing". An hour was too short for the obvious case: a GM opens the
+ * app before the session and creates the rating poll when the game ends. A day matches
+ * Telegram's own examples; the signature is still checked on every request.
+ */
+const MAX_INIT_DATA_AGE_SECONDS = 86_400; // 24 hours
+
+/** The login widget's payload is exchanged for a session JWT immediately, so it stays short-lived. */
+const MAX_LOGIN_WIDGET_AGE_SECONDS = 3600; // 1 hour
 
 /**
  * Verifies that `initData` was genuinely issued by Telegram for our bot, per the
@@ -131,7 +141,7 @@ export async function verifyTelegramLoginWidget(
   }
 
   const authDate = Number(payload.auth_date);
-  if (!authDate || Date.now() / 1000 - authDate > MAX_INIT_DATA_AGE_SECONDS) {
+  if (!authDate || Date.now() / 1000 - authDate > MAX_LOGIN_WIDGET_AGE_SECONDS) {
     return null;
   }
 

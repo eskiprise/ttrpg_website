@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TelegramGameSummary } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
+import { formatGameTitle } from "../../lib/gameTitle";
 import { useTelegramApp } from "./TelegramAppContext";
 import { useRunOnVisible } from "./useRefetchOnVisible";
 
@@ -91,7 +92,7 @@ export function TelegramGamesList({ kind }: { kind: keyof typeof ENDPOINTS }) {
             className="rounded-lg border border-border bg-surface p-4 hover:bg-surface-2"
           >
             <div className="flex items-center justify-between gap-3">
-              <strong className="text-ink">{game.questionText}</strong>
+              <strong className="text-ink">{formatGameTitle(game.questionText)}</strong>
               <span className="font-mono text-sm tabular-nums text-ink-muted">
                 {new Date(game.createdAt).toLocaleDateString(i18n.language)}
               </span>

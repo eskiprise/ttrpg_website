@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { Band } from "../components/Band";
 import { CLUB_TELEGRAM_URL } from "../lib/club";
@@ -29,7 +30,17 @@ export function Login() {
     onAuthRef.current = (user) => {
       loginWithTelegram(user)
         .then(() => navigate("/"))
-        .catch((err) => setError(err instanceof Error ? err.message : t("login.loginFailed")));
+        .catch((err) =>
+          setError(
+            // The club's inside is for the club: the backend only issues a session to
+            // someone in the chat.
+            err instanceof ApiError && err.status === 403
+              ? t("login.notMember")
+              : err instanceof Error
+                ? err.message
+                : t("login.loginFailed")
+          )
+        );
     };
   });
 

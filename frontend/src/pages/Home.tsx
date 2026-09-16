@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import type {
   ClubStatistics,
   GameLogMonthlyCount,
-  GameSystem,
+  GameSystemListResponse,
+  GameSystemWithCount,
   PublicGameMaster,
   TelegramGameSummary,
 } from "@ttrpg-club/shared";
@@ -12,6 +13,7 @@ import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { formatGameTitle } from "../lib/gameTitle";
 import { truncate } from "../lib/text";
+import { roundedThreshold } from "../lib/approx";
 import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
@@ -19,7 +21,8 @@ import { CLUB_TELEGRAM_URL } from "../lib/club";
 
 const RECENT_SESSIONS_COUNT = 3;
 const GM_PREVIEW_COUNT = 3;
-const SYSTEM_TAG_LIMIT = 18;
+/** The most-played systems get the dark chip — the concept's "lead" row. */
+const LEAD_SYSTEMS = 5;
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -40,14 +43,14 @@ function Eyebrow({ children, onBand = false }: { children: React.ReactNode; onBa
 export function Home() {
   const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
-  const [systems, setSystems] = useState<GameSystem[]>([]);
+  const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
   const [gms, setGms] = useState<PublicGameMaster[]>([]);
   const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);
   const [gamesPerMonth, setGamesPerMonth] = useState<GameLogMonthlyCount[]>([]);
   const [stats, setStats] = useState<ClubStatistics | null>(null);
 
   useEffect(() => {
-    apiFetch<{ systems: GameSystem[] }>("/game-systems").then((d) => setSystems(d.systems));
+    apiFetch<GameSystemListResponse>("/game-systems").then((d) => setSystems(d.systems));
     apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters").then((d) => setGms(d.gameMasters));
     // Public since the redesign — the headline figures are the pitch to a stranger.
     // Tolerates failure: the two tiles it feeds simply don't render, rather than the
@@ -68,12 +71,17 @@ export function Home() {
   }, [idToken]);
 
   const totalSessions = gamesPerMonth.reduce((sum, m) => sum + m.count, 0);
+  // Rounded here as everywhere outside a system's own page: "200+", not "237".
+  const totalApprox = roundedThreshold(totalSessions);
+  const seatsApprox = roundedThreshold(stats?.totalSeats ?? 0);
 
   return (
     <div>
       {/* ── Hero ───────────────────────────────────────────────── */}
       <Band tone="page">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+        {/* grid-cols-1 = minmax(0, 1fr): without it the single mobile column sizes to the
+            longest one-line session title in the card and pushes the page sideways. */}
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div>
             <Eyebrow>{t("home.eyebrow")}</Eyebrow>
             <h1 className="mt-4 text-[clamp(2.25rem,1.3rem+4vw,4rem)] leading-[1.04] font-bold tracking-[-0.025em]">
@@ -138,12 +146,18 @@ export function Home() {
         <Band tone="dark">
           <Eyebrow onBand>{t("home.evidenceEyebrow")}</Eyebrow>
           <h2 className="mt-4 max-w-[20ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] text-band-ink">
-            {t("home.evidenceTitle", { count: totalSessions })}
+            {totalApprox
+              ? t("home.evidenceTitleApprox", { count: totalApprox })
+              : t("home.evidenceTitle", { count: totalSessions })}
           </h2>
           <p className="mt-4 max-w-[52ch] text-band-ink-muted">{t("home.evidenceSub")}</p>
 
           <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
-            <StatTile tone="band" value={totalSessions} label={t("home.statSessions")} />
+            <StatTile
+              tone="band"
+              value={totalApprox ? `${totalApprox}+` : totalSessions}
+              label={t("home.statSessions")}
+            />
             {stats?.averageScore != null && (
               <StatTile
                 tone="band"
@@ -155,7 +169,11 @@ export function Home() {
             {/* `> 0` also covers the field being absent entirely, which it is when a
                 newer frontend is live against a backend that predates totalSeats. */}
             {(stats?.totalSeats ?? 0) > 0 && (
-              <StatTile tone="band" value={stats!.totalSeats} label={t("home.statSeats")} />
+              <StatTile
+                tone="band"
+                value={seatsApprox ? `${seatsApprox}+` : stats!.totalSeats}
+                label={t("home.statSeats")}
+              />
             )}
             {systems.length > 0 && (
               <StatTile tone="band" value={systems.length} label={t("home.statSystems")} />
@@ -165,29 +183,25 @@ export function Home() {
           <div className="mt-10">
             <GamesPerMonthChart
               data={gamesPerMonth}
-              maxMonths={18}
+              maxMonths={12}
               tone="band"
               title={t("home.growthTitle")}
-              legend={t("home.growthLegend", {
-                from: gamesPerMonth[0]?.count ?? 0,
-                peak: Math.max(...gamesPerMonth.map((m) => m.count)),
-              })}
             />
           </div>
         </Band>
       )}
 
-      {/* ── Newcomer objections ────────────────────────────────── */}
+      {/* ── Why come ───────────────────────────────────────────── */}
       <Band tone="page">
-        <Eyebrow>{t("home.fearsEyebrow")}</Eyebrow>
+        <Eyebrow>{t("home.whyEyebrow")}</Eyebrow>
         <h2 className="mt-4 max-w-[24ch] text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
-          {t("home.fearsTitle")}
+          {t("home.whyTitle")}
         </h2>
         <div className="mt-10 grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((n) => (
             <div key={n} className="border-t-2 border-ink pt-4">
-              <h3 className="text-lg font-bold">{t(`home.fear${n}Title`)}</h3>
-              <p className="mt-2 text-ink-muted">{t(`home.fear${n}Body`)}</p>
+              <h3 className="text-lg font-bold">{t(`home.why${n}Title`)}</h3>
+              <p className="mt-2 text-ink-muted">{t(`home.why${n}Body`)}</p>
             </div>
           ))}
         </div>
@@ -253,23 +267,35 @@ export function Home() {
           </h2>
           <p className="mt-4 max-w-[52ch] text-ink-muted">{t("home.systemsSub")}</p>
           <div className="mt-8 flex flex-wrap gap-2">
-            {systems.slice(0, SYSTEM_TAG_LIMIT).map((s) => (
-              <Link
-                key={s.systemId}
-                to="/game-systems"
-                className="rounded-full border border-border bg-surface px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:no-underline"
-              >
-                {s.name}
-              </Link>
-            ))}
-            {systems.length > SYSTEM_TAG_LIMIT && (
-              <Link
-                to="/game-systems"
-                className="rounded-full border border-transparent px-3.5 py-2 text-sm font-semibold"
-              >
-                {t("home.systemsMore", { count: systems.length - SYSTEM_TAG_LIMIT })} →
-              </Link>
-            )}
+            {systems.map((s, index) => {
+              // sessionCount is missing if the backend predates it — then it's just names.
+              const count = s.sessionCount ?? 0;
+              const lead = index < LEAD_SYSTEMS && count > 0;
+              // "30+" rather than "42" — the exact figure lives on the system's page.
+              const approx = roundedThreshold(count);
+              return (
+                <Link
+                  key={s.systemId}
+                  to={`/game-systems/${s.systemId}`}
+                  className={`inline-flex items-baseline gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors hover:no-underline ${
+                    lead
+                      ? "border-band bg-band text-band-ink hover:border-band-accent"
+                      : "border-border bg-surface text-ink hover:border-accent"
+                  }`}
+                >
+                  {s.name}
+                  {count > 0 && (
+                    <span
+                      className={`font-numeric text-xs font-bold tabular-nums ${
+                        lead ? "text-band-accent" : "text-accent"
+                      }`}
+                    >
+                      {approx ? `${approx}+` : count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </Band>
       )}

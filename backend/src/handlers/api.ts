@@ -8,9 +8,11 @@ import { createSignupRequest } from "./resources/signup.js";
 import { loginWithTelegram, devLogin } from "./resources/auth.js";
 import {
   listGameSystems,
+  getGameSystemDetail,
   createGameSystem,
   updateGameSystem,
   deleteGameSystem,
+  getGameSystemImageUploadUrl,
 } from "./resources/gameSystems.js";
 import { listGameMasters, getGameMasterDetail } from "./resources/gameMasters.js";
 import { listGameLog, getGameLogDetail } from "./resources/gameLog.js";
@@ -37,6 +39,7 @@ import {
   getTelegramGameVoters,
 } from "./resources/telegramGames.js";
 import { getTelegramLeaderboard } from "./resources/telegramLeaderboard.js";
+import { createTelegramPoll } from "./resources/telegramPolls.js";
 
 type RouteHandler = (
   event: APIGatewayProxyEventV2
@@ -49,8 +52,10 @@ const routes: Record<string, RouteHandler> = {
 
   "POST /auth/telegram": loginWithTelegram,
 
-  "GET /game-systems": async () => listGameSystems(),
+  "GET /game-systems": listGameSystems,
+  "GET /game-systems/{systemId}": getGameSystemDetail,
   "POST /admin/game-systems": createGameSystem,
+  "POST /admin/game-systems/image-upload-url": getGameSystemImageUploadUrl,
   "PATCH /admin/game-systems/{systemId}": updateGameSystem,
   "DELETE /admin/game-systems/{systemId}": deleteGameSystem,
 
@@ -80,6 +85,7 @@ const routes: Record<string, RouteHandler> = {
   "PATCH /admin/users/{userId}/roles": updateUserRoles,
 
   "POST /telegram/stats": getTelegramStats,
+  "POST /telegram/polls": createTelegramPoll,
   "POST /telegram/feedback": postTelegramFeedback,
   "POST /telegram/feedback/eligibility": getTelegramFeedbackEligibility,
   "POST /telegram/games/played": getTelegramGamesPlayed,

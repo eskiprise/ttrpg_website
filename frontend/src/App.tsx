@@ -7,6 +7,7 @@ import { About } from "./pages/About";
 import { GameMasters } from "./pages/GameMasters";
 import { GameMasterDetail } from "./pages/GameMasterDetail";
 import { GameSystems } from "./pages/GameSystems";
+import { GameSystemDetail } from "./pages/GameSystemDetail";
 import { GameLog } from "./pages/GameLog";
 import { GameDetail } from "./pages/GameDetail";
 import { Statistics } from "./pages/Statistics";
@@ -16,6 +17,7 @@ import { Profile } from "./pages/Profile";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { TelegramMiniAppRoot } from "./pages/telegram/TelegramMiniAppRoot";
 import { TelegramStatsHome } from "./pages/telegram/TelegramStatsHome";
+import { TelegramCreatePoll } from "./pages/telegram/TelegramCreatePoll";
 import { TelegramGamesList } from "./pages/telegram/TelegramGamesList";
 import { TelegramGameDetail } from "./pages/telegram/TelegramGameDetail";
 import { TelegramFeedbackForm } from "./pages/telegram/TelegramFeedbackForm";
@@ -40,6 +42,7 @@ function App() {
           <Route path="/game-masters" element={<GameMasters />} />
           <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
           <Route path="/game-systems" element={<GameSystems />} />
+          <Route path="/game-systems/:systemId" element={<GameSystemDetail />} />
           <Route path="/game-log" element={<GameLog />} />
           <Route path="/game-log/:pollId" element={<GameDetail />} />
           <Route path="/signup" element={<Signup />} />
@@ -51,6 +54,7 @@ function App() {
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/telegram" element={<TelegramMiniAppRoot />}>
             <Route index element={<TelegramStatsHome />} />
+            <Route path="create-poll" element={<TelegramCreatePoll />} />
             <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
             <Route path="games/played" element={<TelegramGamesList kind="played" />} />
             <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />
