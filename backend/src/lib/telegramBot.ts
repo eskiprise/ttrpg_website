@@ -1,5 +1,6 @@
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 import { getBotToken } from "./telegramAuth.js";
+import { HttpError } from "./response.js";
 
 /**
  * The little slice of the Telegram Bot API this backend needs to post a poll into the
@@ -16,7 +17,14 @@ export async function getClubChatId(): Promise<number> {
   const paramName = process.env.TELEGRAM_CLUB_CHAT_ID_PARAM;
   if (!paramName) throw new Error("Missing TELEGRAM_CLUB_CHAT_ID_PARAM env var");
 
-  const result = await ssm.send(new GetParameterCommand({ Name: paramName }));
+  let result;
+  try {
+    result = await ssm.send(new GetParameterCommand({ Name: paramName }));
+  } catch (err) {
+    // Almost always the Lambda's IAM policy not (yet) allowing this parameter.
+    console.error(`Could not read ${paramName}`, err);
+    throw new HttpError(502, `Could not read the club chat id from ${paramName}`);
+  }
   const value = result.Parameter?.Value;
   if (!value) throw new Error(`SSM parameter ${paramName} has no value`);
   cachedChatId = Number(value);
@@ -44,7 +52,11 @@ async function callTelegram<T>(method: string, payload: object): Promise<T> {
   });
   const data = (await response.json()) as { ok: boolean; result?: T; description?: string };
   if (!data.ok) {
-    throw new Error(`Telegram ${method} failed: ${data.description ?? response.status}`);
+    // Surfaced rather than swallowed into a generic 500: what Telegram refuses is
+    // nearly always a configuration fact someone can act on ("chat not found",
+    // "message thread not found", "not enough rights to send polls").
+    console.error(`Telegram ${method} failed`, { payload, description: data.description });
+    throw new HttpError(502, `Telegram: ${data.description ?? `${method} failed (${response.status})`}`);
   }
   return data.result as T;
 }
@@ -65,10 +77,12 @@ export async function isClubChatMember(chatId: number, userId: number): Promise<
       user_id: userId,
     });
     return MEMBER_STATUSES.has(member.status);
-  } catch {
-    // "user not found" comes back as an error, not a status — treat any failure to
-    // confirm membership as "not a member" rather than letting a stranger post.
-    return false;
+  } catch (err) {
+    // Someone who was never in the chat comes back as an error rather than a status —
+    // that's a plain "no". Anything else (chat not found, bot not in the chat) is a
+    // configuration problem and must not masquerade as "you're not a member".
+    if (err instanceof HttpError && /user not found/i.test(err.message)) return false;
+    throw err;
   }
 }
 
