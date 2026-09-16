@@ -282,5 +282,4 @@ export interface ClubStatistics {
   topGameMasters: LeaderboardEntry[];
   topPlayers: LeaderboardEntry[];
   highestRatedGame: GameSpotlight | null;
-  lowestRatedGame: GameSpotlight | null;
 }

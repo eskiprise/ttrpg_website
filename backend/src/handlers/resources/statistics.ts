@@ -149,16 +149,14 @@ export async function getClubStatistics(event: APIGatewayProxyEventV2) {
     }
   }
 
+  // Only the best game is published: singling out someone's worst-rated session
+  // would put a GM's name next to it on a page meant to attract players.
   let highestRatedGame: GameSpotlight | null = null;
-  let lowestRatedGame: GameSpotlight | null = null;
   for (const poll of polls) {
     const avg = pollAverages.get(poll.pollId);
     if (avg === undefined) continue;
     if (!highestRatedGame || avg > highestRatedGame.averageScore) {
       highestRatedGame = { pollId: poll.pollId, questionText: poll.questionText, averageScore: avg };
-    }
-    if (!lowestRatedGame || avg < lowestRatedGame.averageScore) {
-      lowestRatedGame = { pollId: poll.pollId, questionText: poll.questionText, averageScore: avg };
     }
   }
 
@@ -188,7 +186,6 @@ export async function getClubStatistics(event: APIGatewayProxyEventV2) {
     topGameMasters: topEntries(gmsByUser),
     topPlayers,
     highestRatedGame,
-    lowestRatedGame,
   };
 
   return json(200, { statistics });

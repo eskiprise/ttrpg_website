@@ -213,43 +213,23 @@ export function Statistics() {
             />
           </div>
 
-          {(stats.highestRatedGame || stats.lowestRatedGame) && (
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
-              {stats.highestRatedGame && (
-                <Link
-                  to={`/game-log/${stats.highestRatedGame.pollId}`}
-                  className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
-                >
-                  <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
-                    {t("statistics.highestRated")}
-                  </span>
-                  <h2 className="text-lg leading-snug font-bold">
-                    {formatGameTitle(stats.highestRatedGame.questionText)}
-                  </h2>
-                  <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
-                    {stats.highestRatedGame.averageScore.toFixed(1)}
-                    <span className="text-sm text-ink-muted"> / 10</span>
-                  </span>
-                </Link>
-              )}
-              {stats.lowestRatedGame && (
-                <Link
-                  to={`/game-log/${stats.lowestRatedGame.pollId}`}
-                  className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
-                >
-                  <span className="text-xs font-semibold tracking-[0.1em] text-ink-muted uppercase">
-                    {t("statistics.lowestRated")}
-                  </span>
-                  <h2 className="text-lg leading-snug font-bold">
-                    {formatGameTitle(stats.lowestRatedGame.questionText)}
-                  </h2>
-                  <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
-                    {stats.lowestRatedGame.averageScore.toFixed(1)}
-                    <span className="text-sm text-ink-muted"> / 10</span>
-                  </span>
-                </Link>
-              )}
-            </div>
+          {/* Only the best game — a "worst rated" card would pin a GM's name to it. */}
+          {stats.highestRatedGame && (
+            <Link
+              to={`/game-log/${stats.highestRatedGame.pollId}`}
+              className="mt-6 flex max-w-md flex-col gap-2 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
+            >
+              <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
+                {t("statistics.highestRated")}
+              </span>
+              <h2 className="text-lg leading-snug font-bold">
+                {formatGameTitle(stats.highestRatedGame.questionText)}
+              </h2>
+              <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
+                {stats.highestRatedGame.averageScore.toFixed(1)}
+                <span className="text-sm text-ink-muted"> / 10</span>
+              </span>
+            </Link>
           )}
         </Band>
       )}

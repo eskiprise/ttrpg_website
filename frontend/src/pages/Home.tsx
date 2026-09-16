@@ -73,6 +73,7 @@ export function Home() {
   const totalSessions = gamesPerMonth.reduce((sum, m) => sum + m.count, 0);
   // Rounded here as everywhere outside a system's own page: "200+", not "237".
   const totalApprox = roundedThreshold(totalSessions);
+  const seatsApprox = roundedThreshold(stats?.totalSeats ?? 0);
 
   return (
     <div>
@@ -168,7 +169,11 @@ export function Home() {
             {/* `> 0` also covers the field being absent entirely, which it is when a
                 newer frontend is live against a backend that predates totalSeats. */}
             {(stats?.totalSeats ?? 0) > 0 && (
-              <StatTile tone="band" value={stats!.totalSeats} label={t("home.statSeats")} />
+              <StatTile
+                tone="band"
+                value={seatsApprox ? `${seatsApprox}+` : stats!.totalSeats}
+                label={t("home.statSeats")}
+              />
             )}
             {systems.length > 0 && (
               <StatTile tone="band" value={systems.length} label={t("home.statSystems")} />

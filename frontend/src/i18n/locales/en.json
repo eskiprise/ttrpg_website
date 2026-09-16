@@ -232,7 +232,6 @@
     "topGameMasters": "Most Active Game Masters",
     "topPlayers": "Most Active Players",
     "highestRated": "Highest Rated",
-    "lowestRated": "Lowest Rated",
     "noData": "Not enough data yet.",
     "gamesSuffix_one": "{{count}} game",
     "gamesSuffix_other": "{{count}} games"
