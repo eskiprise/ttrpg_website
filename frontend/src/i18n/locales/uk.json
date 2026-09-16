@@ -104,8 +104,8 @@
     "games_few": "{{count}} гри",
     "games_many": "{{count}} ігор",
     "games_other": "{{count}} ігор",
-    "gamesApprox": "{{count}}+ ігор",
-    "notPlayedYet": "Ще не грали"
+    "notPlayedYet": "Ще не грали",
+    "othersTitle": "Інші системи"
   },
   "gameSystemDetail": {
     "back": "Усі системи",

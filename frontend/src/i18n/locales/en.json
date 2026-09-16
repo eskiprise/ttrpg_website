@@ -98,8 +98,8 @@
     "intro": "Every system we've played — and how many games in each. Tap one to find out more.",
     "games_one": "{{count}} game",
     "games_other": "{{count}} games",
-    "gamesApprox": "{{count}}+ games",
-    "notPlayedYet": "Not played yet"
+    "notPlayedYet": "Not played yet",
+    "othersTitle": "Other systems"
   },
   "gameSystemDetail": {
     "back": "All systems",
