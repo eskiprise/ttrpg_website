@@ -56,7 +56,7 @@ export function GameSystemDetail() {
                 <p className="mt-5 max-w-[62ch] text-lg leading-relaxed whitespace-pre-wrap">{system.description}</p>
               )}
               <div className="mt-8 grid max-w-md grid-cols-2 gap-4">
-                <StatTile value={system.sessionCount} label={t("gameSystemDetail.sessionsPlayed", { count: system.sessionCount })} />
+                <StatTile value={system.sessionCount} label={t("gameSystemDetail.gamesPlayed", { count: system.sessionCount })} />
                 <StatTile
                   value={data.averageScore !== null ? data.averageScore.toFixed(1) : "—"}
                   unit={data.averageScore !== null ? "/10" : undefined}

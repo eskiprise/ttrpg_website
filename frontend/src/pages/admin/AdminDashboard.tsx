@@ -290,7 +290,7 @@ function GameSystemRow({
         </span>
         <span className="min-w-0 flex-1 truncate font-medium">{system.name}</span>
         <span className="flex-shrink-0 text-sm text-ink-muted">
-          {t("gameSystems.sessions", { count: system.sessionCount ?? 0 })}
+          {t("gameSystems.games", { count: system.sessionCount ?? 0 })}
         </span>
         <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-90">
           ›

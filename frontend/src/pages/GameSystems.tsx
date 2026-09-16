@@ -5,6 +5,7 @@ import type { GameSystemListResponse, GameSystemWithCount } from "@ttrpg-club/sh
 import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
 import { SystemCover } from "../components/SystemCover";
+import { roundedThreshold } from "../lib/approx";
 
 export function GameSystems() {
   const { t } = useTranslation();
@@ -16,6 +17,13 @@ export function GameSystems() {
       .then((data) => setSystems(data.systems))
       .catch((err) => setError(err.message));
   }, []);
+
+  /** Rounded down to a threshold ("30+ ігор"); the exact count only below 10. */
+  function gamesLabel(count: number): string {
+    if (count === 0) return t("gameSystems.notPlayedYet");
+    const approx = roundedThreshold(count);
+    return approx ? t("gameSystems.gamesApprox", { count: approx }) : t("gameSystems.games", { count });
+  }
 
   return (
     <PageShell width="full">
@@ -39,11 +47,7 @@ export function GameSystems() {
             <p className="mt-3 leading-snug font-bold [overflow-wrap:anywhere] group-hover:text-accent">
               {system.name}
             </p>
-            <p className="mt-0.5 text-sm text-ink-muted">
-              {(system.sessionCount ?? 0) > 0
-                ? t("gameSystems.sessions", { count: system.sessionCount })
-                : t("gameSystems.notPlayedYet")}
-            </p>
+            <p className="mt-0.5 text-sm text-ink-muted">{gamesLabel(system.sessionCount ?? 0)}</p>
           </Link>
         ))}
       </div>

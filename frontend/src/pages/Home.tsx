@@ -13,6 +13,7 @@ import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { formatGameTitle } from "../lib/gameTitle";
 import { truncate } from "../lib/text";
+import { roundedThreshold } from "../lib/approx";
 import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
@@ -70,6 +71,8 @@ export function Home() {
   }, [idToken]);
 
   const totalSessions = gamesPerMonth.reduce((sum, m) => sum + m.count, 0);
+  // Rounded here as everywhere outside a system's own page: "200+", not "237".
+  const totalApprox = roundedThreshold(totalSessions);
 
   return (
     <div>
@@ -142,12 +145,18 @@ export function Home() {
         <Band tone="dark">
           <Eyebrow onBand>{t("home.evidenceEyebrow")}</Eyebrow>
           <h2 className="mt-4 max-w-[20ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] text-band-ink">
-            {t("home.evidenceTitle", { count: totalSessions })}
+            {totalApprox
+              ? t("home.evidenceTitleApprox", { count: totalApprox })
+              : t("home.evidenceTitle", { count: totalSessions })}
           </h2>
           <p className="mt-4 max-w-[52ch] text-band-ink-muted">{t("home.evidenceSub")}</p>
 
           <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
-            <StatTile tone="band" value={totalSessions} label={t("home.statSessions")} />
+            <StatTile
+              tone="band"
+              value={totalApprox ? `${totalApprox}+` : totalSessions}
+              label={t("home.statSessions")}
+            />
             {stats?.averageScore != null && (
               <StatTile
                 tone="band"
@@ -261,6 +270,8 @@ export function Home() {
               // sessionCount is missing if the backend predates it — then it's just names.
               const count = s.sessionCount ?? 0;
               const lead = index < LEAD_SYSTEMS && count > 0;
+              // "30+" rather than "42" — the exact figure lives on the system's page.
+              const approx = roundedThreshold(count);
               return (
                 <Link
                   key={s.systemId}
@@ -278,7 +289,7 @@ export function Home() {
                         lead ? "text-band-accent" : "text-accent"
                       }`}
                     >
-                      {count}
+                      {approx ? `${approx}+` : count}
                     </span>
                   )}
                 </Link>
