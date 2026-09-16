@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TelegramGameDetail as TelegramGameDetailType } from "@ttrpg-club/shared";
 import { apiFetch } from "../../lib/api";
+import { formatGameTitle } from "../../lib/gameTitle";
 import { useTelegramApp } from "./TelegramAppContext";
 import { useRefetchOnVisible } from "./useRefetchOnVisible";
 
@@ -34,7 +35,7 @@ export function TelegramGameDetail() {
       </button>
 
       <div>
-        <h1 className="text-xl font-bold">{game.questionText}</h1>
+        <h1 className="text-xl font-bold">{formatGameTitle(game.questionText)}</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {new Date(game.createdAt).toLocaleDateString(i18n.language)} · {t("telegramApp.gmLabel")} {game.gmDisplayName}
         </p>
