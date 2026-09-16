@@ -192,6 +192,22 @@
     padding: 0.55rem 0.7rem;
   }
 
+  /* Native selects arrive in the OS's own chrome (a grey iOS pill in the Telegram Mini
+     App), which reads as a foreign control next to our inputs. Strip it and draw the
+     chevron from two gradients: unlike an SVG data URI, currentColor follows the text
+     into Night. The picker itself stays native, which is what you want on a phone. */
+  select {
+    appearance: none;
+    padding-right: 2rem;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 1.05rem center, right 0.7rem center;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
+
   form label {
     display: flex;
     flex-direction: column;
