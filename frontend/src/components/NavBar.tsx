@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { CLUB_TELEGRAM_URL } from "../lib/club";
 
@@ -71,17 +70,19 @@ export function NavBar() {
               <NavLink to="/login" className={linkClass}>{t("nav.logIn")}</NavLink>
             )}
             {/* Below lg, this dropdown is the only nav surface — without this row,
-                language/theme controls (desktop-only further down) would be
-                completely unreachable on mobile and tablet. */}
+                the theme control (desktop-only further down) would be completely
+                unreachable on mobile and tablet. */}
             <div className="mt-2 flex items-center gap-3 border-t border-border pt-3">
-              <LanguageSwitcher />
               <ThemeToggle />
             </div>
           </div>
         </details>
 
+        {/* The language switcher is deliberately not rendered: the club's audience is
+            Ukrainian, so the site shows Ukrainian only for now. Everything behind it —
+            LanguageSwitcher.tsx, en.json, the i18n setup — is untouched, so bringing the
+            button back is a one-line change. */}
         <div className="hidden flex-shrink-0 items-center gap-4 lg:flex">
-          <LanguageSwitcher />
           <ThemeToggle />
           {idToken ? (
             <>
