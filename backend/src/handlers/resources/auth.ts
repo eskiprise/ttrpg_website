@@ -11,6 +11,7 @@ import {
 } from "../../lib/telegramAuth.js";
 import { signSession } from "../../lib/session.js";
 import { isAdminId } from "../../lib/auth.js";
+import { getClubChatId, isClubChatMember } from "../../lib/telegramBot.js";
 
 /**
  * Only sets firstName/lastName/profilePictureUrl on first login (record creation) —
@@ -46,11 +47,26 @@ async function loginOrCreateUser(telegramUser: TelegramLoginWidgetUser) {
   return { token, user };
 }
 
+/**
+ * The site's logged-in view is the club's inside: real names instead of nicknames, and
+ * comments under sessions. So signing in is for the club — anyone can read the public
+ * pages, but an account only exists for someone in the chat. Admins are let through
+ * regardless, so nobody can lock themselves out by leaving the chat.
+ */
+async function assertMayLogIn(telegramUser: TelegramLoginWidgetUser): Promise<void> {
+  if (isAdminId(String(telegramUser.id))) return;
+  const chatId = await getClubChatId();
+  if (!(await isClubChatMember(chatId, telegramUser.id))) {
+    throw new HttpError(403, "Only members of the club chat can sign in");
+  }
+}
+
 export async function loginWithTelegram(event: APIGatewayProxyEventV2) {
   const body = JSON.parse(event.body ?? "{}") as Record<string, unknown>;
   const telegramUser = await verifyTelegramLoginWidget(body);
   if (!telegramUser) throw new HttpError(401, "Invalid Telegram login payload");
 
+  await assertMayLogIn(telegramUser);
   const { token, user } = await loginOrCreateUser(telegramUser);
   return json(200, { token, user, isAdmin: isAdminId(user.userId) });
 }

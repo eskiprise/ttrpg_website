@@ -170,7 +170,8 @@
     "notMemberYet": "Not with us yet?",
     "writeToUs": "Message us and come play",
     "notConfigured": "Telegram login isn't configured yet.",
-    "loginFailed": "Login failed"
+    "loginFailed": "Login failed",
+    "notMember": "Signing in is for members of the club chat. If you're not with us yet, message us and we'll add you."
   },
   "profile": {
     "title": "My Profile",
