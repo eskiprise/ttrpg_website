@@ -36,9 +36,13 @@ export function TelegramCreatePoll() {
       setError(
         err instanceof ApiError && err.status === 403
           ? t("telegramApp.createPollNotMember")
-          : err instanceof Error
-            ? err.message
-            : t("common.somethingWrong")
+          : // Telegram signs the app's session once, at open — an app left open for a
+            // day needs reopening rather than an English error nobody can act on.
+            err instanceof ApiError && err.status === 401
+            ? t("telegramApp.sessionExpired")
+            : err instanceof Error
+              ? err.message
+              : t("common.somethingWrong")
       );
     } finally {
       setBusy(false);

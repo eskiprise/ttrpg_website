@@ -251,6 +251,7 @@
     "createPollDoneBody": "Take a look at the club chat — players can vote already.",
     "createPollAnother": "Create another",
     "createPollNotMember": "Only members of the club chat can create a poll.",
+    "sessionExpired": "This session has expired. Close and reopen the app, then try again.",
     "createPollNoSystems": "No systems yet — an admin has to add them on the site first.",
     "totalRatings": "Games Rated",
     "averageRating": "Average Rating You Give",
