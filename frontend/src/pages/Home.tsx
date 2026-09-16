@@ -183,13 +183,9 @@ export function Home() {
           <div className="mt-10">
             <GamesPerMonthChart
               data={gamesPerMonth}
-              maxMonths={18}
+              maxMonths={12}
               tone="band"
               title={t("home.growthTitle")}
-              legend={t("home.growthLegend", {
-                from: gamesPerMonth[0]?.count ?? 0,
-                peak: Math.max(...gamesPerMonth.map((m) => m.count)),
-              })}
             />
           </div>
         </Band>
