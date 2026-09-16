@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,10 +10,12 @@ import {
 import { ApiError, apiFetch } from "../../lib/api";
 import { suggestNextSessionName } from "../../lib/sessionName";
 import { useTelegramApp } from "./TelegramAppContext";
+import { SystemPicker, type SystemGroup } from "./SystemPicker";
 
 export function TelegramCreatePoll() {
   const { t } = useTranslation();
   const { initData } = useTelegramApp();
+  const systemLabelId = useId();
   const [systems, setSystems] = useState<GameSystemWithCount[] | null>(null);
   const [myGames, setMyGames] = useState<TelegramGameSummary[]>([]);
   const [systemId, setSystemId] = useState("");
@@ -66,6 +68,15 @@ export function TelegramCreatePoll() {
     () => (systems ?? []).filter((system) => !lastGameBySystem.has(system.systemId)),
     [systems, lastGameBySystem]
   );
+
+  const groups: SystemGroup[] = [
+    ...(recentSystems.length > 0
+      ? [{ label: t("telegramApp.createPollRecentSystems"), systems: recentSystems }]
+      : []),
+    ...(otherSystems.length > 0
+      ? [{ label: t("telegramApp.createPollOtherSystems"), systems: otherSystems }]
+      : []),
+  ];
 
   function onSystemChange(nextSystemId: string) {
     setSystemId(nextSystemId);
@@ -146,44 +157,21 @@ export function TelegramCreatePoll() {
         <p className="text-ink-muted">{t("telegramApp.createPollNoSystems")}</p>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-4">
-          {/* System first: picking it is what suggests the session name below. */}
-          <label className="flex flex-col gap-1">
-            <span className="font-semibold">{t("telegramApp.createPollSystem")}</span>
-            <select
-              required
+          {/* System first: picking it is what suggests the session name below. Not a
+              <label>, since the picker is a button + listbox rather than a form field. */}
+          <div className="flex flex-col gap-1">
+            <span id={systemLabelId} className="font-semibold">
+              {t("telegramApp.createPollSystem")}
+            </span>
+            <SystemPicker
+              groups={groups}
               value={systemId}
-              onChange={(e) => onSystemChange(e.target.value)}
+              onChange={onSystemChange}
               disabled={!systems}
-            >
-              <option value="">
-                {systems ? t("telegramApp.createPollSystemPlaceholder") : t("common.loading")}
-              </option>
-              {recentSystems.length > 0 ? (
-                <>
-                  <optgroup label={t("telegramApp.createPollRecentSystems")}>
-                    {recentSystems.map((system) => (
-                      <option key={system.systemId} value={system.systemId}>
-                        {system.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label={t("telegramApp.createPollOtherSystems")}>
-                    {otherSystems.map((system) => (
-                      <option key={system.systemId} value={system.systemId}>
-                        {system.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                </>
-              ) : (
-                otherSystems.map((system) => (
-                  <option key={system.systemId} value={system.systemId}>
-                    {system.name}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
+              placeholder={systems ? t("telegramApp.createPollSystemPlaceholder") : t("common.loading")}
+              labelledBy={systemLabelId}
+            />
+          </div>
 
           <label className="flex flex-col gap-1">
             <span className="font-semibold">{t("telegramApp.createPollSession")}</span>
