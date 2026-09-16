@@ -181,17 +181,17 @@ export function Home() {
         </Band>
       )}
 
-      {/* ── Newcomer objections ────────────────────────────────── */}
+      {/* ── Why come ───────────────────────────────────────────── */}
       <Band tone="page">
-        <Eyebrow>{t("home.fearsEyebrow")}</Eyebrow>
+        <Eyebrow>{t("home.whyEyebrow")}</Eyebrow>
         <h2 className="mt-4 max-w-[24ch] text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
-          {t("home.fearsTitle")}
+          {t("home.whyTitle")}
         </h2>
         <div className="mt-10 grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((n) => (
             <div key={n} className="border-t-2 border-ink pt-4">
-              <h3 className="text-lg font-bold">{t(`home.fear${n}Title`)}</h3>
-              <p className="mt-2 text-ink-muted">{t(`home.fear${n}Body`)}</p>
+              <h3 className="text-lg font-bold">{t(`home.why${n}Title`)}</h3>
+              <p className="mt-2 text-ink-muted">{t(`home.why${n}Body`)}</p>
             </div>
           ))}
         </div>
