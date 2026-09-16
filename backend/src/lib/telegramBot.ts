@@ -19,7 +19,9 @@ export async function getClubChatId(): Promise<number> {
 
   let result;
   try {
-    result = await ssm.send(new GetParameterCommand({ Name: paramName }));
+    // SecureString, like the bot token — without WithDecryption the API happily returns
+    // the ciphertext instead of the chat id.
+    result = await ssm.send(new GetParameterCommand({ Name: paramName, WithDecryption: true }));
   } catch (err) {
     // Almost always the Lambda's IAM policy not (yet) allowing this parameter.
     console.error(`Could not read ${paramName}`, err);
