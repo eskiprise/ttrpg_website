@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google Analytics (gtag.js). Google's snippet, loaded only on the public prod site:
+         dev, localhost and the Telegram Mini App (club members, not visitors) would
+         otherwise mix into the numbers the site is meant to measure. Route changes need
+         nothing extra — GA4's enhanced measurement tracks history navigation. -->
+    <script>
+      (function () {
+        if (location.hostname !== "dnaclub.com.ua" || location.pathname.startsWith("/telegram")) return;
+        var id = "G-2GKBDZTV11";
+        var tag = document.createElement("script");
+        tag.async = true;
+        tag.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(tag);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag("js", new Date());
+        window.gtag("config", id);
+      })();
+    </script>
     <title>Dice &amp; Adventures Club — настільні рольові ігри у Вінниці</title>
     <meta
       name="description"
