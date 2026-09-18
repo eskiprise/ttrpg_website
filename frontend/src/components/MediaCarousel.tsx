@@ -6,6 +6,13 @@ import type { MediaItem } from "@ttrpg-club/shared";
 const PHOTO_MS = 4500;
 
 /**
+ * Above this many items, one scrub-bar segment per item no longer fits comfortably
+ * (each sliver gets squeezed by its neighbours' gaps, especially at phone width) — the
+ * scrub bar switches to a single overall progress bar instead.
+ */
+const COMPACT_SCRUB_THRESHOLD = 20;
+
+/**
  * Autoplaying photo/video carousel for the "About Us" gallery. A photo advances on a
  * fixed timer; a video plays once (muted — required for autoplay in every browser) and
  * advances on its own `ended` event rather than a timer, so a 12s clip and a 40s clip
@@ -26,9 +33,12 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(!reduceMotion);
 
+  const compact = items.length > COMPACT_SCRUB_THRESHOLD;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fillRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const barFillRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const segmentStartRef = useRef(0);
 
@@ -41,6 +51,14 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
   playingRef.current = playing;
 
   function setFill(i: number, remainingPct: number) {
+    if (compact) {
+      // Only the active slide's progress feeds the single overall bar — everything
+      // else (the "reset every other segment" sweep below) is a per-dot concern only.
+      if (i !== indexRef.current || !barFillRef.current) return;
+      const overallPct = ((i + (100 - remainingPct) / 100) / items.length) * 100;
+      barFillRef.current.style.width = `${overallPct}%`;
+      return;
+    }
     const el = fillRefs.current[i];
     if (el) el.style.right = `${remainingPct}%`;
   }
@@ -158,6 +176,12 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
     resumeAfterInteraction();
   }
 
+  function onBarClick(e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    goTo(Math.min(items.length - 1, Math.max(0, Math.floor(ratio * items.length))));
+  }
+
   if (items.length === 0) return null;
 
   return (
@@ -252,25 +276,40 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
 
       {items.length > 1 && (
         <div className="mt-4 flex items-center gap-2">
-          <div className="flex flex-1 gap-1.5">
-            {items.map((item, i) => (
-              <button
-                key={item.mediaId}
-                type="button"
-                aria-label={t("about.gallerySlideLabel", { index: i + 1, total: items.length })}
-                onClick={() => goTo(i)}
-                className="relative h-1 flex-1 overflow-hidden rounded-full bg-band-edge"
-              >
-                <div
-                  ref={(el) => {
-                    fillRefs.current[i] = el;
-                  }}
-                  className="absolute inset-0 rounded-full bg-band-accent"
-                  style={{ right: i < index ? "0%" : i === index ? "100%" : "100%" }}
-                />
-              </button>
-            ))}
-          </div>
+          {compact ? (
+            <button
+              type="button"
+              aria-label={t("about.gallerySlideLabel", { index: index + 1, total: items.length })}
+              onClick={onBarClick}
+              className="relative h-1 flex-1 overflow-hidden rounded-full bg-band-edge"
+            >
+              <div
+                ref={barFillRef}
+                className="absolute inset-y-0 left-0 rounded-full bg-band-accent"
+                style={{ width: `${(index / items.length) * 100}%` }}
+              />
+            </button>
+          ) : (
+            <div className="flex flex-1 gap-1.5">
+              {items.map((item, i) => (
+                <button
+                  key={item.mediaId}
+                  type="button"
+                  aria-label={t("about.gallerySlideLabel", { index: i + 1, total: items.length })}
+                  onClick={() => goTo(i)}
+                  className="relative h-1 flex-1 overflow-hidden rounded-full bg-band-edge"
+                >
+                  <div
+                    ref={(el) => {
+                      fillRefs.current[i] = el;
+                    }}
+                    className="absolute inset-0 rounded-full bg-band-accent"
+                    style={{ right: i < index ? "0%" : i === index ? "100%" : "100%" }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
           <span className="flex-shrink-0 font-numeric text-xs text-band-ink-muted tabular-nums">
             {index + 1} / {items.length}
           </span>
