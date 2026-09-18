@@ -116,6 +116,23 @@ export interface ImageUploadUrlResponse {
 
 export type AvatarUploadUrlResponse = ImageUploadUrlResponse;
 
+/** One photo or video in the "About Us" gallery carousel. */
+export interface MediaItem {
+  mediaId: string;
+  kind: "photo" | "video";
+  url: string;
+  /** Video only — a still frame shown before playback starts (the <video poster>). */
+  posterUrl?: string;
+  caption?: string;
+  displayIndex: number;
+  createdAt: string;
+}
+
+export interface MediaListResponse {
+  /** Already sorted by displayIndex. */
+  items: MediaItem[];
+}
+
 export interface TelegramRecentRating {
   pollId: string;
   questionText: string;

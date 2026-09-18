@@ -37,6 +37,7 @@ export const Tables = {
   signupRequests: () => requireEnv("TABLE_SIGNUP_REQUESTS"),
   gameSystems: () => requireEnv("TABLE_GAME_SYSTEMS"),
   gameComments: () => requireEnv("TABLE_GAME_COMMENTS"),
+  clubMedia: () => requireEnv("TABLE_CLUB_MEDIA"),
   settings: () => requireEnv("TABLE_SETTINGS"),
   telegramRatingVotes: () => requireEnv("TABLE_TELEGRAM_RATING_VOTES"),
   telegramRatingPolls: () => requireEnv("TABLE_TELEGRAM_RATING_POLLS"),
