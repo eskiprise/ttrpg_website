@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import type {
   GameSystemListResponse,
   GameSystemWithCount,
+  MediaItem,
+  MediaListResponse,
   SignupRequest,
   UnmatchedGame,
   User,
 } from "@ttrpg-club/shared";
 import { ApiError, apiFetch } from "../../lib/api";
-import { uploadGameSystemCover } from "../../lib/uploads";
+import { uploadGameSystemCover, uploadMediaFile } from "../../lib/uploads";
 import { useAuth } from "../../auth/AuthContext";
 import { SystemCover } from "../../components/SystemCover";
 
@@ -342,6 +344,248 @@ function GameSystemRow({
   );
 }
 
+const MEDIA_ACCEPT = "image/jpeg,image/png,image/webp,video/mp4,video/webm";
+
+/** Persists a new top-to-bottom order: renumbers to a clean 0..n-1 run and only PATCHes rows whose index actually moved. */
+async function persistMediaOrder(items: MediaItem[], token: string | null): Promise<void> {
+  const updates = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item, index }) => item.displayIndex !== index)
+    .map(({ item, index }) =>
+      apiFetch(`/admin/media/${item.mediaId}`, { method: "PATCH", token, body: { displayIndex: index } })
+    );
+  await Promise.all(updates);
+}
+
+function MediaUploadForm({ token, onAdded }: { token: string | null; onAdded: () => void }) {
+  const { t } = useTranslation();
+  const [inputKey, setInputKey] = useState(0);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function onFilesSelected(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    if (files.length === 0) return;
+
+    setErrors([]);
+    setNotice(null);
+    setProgress({ done: 0, total: files.length });
+
+    const failures: string[] = [];
+    let anyLongVideo = false;
+    // One at a time — parallel uploads of several multi-MB videos would fight over the
+    // same connection anyway, and this keeps the progress count meaningful.
+    for (const file of files) {
+      try {
+        const uploaded = await uploadMediaFile(file, token);
+        if (uploaded.kind === "video" && uploaded.longerThanRecommended) anyLongVideo = true;
+        await apiFetch("/admin/media", {
+          method: "POST",
+          token,
+          body:
+            uploaded.kind === "video"
+              ? { kind: "video", url: uploaded.url, posterUrl: uploaded.posterUrl }
+              : { kind: "photo", url: uploaded.url },
+        });
+      } catch (err) {
+        failures.push(`${file.name}: ${err instanceof Error ? err.message : t("common.somethingWrong")}`);
+      }
+      setProgress((p) => (p ? { done: p.done + 1, total: p.total } : p));
+    }
+
+    setErrors(failures);
+    if (anyLongVideo) setNotice(t("admin.mediaLongVideoNotice"));
+    setProgress(null);
+    setInputKey((k) => k + 1); // file inputs can't be cleared by value
+    onAdded();
+  }
+
+  return (
+    <div>
+      <label className="flex flex-col gap-1 text-sm text-ink-muted">
+        {t("admin.mediaUploadLabel")}
+        <input
+          key={inputKey}
+          type="file"
+          multiple
+          accept={MEDIA_ACCEPT}
+          disabled={!!progress}
+          onChange={(e) => onFilesSelected(e.target.files)}
+          className="max-w-full text-sm"
+        />
+      </label>
+      {progress && (
+        <p className="mt-2 text-sm text-ink-muted">
+          {t("admin.mediaUploading", { done: progress.done, total: progress.total })}
+        </p>
+      )}
+      {notice && <p className="mt-2 text-sm text-ink-muted">{notice}</p>}
+      {errors.length > 0 && (
+        <ul className="mt-2 flex flex-col gap-1 text-sm text-accent">
+          {errors.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function MediaRow({
+  item,
+  token,
+  canMoveUp,
+  canMoveDown,
+  moveBusy,
+  onMoveUp,
+  onMoveDown,
+  onChanged,
+}: {
+  item: MediaItem;
+  token: string | null;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  moveBusy: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onChanged: () => void;
+}) {
+  const { t } = useTranslation();
+  const [caption, setCaption] = useState(item.caption ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function saveCaptionIfChanged() {
+    if (caption === (item.caption ?? "")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch(`/admin/media/${item.mediaId}`, { method: "PATCH", token, body: { caption } });
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (!window.confirm(t("admin.confirmDeleteMedia"))) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch(`/admin/media/${item.mediaId}`, { method: "DELETE", token });
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
+      <span className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-md border border-border bg-surface-2">
+        <img src={item.kind === "video" ? item.posterUrl : item.url} alt="" className="h-full w-full object-cover" />
+        {item.kind === "video" && (
+          <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-black/30 text-sm text-white">
+            ▶
+          </span>
+        )}
+      </span>
+      <input
+        value={caption}
+        placeholder={t("admin.mediaCaptionPlaceholder")}
+        disabled={busy}
+        onChange={(e) => setCaption(e.target.value)}
+        onBlur={saveCaptionIfChanged}
+        className="min-w-0 flex-1"
+      />
+      <div className="flex flex-shrink-0 items-center gap-1">
+        <button
+          type="button"
+          className="secondary px-2"
+          aria-label={t("admin.mediaMoveUp")}
+          disabled={!canMoveUp || moveBusy}
+          onClick={onMoveUp}
+        >
+          ▲
+        </button>
+        <button
+          type="button"
+          className="secondary px-2"
+          aria-label={t("admin.mediaMoveDown")}
+          disabled={!canMoveDown || moveBusy}
+          onClick={onMoveDown}
+        >
+          ▼
+        </button>
+        <button type="button" className="secondary" disabled={busy} onClick={remove}>
+          {t("admin.deleteSystem")}
+        </button>
+      </div>
+      {error && <p className="ml-2 flex-shrink-0 text-sm text-accent">{error}</p>}
+    </div>
+  );
+}
+
+function MediaAdmin({ token, tick, reload }: { token: string | null; tick: number; reload: () => void }) {
+  const { t } = useTranslation();
+  const [items, setItems] = useState<MediaItem[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [moveBusy, setMoveBusy] = useState(false);
+
+  useEffect(() => {
+    apiFetch<MediaListResponse>("/media", { token })
+      .then((data) => setItems(data.items))
+      .catch((err) => setError(err.message));
+  }, [token, tick]);
+
+  async function move(from: number, to: number) {
+    if (!items || to < 0 || to >= items.length) return;
+    const reordered = [...items];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    setItems(reordered); // optimistic — the list re-fetch below confirms it
+    setMoveBusy(true);
+    try {
+      await persistMediaOrder(reordered, token);
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+    } finally {
+      setMoveBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.mediaTitle")}</h2>
+      <p className="mt-2 text-sm text-ink-muted">{t("admin.mediaHint")}</p>
+      <div className="mt-4 border-b border-border pb-5">
+        <MediaUploadForm token={token} onAdded={reload} />
+      </div>
+      {error && <p className="mt-3 text-accent">{error}</p>}
+      {items?.length === 0 && <p className="mt-3 text-ink-muted">{t("admin.mediaNone")}</p>}
+      <div className="flex flex-col">
+        {items?.map((item, index) => (
+          <MediaRow
+            key={item.mediaId}
+            item={item}
+            token={token}
+            canMoveUp={index > 0}
+            canMoveDown={index < items.length - 1}
+            moveBusy={moveBusy}
+            onMoveUp={() => move(index, index - 1)}
+            onMoveDown={() => move(index, index + 1)}
+            onChanged={reload}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function GameSystemsAdmin({ token, tick, reload }: { token: string | null; tick: number; reload: () => void }) {
   const { t } = useTranslation();
   const [systems, setSystems] = useState<GameSystemWithCount[] | null>(null);
@@ -408,6 +652,7 @@ export function AdminDashboard() {
           <SignupRequests token={idToken} />
           <Members token={idToken} />
           <GameSystemsAdmin token={idToken} tick={tick} reload={reload} />
+          <MediaAdmin token={idToken} tick={tick} reload={reload} />
         </div>
         <div className="flex flex-col gap-6">
           <AnonymizeToggle token={idToken} />

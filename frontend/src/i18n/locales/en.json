@@ -81,7 +81,19 @@
   },
   "about": {
     "title": "About Us",
-    "body": "We're a group of friends who get together to play tabletop RPGs. This site tracks who's run and played what, so we can look back on the campaigns we've shared."
+    "body": "We're a group of friends who get together to play tabletop RPGs. This site tracks who's run and played what, so we can look back on the campaigns we've shared.",
+    "galleryEyebrow": "Club life",
+    "galleryTitle": "Photos and videos from our games",
+    "gallerySub": "Shots from real sessions — this is what the table looks like when we play.",
+    "galleryLabel": "Photos and videos from club life",
+    "galleryVideoBadge": "Video",
+    "galleryMute": "Mute",
+    "galleryUnmute": "Unmute",
+    "galleryPrev": "Previous slide",
+    "galleryNext": "Next slide",
+    "gallerySlideLabel": "Slide {{index}} of {{total}}",
+    "galleryPause": "⏸ Pause",
+    "galleryPlay": "▶ Play"
   },
   "gameMasters": {
     "title": "Game Masters",
@@ -212,7 +224,17 @@
     "deleteSystem": "Delete",
     "confirmDeleteSystem": "Delete the system “{{name}}”? Its games stay, but won't count toward it any more.",
     "unmatchedTitle": "Unrecognised games",
-    "unmatchedHint": "Polls whose title didn't match any system. Add an alias to the right system and they'll count."
+    "unmatchedHint": "Polls whose title didn't match any system. Add an alias to the right system and they'll count.",
+    "mediaTitle": "Media",
+    "mediaHint": "Photos and short videos for the \"About Us\" page. Compress video beforehand — the site doesn't transcode it.",
+    "mediaUploadLabel": "Add photos or videos",
+    "mediaUploading": "Uploaded {{done}} of {{total}}…",
+    "mediaLongVideoNotice": "Some videos run longer than ~30 seconds — shorter clips autoplay better in the carousel.",
+    "mediaNone": "Nothing uploaded yet.",
+    "mediaCaptionPlaceholder": "Caption (optional)",
+    "mediaMoveUp": "Move up",
+    "mediaMoveDown": "Move down",
+    "confirmDeleteMedia": "Delete this file? This can't be undone."
   },
   "statistics": {
     "eyebrow": "Club numbers",

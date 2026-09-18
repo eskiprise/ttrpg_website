@@ -14,6 +14,13 @@ import {
   deleteGameSystem,
   getGameSystemImageUploadUrl,
 } from "./resources/gameSystems.js";
+import {
+  listMedia,
+  getMediaUploadUrl,
+  createMediaItem,
+  updateMediaItem,
+  deleteMediaItem,
+} from "./resources/media.js";
 import { listGameMasters, getGameMasterDetail } from "./resources/gameMasters.js";
 import { listGameLog, getGameLogDetail } from "./resources/gameLog.js";
 import { listComments, postComment, deleteComment } from "./resources/comments.js";
@@ -58,6 +65,12 @@ const routes: Record<string, RouteHandler> = {
   "POST /admin/game-systems/image-upload-url": getGameSystemImageUploadUrl,
   "PATCH /admin/game-systems/{systemId}": updateGameSystem,
   "DELETE /admin/game-systems/{systemId}": deleteGameSystem,
+
+  "GET /media": async () => listMedia(),
+  "POST /admin/media/upload-url": getMediaUploadUrl,
+  "POST /admin/media": createMediaItem,
+  "PATCH /admin/media/{mediaId}": updateMediaItem,
+  "DELETE /admin/media/{mediaId}": deleteMediaItem,
 
   "GET /game-masters": async () => listGameMasters(),
   "GET /game-masters/{userId}": getGameMasterDetail,
