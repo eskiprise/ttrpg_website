@@ -144,9 +144,13 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
   }, [index]);
 
   function pauseForInteraction() {
+    // Hover/focus/touch only holds the current slide in place — it stops a photo's
+    // advance timer and blocks the *next* slide from autoplaying (see the
+    // hoverPausedRef check in startActiveSlide) — but a video already playing keeps
+    // playing, since freezing it just because the cursor crossed the frame reads as
+    // broken, not as "paused for your convenience".
     hoverPausedRef.current = true;
     stopTimer();
-    videoRef.current?.pause();
   }
   function resumeAfterInteraction() {
     hoverPausedRef.current = false;
