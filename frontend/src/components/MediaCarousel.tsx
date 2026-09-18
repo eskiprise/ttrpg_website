@@ -12,11 +12,34 @@ const PHOTO_MS = 4500;
  */
 const COMPACT_SCRUB_THRESHOLD = 20;
 
+function SpeakerIcon({ muted }: { muted: boolean }) {
+  // shrink-0: a flex child's default min-width:auto lets the browser collapse a
+  // replaced element like this svg to 0 width inside the flex button, even with an
+  // explicit w-4 — shrink-0 opts it out of that.
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
+      {muted ? (
+        <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M16 9.5l5 5" />
+          <path d="M21 9.5l-5 5" />
+        </g>
+      ) : (
+        <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M16.5 8.5a5 5 0 0 1 0 7" />
+          <path d="M19 6a8.5 8.5 0 0 1 0 12" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
 /**
  * Autoplaying photo/video carousel for the "About Us" gallery. A photo advances on a
- * fixed timer; a video plays once (muted — required for autoplay in every browser) and
- * advances on its own `ended` event rather than a timer, so a 12s clip and a 40s clip
- * each get their actual length on screen.
+ * fixed timer; a video autoplays muted (required by every browser without a prior user
+ * gesture — the speaker button is that gesture, and unmuting sticks for the rest of the
+ * session) and advances on its own `ended` event rather than a timer, so a 12s clip and
+ * a 40s clip each get their actual length on screen.
  *
  * The moving parts (which slide is active, the running timer/video, the per-slide
  * progress bar) are kept in refs and driven imperatively — the same shape as the
@@ -32,6 +55,11 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
 
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(!reduceMotion);
+  // Starts muted — unmuted autoplay is blocked by every browser without a prior user
+  // gesture. Unmuting is that gesture, and it applies to every video afterwards (not
+  // just the one you clicked), matching how Instagram/YouTube remember your choice for
+  // the rest of the session.
+  const [muted, setMuted] = useState(true);
 
   const compact = items.length > COMPACT_SCRUB_THRESHOLD;
 
@@ -46,9 +74,11 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
   // without re-subscribing every effect to them.
   const indexRef = useRef(index);
   const playingRef = useRef(playing);
+  const mutedRef = useRef(muted);
   const hoverPausedRef = useRef(false);
   indexRef.current = index;
   playingRef.current = playing;
+  mutedRef.current = muted;
 
   function setFill(i: number, remainingPct: number) {
     if (compact) {
@@ -108,10 +138,12 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
     } else {
       const video = videoRef.current;
       if (!video) return;
-      video.muted = true;
+      video.muted = mutedRef.current;
       video.play().catch(() => {
-        // Autoplay refused (rare, muted+inline is normally allowed) — the poster
-        // frame stays on screen and the slide simply doesn't self-advance.
+        // Autoplay refused — muted+inline is normally allowed everywhere, but a
+        // browser can still refuse unmuted autoplay for a *new* video despite the
+        // earlier unmute click. Either way, the poster frame stays on screen and the
+        // slide simply doesn't self-advance.
       });
     }
   }
@@ -122,6 +154,12 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
     return stopTimer;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, playing]);
+
+  // Toggling mute should take effect on whatever's playing right now, not wait for the
+  // next slide — startActiveSlide only re-runs on index/playing changes.
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
 
   // Real video progress drives its own scrub segment and advances the carousel when
   // the clip actually ends, whatever its real length is.
@@ -233,7 +271,7 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
                 ref={videoRef}
                 src={item.url}
                 poster={item.posterUrl}
-                muted
+                muted={muted}
                 playsInline
                 preload="metadata"
                 className="relative h-full w-full object-contain"
@@ -247,6 +285,16 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-band-accent" />
                 {t("about.galleryVideoBadge")}
               </span>
+            )}
+            {item.kind === "video" && (
+              <button
+                type="button"
+                aria-label={muted ? t("about.galleryUnmute") : t("about.galleryMute")}
+                onClick={() => setMuted((m) => !m)}
+                className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white backdrop-blur-sm hover:bg-black/65"
+              >
+                <SpeakerIcon muted={muted} />
+              </button>
             )}
             {item.caption && (
               <p className="absolute right-4 bottom-4 left-4 font-display text-lg leading-snug font-bold text-white [text-wrap:balance]">
