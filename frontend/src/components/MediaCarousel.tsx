@@ -60,6 +60,16 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
     stopTimer();
     const item = items[indexRef.current];
     if (!item) return;
+
+    // Every segment's fill is written straight to the DOM (setFill), bypassing React,
+    // so the active slide can animate every frame without a re-render. That means a
+    // jump can leave a stale mid-progress value behind: React only touches a segment's
+    // style if its *rendered* value changed, and "was active" -> "is now upcoming" both
+    // render as the same 100%, so React skips it and the old partial fill sticks. Reset
+    // every non-active segment explicitly here instead of relying on React's diff.
+    items.forEach((_, i) => {
+      if (i !== indexRef.current) setFill(i, i < indexRef.current ? 0 : 100);
+    });
     setFill(indexRef.current, 100);
 
     if (!playingRef.current || hoverPausedRef.current) return;
@@ -174,8 +184,22 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
             style={{ opacity: i === index ? 1 : 0, zIndex: i === index ? 1 : 0 }}
             aria-hidden={i !== index}
           >
+            {/* Blurred fill behind the real media — a portrait photo/video never gets
+                cropped by the 16:9 frame, it just floats over a soft-focus copy of
+                itself instead of leaving bare background on the sides. */}
+            <img
+              src={item.kind === "photo" ? item.url : item.posterUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-2xl"
+            />
             {item.kind === "photo" ? (
-              <img src={item.url} alt={item.caption ?? ""} loading="lazy" className="h-full w-full object-cover" />
+              <img
+                src={item.url}
+                alt={item.caption ?? ""}
+                loading="lazy"
+                className="relative h-full w-full object-contain"
+              />
             ) : i === index ? (
               <video
                 ref={videoRef}
@@ -184,10 +208,10 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
                 muted
                 playsInline
                 preload="metadata"
-                className="h-full w-full object-cover"
+                className="relative h-full w-full object-contain"
               />
             ) : (
-              <img src={item.posterUrl} alt="" className="h-full w-full object-cover" />
+              <img src={item.posterUrl} alt="" className="relative h-full w-full object-contain" />
             )}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" />
             {item.kind === "video" && (
