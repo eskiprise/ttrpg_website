@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-  GameSystemListResponse,
-  GameSystemWithCount,
-  MediaItem,
-  MediaListResponse,
-  SignupRequest,
-  UnmatchedGame,
-  User,
+import {
+  formatGameTitle,
+  type GameSystemListResponse,
+  type GameSystemWithCount,
+  type MediaItem,
+  type MediaListResponse,
+  type SignupRequest,
+  type TelegramGameSummary,
+  type UnmatchedGame,
+  type User,
 } from "@ttrpg-club/shared";
 import { ApiError, apiFetch } from "../../lib/api";
 import { uploadGameSystemCover, uploadMediaFile } from "../../lib/uploads";
@@ -636,6 +638,159 @@ function GameSystemsAdmin({ token, tick, reload }: { token: string | null; tick:
   );
 }
 
+const GAMES_PAGE_SIZE = 30;
+
+function GameAdminRow({
+  game,
+  token,
+  users,
+  onChanged,
+}: {
+  game: TelegramGameSummary;
+  token: string | null;
+  users: User[];
+  onChanged: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const originalTitle = formatGameTitle(game.questionText);
+  const [title, setTitle] = useState(originalTitle);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run(body: object) {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch(`/admin/game-log/${game.pollId}`, { method: "PATCH", token, body });
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function saveTitleIfChanged() {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed === originalTitle) return;
+    void run({ questionText: trimmed });
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-b border-border py-3 last:border-b-0 sm:flex-row sm:items-center">
+      <input
+        className="min-w-0 flex-1"
+        value={title}
+        disabled={busy}
+        onChange={(e) => setTitle(e.target.value)}
+        onBlur={saveTitleIfChanged}
+      />
+      <select
+        value={game.gmUserId ?? ""}
+        disabled={busy}
+        onChange={(e) => run({ gmUserId: e.target.value || null })}
+        className="sm:w-56"
+      >
+        <option value="">{t("admin.noGm")}</option>
+        {users.map((u) => (
+          <option key={u.userId} value={u.userId}>
+            {u.firstName} {u.lastName}
+          </option>
+        ))}
+      </select>
+      <span className="flex-shrink-0 text-xs text-ink-muted">
+        {new Date(game.createdAt).toLocaleDateString(i18n.language, { day: "numeric", month: "short" })}
+      </span>
+      {error && <p className="text-sm text-accent">{error}</p>}
+    </div>
+  );
+}
+
+function GamesAdmin({ token, tick, reload }: { token: string | null; tick: number; reload: () => void }) {
+  const { t } = useTranslation();
+  const [games, setGames] = useState<TelegramGameSummary[] | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [onlyMissingGm, setOnlyMissingGm] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiFetch<{ users: User[] }>("/admin/users", { token })
+      .then((data) =>
+        setUsers(
+          data.users
+            .slice()
+            .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
+        )
+      )
+      .catch((err) => setError(err.message));
+  }, [token, tick]);
+
+  const load = useCallback(
+    (offset: number, replace: boolean) => {
+      setLoading(true);
+      const params = new URLSearchParams({
+        limit: String(GAMES_PAGE_SIZE),
+        offset: String(offset),
+        sortBy: "date",
+        sortDir: "desc",
+      });
+      if (onlyMissingGm) params.set("hasGm", "false");
+      apiFetch<{ games: TelegramGameSummary[]; hasMore: boolean }>(`/game-log?${params}`, { token })
+        .then((data) => {
+          setGames((prev) => (replace || !prev ? data.games : [...prev, ...data.games]));
+          setHasMore(data.hasMore);
+          setError(null);
+        })
+        .catch((err) => setError(err instanceof Error ? err.message : t("common.somethingWrong")))
+        .finally(() => setLoading(false));
+    },
+    [token, onlyMissingGm, t]
+  );
+
+  useEffect(() => {
+    load(0, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, tick, onlyMissingGm]);
+
+  return (
+    <div className="rounded-xl border border-border bg-surface p-6">
+      <h2 className="text-xl font-bold">{t("admin.gamesTitle")}</h2>
+      <p className="mt-2 text-sm text-ink-muted">{t("admin.gamesHint")}</p>
+      <label className="mt-3 flex items-center gap-2 text-sm text-ink-muted">
+        <input
+          type="checkbox"
+          checked={onlyMissingGm}
+          onChange={(e) => setOnlyMissingGm(e.target.checked)}
+        />
+        {t("admin.gamesOnlyMissingGm")}
+      </label>
+      {error && <p className="mt-3 text-accent">{error}</p>}
+      {games?.length === 0 && (
+        <p className="mt-3 text-ink-muted">
+          {onlyMissingGm ? t("admin.gamesNoneMissingGm") : t("gameLog.none")}
+        </p>
+      )}
+      <div className="mt-3 flex flex-col">
+        {games?.map((game) => (
+          <GameAdminRow key={game.pollId} game={game} token={token} users={users} onChanged={reload} />
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          type="button"
+          className="secondary mt-4"
+          disabled={loading}
+          onClick={() => load(games?.length ?? 0, false)}
+        >
+          {t("gameLog.loadMore")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   const { t } = useTranslation();
   const { idToken } = useAuth();
@@ -652,6 +807,7 @@ export function AdminDashboard() {
           <SignupRequests token={idToken} />
           <Members token={idToken} />
           <GameSystemsAdmin token={idToken} tick={tick} reload={reload} />
+          <GamesAdmin token={idToken} tick={tick} reload={reload} />
           <MediaAdmin token={idToken} tick={tick} reload={reload} />
         </div>
         <div className="flex flex-col gap-6">
