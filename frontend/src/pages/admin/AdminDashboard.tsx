@@ -531,6 +531,23 @@ function MediaRow({
   );
 }
 
+/** Long admin lists (dozens of games/systems/media items) push the whole dashboard page
+ * length way down — collapsed by default behind a summary count, opened on demand. */
+function CollapsibleList({ count, children }: { count: number; children: React.ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <details className="group mt-3">
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+        <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-90">
+          ›
+        </span>
+        {t("admin.showList", { count })}
+      </summary>
+      <div className="mt-3 flex flex-col">{children}</div>
+    </details>
+  );
+}
+
 function MediaAdmin({ token, tick, reload }: { token: string | null; tick: number; reload: () => void }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<MediaItem[] | null>(null);
@@ -569,21 +586,23 @@ function MediaAdmin({ token, tick, reload }: { token: string | null; tick: numbe
       </div>
       {error && <p className="mt-3 text-accent">{error}</p>}
       {items?.length === 0 && <p className="mt-3 text-ink-muted">{t("admin.mediaNone")}</p>}
-      <div className="flex flex-col">
-        {items?.map((item, index) => (
-          <MediaRow
-            key={item.mediaId}
-            item={item}
-            token={token}
-            canMoveUp={index > 0}
-            canMoveDown={index < items.length - 1}
-            moveBusy={moveBusy}
-            onMoveUp={() => move(index, index - 1)}
-            onMoveDown={() => move(index, index + 1)}
-            onChanged={reload}
-          />
-        ))}
-      </div>
+      {(items?.length ?? 0) > 0 && (
+        <CollapsibleList count={items!.length}>
+          {items!.map((item, index) => (
+            <MediaRow
+              key={item.mediaId}
+              item={item}
+              token={token}
+              canMoveUp={index > 0}
+              canMoveDown={index < items!.length - 1}
+              moveBusy={moveBusy}
+              onMoveUp={() => move(index, index - 1)}
+              onMoveDown={() => move(index, index + 1)}
+              onChanged={reload}
+            />
+          ))}
+        </CollapsibleList>
+      )}
     </div>
   );
 }
@@ -609,11 +628,13 @@ function GameSystemsAdmin({ token, tick, reload }: { token: string | null; tick:
       <p className="mt-2 text-sm text-ink-muted">{t("admin.systemsHint")}</p>
       {error && <p className="mt-3 text-accent">{error}</p>}
       {systems?.length === 0 && <p className="mt-3 text-ink-muted">{t("gameSystems.none")}</p>}
-      <div className="mt-3 flex flex-col">
-        {systems?.map((system) => (
-          <GameSystemRow key={system.systemId} system={system} token={token} onChanged={reload} />
-        ))}
-      </div>
+      {(systems?.length ?? 0) > 0 && (
+        <CollapsibleList count={systems!.length}>
+          {systems!.map((system) => (
+            <GameSystemRow key={system.systemId} system={system} token={token} onChanged={reload} />
+          ))}
+        </CollapsibleList>
+      )}
 
       {unmatched.length > 0 && (
         <div className="mt-6 border-t border-border pt-5">
@@ -772,20 +793,22 @@ function GamesAdmin({ token, tick, reload }: { token: string | null; tick: numbe
           {onlyMissingGm ? t("admin.gamesNoneMissingGm") : t("gameLog.none")}
         </p>
       )}
-      <div className="mt-3 flex flex-col">
-        {games?.map((game) => (
-          <GameAdminRow key={game.pollId} game={game} token={token} users={users} onChanged={reload} />
-        ))}
-      </div>
-      {hasMore && (
-        <button
-          type="button"
-          className="secondary mt-4"
-          disabled={loading}
-          onClick={() => load(games?.length ?? 0, false)}
-        >
-          {t("gameLog.loadMore")}
-        </button>
+      {(games?.length ?? 0) > 0 && (
+        <CollapsibleList count={games!.length}>
+          {games!.map((game) => (
+            <GameAdminRow key={game.pollId} game={game} token={token} users={users} onChanged={reload} />
+          ))}
+          {hasMore && (
+            <button
+              type="button"
+              className="secondary mt-4 self-start"
+              disabled={loading}
+              onClick={() => load(games?.length ?? 0, false)}
+            >
+              {t("gameLog.loadMore")}
+            </button>
+          )}
+        </CollapsibleList>
       )}
     </div>
   );

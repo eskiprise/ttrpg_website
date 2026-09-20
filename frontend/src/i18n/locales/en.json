@@ -239,6 +239,7 @@
     "gamesOnlyMissingGm": "Show only games with no GM",
     "gamesNoneMissingGm": "Every game has a GM.",
     "noGm": "— No GM —",
+    "showList": "Show list ({{count}})",
     "mediaTitle": "Media",
     "mediaHint": "Photos and short videos for the \"About Us\" page. Compress video beforehand — the site doesn't transcode it.",
     "mediaUploadLabel": "Add photos or videos",
