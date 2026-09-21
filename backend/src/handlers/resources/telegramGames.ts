@@ -56,6 +56,7 @@ export function summarize(poll: PollRecord, votes: VoteRecord[], callerUserId: n
     questionText: poll.questionText,
     createdAt: poll.createdAt,
     gmDisplayName,
+    gmUserId: poll.creatorUserId !== undefined ? String(poll.creatorUserId) : undefined,
     playerCount: votes.length,
     averageScore,
     myRating: myVote ? myVote.rating : null,

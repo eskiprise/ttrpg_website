@@ -175,6 +175,9 @@ export interface TelegramGameSummary {
   questionText: string;
   createdAt: string;
   gmDisplayName: string;
+  /** The poll's creator as a `users` table id, when set — lets the admin "edit game"
+   * UI preselect the current GM in a picker. Absent on polls with no recorded GM. */
+  gmUserId?: string;
   playerCount: number;
   averageScore: number | null;
   /** The caller's own vote on this poll, or null if they didn't vote (or voted "see results"). */
