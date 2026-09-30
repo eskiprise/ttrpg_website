@@ -213,4 +213,20 @@
     flex-direction: column;
     gap: 0.3rem;
   }
+
+  /* An empty date input's "dd.mm.yyyy" hint otherwise inherits the same full-strength
+     ink color as real typed text (confirmed: Chrome's internal date parts do inherit
+     the host's `color`), reading as bold placeholder clutter rather than an empty
+     field. `.date-empty` (set in JS from whether the input actually has a value, not
+     :focus — a *filled* date must stay fully legible even after the field loses focus)
+     hides the hint entirely at rest; focusing the field brings it back in a muted tone
+     so it's still readable while picking. Chrome/Safari/Edge only — Firefox's own date
+     chrome doesn't expose these parts, but already renders its hint in a muted tone by
+     default rather than full ink, so there's nothing to hide there. */
+  input[type="date"].date-empty {
+    color: transparent;
+  }
+  input[type="date"].date-empty:focus {
+    color: var(--ink-muted);
+  }
 }

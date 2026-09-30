@@ -13,6 +13,8 @@ import { formatGameTitle } from "../lib/gameTitle";
 import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
+import { EMPTY_GAME_FILTERS, GameFilterBar, type GameFilterValues } from "../components/GameFilterBar";
+import { useSeo } from "../hooks/useSeo";
 
 function Leaderboard({
   title,
@@ -50,20 +52,10 @@ function Leaderboard({
   );
 }
 
-interface StatFilters {
-  from: string;
-  to: string;
-  gmUserId: string;
-  systemId: string;
-  minScore: string;
-  maxScore: string;
-}
-
-const EMPTY_FILTERS: StatFilters = { from: "", to: "", gmUserId: "", systemId: "", minScore: "", maxScore: "" };
-
 export function Statistics() {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState<StatFilters>(EMPTY_FILTERS);
+  useSeo({ title: t("seo.statistics.title"), description: t("statistics.intro"), path: "/statistics" });
+  const [draft, setDraft] = useState<GameFilterValues>(EMPTY_GAME_FILTERS);
   const [stats, setStats] = useState<ClubStatistics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -81,7 +73,7 @@ export function Statistics() {
       .catch(() => setSystems([]));
   }, []);
 
-  async function load(filters: StatFilters) {
+  async function load(filters: GameFilterValues) {
     setBusy(true);
     setError(null);
     try {
@@ -105,13 +97,13 @@ export function Statistics() {
   }
 
   useEffect(() => {
-    void load(EMPTY_FILTERS);
+    void load(EMPTY_GAME_FILTERS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function reset() {
-    setDraft(EMPTY_FILTERS);
-    void load(EMPTY_FILTERS);
+    setDraft(EMPTY_GAME_FILTERS);
+    void load(EMPTY_GAME_FILTERS);
   }
 
   // Bars scale to the tallest bucket, not to totalVotes — otherwise a spread-out
@@ -130,83 +122,16 @@ export function Statistics() {
         </h1>
         <p className="mt-4 max-w-[54ch] text-lg text-ink-muted">{t("statistics.intro")}</p>
 
-        <div className="mt-8 flex flex-wrap items-end gap-4 rounded-xl border border-border bg-surface p-5">
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("statistics.from")}
-            <input
-              type="date"
-              value={draft.from}
-              max={draft.to || undefined}
-              onChange={(e) => setDraft((d) => ({ ...d, from: e.target.value }))}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("statistics.to")}
-            <input
-              type="date"
-              value={draft.to}
-              min={draft.from || undefined}
-              onChange={(e) => setDraft((d) => ({ ...d, to: e.target.value }))}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("statistics.filterGm")}
-            <select
-              value={draft.gmUserId}
-              onChange={(e) => setDraft((d) => ({ ...d, gmUserId: e.target.value }))}
-            >
-              <option value="">{t("statistics.filterGmAll")}</option>
-              {gameMasters.map((gm) => (
-                <option key={gm.userId} value={gm.userId}>
-                  {gm.firstName} {gm.lastName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("statistics.filterSystem")}
-            <select
-              value={draft.systemId}
-              onChange={(e) => setDraft((d) => ({ ...d, systemId: e.target.value }))}
-            >
-              <option value="">{t("statistics.filterSystemAll")}</option>
-              {systems.map((system) => (
-                <option key={system.systemId} value={system.systemId}>
-                  {system.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("statistics.filterMinScore")}
-            <input
-              type="number"
-              min={1}
-              max={10}
-              step={0.1}
-              className="w-20"
-              value={draft.minScore}
-              onChange={(e) => setDraft((d) => ({ ...d, minScore: e.target.value }))}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-ink-muted">
-            {t("statistics.filterMaxScore")}
-            <input
-              type="number"
-              min={1}
-              max={10}
-              step={0.1}
-              className="w-20"
-              value={draft.maxScore}
-              onChange={(e) => setDraft((d) => ({ ...d, maxScore: e.target.value }))}
-            />
-          </label>
-          <button type="button" disabled={busy} onClick={() => load(draft)}>
-            {t("statistics.apply")}
-          </button>
-          <button type="button" className="secondary" disabled={busy} onClick={reset}>
-            {t("statistics.reset")}
-          </button>
+        <div className="mt-8">
+          <GameFilterBar
+            value={draft}
+            onChange={setDraft}
+            onApply={() => load(draft)}
+            onReset={reset}
+            busy={busy}
+            gameMasters={gameMasters}
+            systems={systems}
+          />
         </div>
 
         {error && <p className="mt-4 text-accent">{error}</p>}

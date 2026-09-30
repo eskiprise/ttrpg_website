@@ -5,6 +5,7 @@ import type { GameSystemListResponse, GameSystemWithCount } from "@ttrpg-club/sh
 import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
 import { SystemCover } from "../components/SystemCover";
+import { useSeo } from "../hooks/useSeo";
 
 /**
  * Systems we've genuinely played a lot get a cover card; the one-off and rare ones
@@ -14,6 +15,7 @@ const FEATURED_FROM_GAMES = 11;
 
 export function GameSystems() {
   const { t } = useTranslation();
+  useSeo({ title: t("seo.gameSystems.title"), description: t("gameSystems.intro"), path: "/game-systems" });
   const [systems, setSystems] = useState<GameSystemWithCount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { PublicGameMaster } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
+import { useSeo } from "../hooks/useSeo";
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -14,6 +15,13 @@ export function GameMasterDetail() {
   const { userId } = useParams<{ userId: string }>();
   const [gm, setGm] = useState<PublicGameMaster | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const gmName = gm ? `${gm.firstName} ${gm.lastName}` : "";
+  useSeo({
+    title: gm ? t("seo.gameMasterDetail.title", { name: gmName }) : t("gameMasters.title"),
+    description: gm ? t("seo.gameMasterDetail.description", { name: gmName }) : t("gameMasters.intro"),
+    path: `/game-masters/${userId ?? ""}`,
+  });
 
   useEffect(() => {
     if (!userId) return;

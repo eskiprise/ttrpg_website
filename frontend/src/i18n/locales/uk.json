@@ -78,7 +78,7 @@
     "factWhen": "Коли",
     "factWhenValue": "Щовечора, 18:30",
     "factWhere": "Де",
-    "factWhereValue": "Вінниця — вкажіть адресу",
+    "factWhereValue": "вул. Дмитра Майбороди, 2, Вінниця",
     "factPrice": "Скільки",
     "factPriceValue": "Перша гра безкоштовно",
     "factAge": "Вік",
@@ -151,9 +151,7 @@
     "sortSystem": "Системою",
     "sortScore": "Оцінкою",
     "sortAsc": "За зростанням ↑",
-    "sortDesc": "За спаданням ↓",
-    "minScore": "Оцінка від",
-    "maxScore": "Оцінка до"
+    "sortDesc": "За спаданням ↓"
   },
   "gameDetail": {
     "dm": "Майстер гри:",
@@ -381,5 +379,26 @@
   "footer": {
     "blurb": "Клуб настільних рольових ігор у Вінниці. Ігри щотижня, новачків вітаємо.",
     "telegram": "Написати в Telegram"
+  },
+  "seo": {
+    "home": { "title": "Dice & Adventures Club — настільні рольові ігри у Вінниці" },
+    "about": { "title": "Про клуб — Dice & Adventures Club" },
+    "gameMasters": { "title": "Майстри гри — Dice & Adventures Club" },
+    "gameMasterDetail": {
+      "title": "{{name}} — майстер гри | Dice & Adventures Club",
+      "description": "Профіль {{name}} — майстра гри в клубі настільних рольових ігор у Вінниці."
+    },
+    "gameSystems": { "title": "Ігри, у які ми граємо — Dice & Adventures Club" },
+    "gameSystemDetail": {
+      "title": "{{name}} — Dice & Adventures Club",
+      "description": "{{name}} у клубі настільних рольових ігор у Вінниці: {{sessionsPhrase}}, оцінки гравців і список зіграних ігор."
+    },
+    "gameLog": { "title": "Історія ігор — Dice & Adventures Club" },
+    "gameDetail": {
+      "title": "{{title}} — Dice & Adventures Club",
+      "description": "Гра «{{title}}» у клубі настільних рольових ігор у Вінниці. Майстер гри: {{gm}}."
+    },
+    "statistics": { "title": "Статистика клубу — Dice & Adventures Club" },
+    "signup": { "title": "Приєднатися до клубу — Dice & Adventures Club" }
   }
 }

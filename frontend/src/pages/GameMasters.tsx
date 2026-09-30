@@ -5,6 +5,7 @@ import type { PublicGameMaster } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { truncate } from "../lib/text";
 import { PageShell } from "../components/PageShell";
+import { useSeo } from "../hooks/useSeo";
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -12,6 +13,7 @@ function initials(firstName: string, lastName: string) {
 
 export function GameMasters() {
   const { t } = useTranslation();
+  useSeo({ title: t("seo.gameMasters.title"), description: t("gameMasters.intro"), path: "/game-masters" });
   const [gms, setGms] = useState<PublicGameMaster[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
