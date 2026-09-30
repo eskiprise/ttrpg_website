@@ -101,6 +101,14 @@ export function TelegramStatsHome() {
         >
           {t("telegramApp.myGamesConducted")} →
         </Link>
+        {stats.gamesConducted > 0 && (
+          <Link
+            to="/telegram/feedback/mine"
+            className="rounded-lg border border-border bg-surface p-4 font-semibold hover:bg-surface-2"
+          >
+            {t("telegramApp.myFeedback")} →
+          </Link>
+        )}
         <Link
           to="/telegram/games/all"
           className="rounded-lg border border-border bg-surface p-4 font-semibold hover:bg-surface-2"

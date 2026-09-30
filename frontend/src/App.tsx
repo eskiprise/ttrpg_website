@@ -21,6 +21,7 @@ import { TelegramCreatePoll } from "./pages/telegram/TelegramCreatePoll";
 import { TelegramGamesList } from "./pages/telegram/TelegramGamesList";
 import { TelegramGameDetail } from "./pages/telegram/TelegramGameDetail";
 import { TelegramFeedbackForm } from "./pages/telegram/TelegramFeedbackForm";
+import { TelegramMyFeedback } from "./pages/telegram/TelegramMyFeedback";
 import { TelegramLeaderboard } from "./pages/telegram/TelegramLeaderboard";
 import { TelegramAchievements } from "./pages/telegram/TelegramAchievements";
 
@@ -56,6 +57,7 @@ function App() {
             <Route index element={<TelegramStatsHome />} />
             <Route path="create-poll" element={<TelegramCreatePoll />} />
             <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
+            <Route path="feedback/mine" element={<TelegramMyFeedback />} />
             <Route path="games/played" element={<TelegramGamesList kind="played" />} />
             <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />
             <Route path="games/all" element={<TelegramGamesList kind="all" />} />

@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { ClubStatistics, LeaderboardEntry } from "@ttrpg-club/shared";
+import type {
+  ClubStatistics,
+  GameSystemListResponse,
+  GameSystemWithCount,
+  LeaderboardEntry,
+  PublicGameMaster,
+} from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { formatGameTitle } from "../lib/gameTitle";
 import { Band } from "../components/Band";
@@ -44,21 +50,48 @@ function Leaderboard({
   );
 }
 
+interface StatFilters {
+  from: string;
+  to: string;
+  gmUserId: string;
+  systemId: string;
+  minScore: string;
+  maxScore: string;
+}
+
+const EMPTY_FILTERS: StatFilters = { from: "", to: "", gmUserId: "", systemId: "", minScore: "", maxScore: "" };
+
 export function Statistics() {
   const { t } = useTranslation();
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [draft, setDraft] = useState<StatFilters>(EMPTY_FILTERS);
   const [stats, setStats] = useState<ClubStatistics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [gameMasters, setGameMasters] = useState<PublicGameMaster[]>([]);
+  const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
 
-  async function load(fromValue: string, toValue: string) {
+  // The GM/system picklists don't depend on the current filters, so they're fetched
+  // once — reusing the same public endpoints the "Майстри гри"/"Ігри" pages already use.
+  useEffect(() => {
+    apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters")
+      .then((data) => setGameMasters(data.gameMasters))
+      .catch(() => setGameMasters([]));
+    apiFetch<GameSystemListResponse>("/game-systems")
+      .then((data) => setSystems(data.systems))
+      .catch(() => setSystems([]));
+  }, []);
+
+  async function load(filters: StatFilters) {
     setBusy(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (fromValue) params.set("from", fromValue);
-      if (toValue) params.set("to", toValue);
+      if (filters.from) params.set("from", filters.from);
+      if (filters.to) params.set("to", filters.to);
+      if (filters.gmUserId) params.set("gmUserId", filters.gmUserId);
+      if (filters.systemId) params.set("systemId", filters.systemId);
+      if (filters.minScore) params.set("minScore", filters.minScore);
+      if (filters.maxScore) params.set("maxScore", filters.maxScore);
       const query = params.toString();
       const data = await apiFetch<{ statistics: ClubStatistics }>(
         `/statistics${query ? `?${query}` : ""}`
@@ -72,14 +105,13 @@ export function Statistics() {
   }
 
   useEffect(() => {
-    void load("", "");
+    void load(EMPTY_FILTERS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function reset() {
-    setFrom("");
-    setTo("");
-    void load("", "");
+    setDraft(EMPTY_FILTERS);
+    void load(EMPTY_FILTERS);
   }
 
   // Bars scale to the tallest bucket, not to totalVotes — otherwise a spread-out
@@ -101,13 +133,75 @@ export function Statistics() {
         <div className="mt-8 flex flex-wrap items-end gap-4 rounded-xl border border-border bg-surface p-5">
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
             {t("statistics.from")}
-            <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
+            <input
+              type="date"
+              value={draft.from}
+              max={draft.to || undefined}
+              onChange={(e) => setDraft((d) => ({ ...d, from: e.target.value }))}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
             {t("statistics.to")}
-            <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
+            <input
+              type="date"
+              value={draft.to}
+              min={draft.from || undefined}
+              onChange={(e) => setDraft((d) => ({ ...d, to: e.target.value }))}
+            />
           </label>
-          <button type="button" disabled={busy} onClick={() => load(from, to)}>
+          <label className="flex flex-col gap-1 text-sm text-ink-muted">
+            {t("statistics.filterGm")}
+            <select
+              value={draft.gmUserId}
+              onChange={(e) => setDraft((d) => ({ ...d, gmUserId: e.target.value }))}
+            >
+              <option value="">{t("statistics.filterGmAll")}</option>
+              {gameMasters.map((gm) => (
+                <option key={gm.userId} value={gm.userId}>
+                  {gm.firstName} {gm.lastName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink-muted">
+            {t("statistics.filterSystem")}
+            <select
+              value={draft.systemId}
+              onChange={(e) => setDraft((d) => ({ ...d, systemId: e.target.value }))}
+            >
+              <option value="">{t("statistics.filterSystemAll")}</option>
+              {systems.map((system) => (
+                <option key={system.systemId} value={system.systemId}>
+                  {system.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink-muted">
+            {t("statistics.filterMinScore")}
+            <input
+              type="number"
+              min={1}
+              max={10}
+              step={0.1}
+              className="w-20"
+              value={draft.minScore}
+              onChange={(e) => setDraft((d) => ({ ...d, minScore: e.target.value }))}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink-muted">
+            {t("statistics.filterMaxScore")}
+            <input
+              type="number"
+              min={1}
+              max={10}
+              step={0.1}
+              className="w-20"
+              value={draft.maxScore}
+              onChange={(e) => setDraft((d) => ({ ...d, maxScore: e.target.value }))}
+            />
+          </label>
+          <button type="button" disabled={busy} onClick={() => load(draft)}>
             {t("statistics.apply")}
           </button>
           <button type="button" className="secondary" disabled={busy} onClick={reset}>

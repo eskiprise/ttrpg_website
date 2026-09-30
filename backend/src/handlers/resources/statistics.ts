@@ -1,9 +1,10 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
+import { createSystemMatcher, POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
 import type {
   ClubStatistics,
   GameLogMonthlyCount,
   GameSpotlight,
+  GameSystem,
   LeaderboardEntry,
 } from "@ttrpg-club/shared";
 import { Tables, scanAll } from "../../lib/dynamo.js";
@@ -25,6 +26,12 @@ function withinRange(createdAt: string, from: string | null, to: string | null):
   if (from && date < from) return false;
   if (to && date > to) return false;
   return true;
+}
+
+function parseScoreBound(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : undefined;
 }
 
 interface Tally {
@@ -82,13 +89,23 @@ function topEntries(byUser: Map<number, Tally>): LeaderboardEntry[] {
 export async function getClubStatistics(event: APIGatewayProxyEventV2) {
   const from = event.queryStringParameters?.from || null;
   const to = event.queryStringParameters?.to || null;
+  const gmUserIdParam = event.queryStringParameters?.gmUserId;
+  const gmUserId = gmUserIdParam ? Number(gmUserIdParam) : null;
+  const systemId = event.queryStringParameters?.systemId || null;
+  const minScore = parseScoreBound(event.queryStringParameters?.minScore);
+  const maxScore = parseScoreBound(event.queryStringParameters?.maxScore);
 
-  const [allPolls, allVotes] = await Promise.all([
+  const [allPolls, allVotes, systems] = await Promise.all([
     scanAll<PollRecord>(Tables.telegramRatingPolls()),
     scanAll<VoteRecord>(Tables.telegramRatingVotes()),
+    systemId ? scanAll<GameSystem>(Tables.gameSystems()) : Promise.resolve<GameSystem[]>([]),
   ]);
+  const matchSystem = systemId ? createSystemMatcher(systems) : null;
 
-  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
+  let polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
+  if (gmUserId !== null && Number.isFinite(gmUserId)) polls = polls.filter((p) => p.creatorUserId === gmUserId);
+  if (systemId && matchSystem) polls = polls.filter((p) => matchSystem(p.questionText) === systemId);
+
   const pollIds = new Set(polls.map((p) => p.pollId));
   const votesByPoll = new Map<string, VoteRecord[]>();
   for (const vote of allVotes) {
@@ -98,22 +115,35 @@ export async function getClubStatistics(event: APIGatewayProxyEventV2) {
     votesByPoll.set(vote.pollId, forPoll);
   }
 
-  const ratingCounts = new Array(POLL_RATING_MAX - POLL_RATING_MIN + 1).fill(0);
-  let totalVotes = 0;
+  // Every poll's own average, needed before the score filter can apply (a poll with no
+  // votes at all can't satisfy a score range, so it's excluded once one is set).
   const pollAverages = new Map<string, number>();
-
   for (const poll of polls) {
     const votes = votesByPoll.get(poll.pollId) ?? [];
     if (votes.length === 0) continue;
-    const avg = average(votes.map((v) => v.rating))!;
-    pollAverages.set(poll.pollId, avg);
-    for (const vote of votes) {
+    pollAverages.set(poll.pollId, average(votes.map((v) => v.rating))!);
+  }
+
+  if (minScore !== undefined || maxScore !== undefined) {
+    polls = polls.filter((p) => {
+      const avg = pollAverages.get(p.pollId);
+      if (avg === undefined) return false;
+      if (minScore !== undefined && avg < minScore) return false;
+      if (maxScore !== undefined && avg > maxScore) return false;
+      return true;
+    });
+  }
+
+  const ratingCounts = new Array(POLL_RATING_MAX - POLL_RATING_MIN + 1).fill(0);
+  let totalVotes = 0;
+  for (const poll of polls) {
+    for (const vote of votesByPoll.get(poll.pollId) ?? []) {
       ratingCounts[vote.rating - POLL_RATING_MIN] += 1;
       totalVotes += 1;
     }
   }
 
-  const averageScore = average(Array.from(pollAverages.values()));
+  const averageScore = average(polls.flatMap((p) => (pollAverages.has(p.pollId) ? [pollAverages.get(p.pollId)!] : [])));
 
   const gmsByUser = new Map<number, Tally>();
   for (const poll of polls) {
