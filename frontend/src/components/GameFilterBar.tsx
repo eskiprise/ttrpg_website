@@ -56,7 +56,7 @@ export function GameFilterBar({
           {t("statistics.from")}
           <input
             type="date"
-            className="w-full"
+            className={`w-full ${value.from ? "" : "date-empty"}`}
             value={value.from}
             max={value.to || undefined}
             onChange={(e) => set("from", e.target.value)}
@@ -66,7 +66,7 @@ export function GameFilterBar({
           {t("statistics.to")}
           <input
             type="date"
-            className="w-full"
+            className={`w-full ${value.to ? "" : "date-empty"}`}
             value={value.to}
             min={value.from || undefined}
             onChange={(e) => set("to", e.target.value)}
