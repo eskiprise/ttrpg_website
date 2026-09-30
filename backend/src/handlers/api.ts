@@ -34,6 +34,7 @@ import { listUsers, updateUserRoles } from "./resources/adminUsers.js";
 import { listMembers } from "./resources/members.js";
 import { getClubStatistics } from "./resources/statistics.js";
 import {
+  getMyFeedback,
   getTelegramAchievements,
   getTelegramFeedbackEligibility,
   getTelegramStats,
@@ -102,6 +103,7 @@ const routes: Record<string, RouteHandler> = {
   "POST /telegram/polls": createTelegramPoll,
   "POST /telegram/feedback": postTelegramFeedback,
   "POST /telegram/feedback/eligibility": getTelegramFeedbackEligibility,
+  "POST /telegram/feedback/mine": getMyFeedback,
   "POST /telegram/games/played": getTelegramGamesPlayed,
   "POST /telegram/games/conducted": getTelegramGamesConducted,
   "POST /telegram/games/all": getTelegramGamesAll,

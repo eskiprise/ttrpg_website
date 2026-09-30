@@ -5,14 +5,24 @@ import type {
   TelegramAchievementStatus,
   TelegramFeedbackEligibility,
   TelegramFeedbackEligibilityRequest,
+  TelegramFeedbackForGame,
+  TelegramFeedbackItem,
   TelegramFeedbackSubmission,
   TelegramRecentRating,
   TelegramUserStats,
 } from "@ttrpg-club/shared";
-import { ACHIEVEMENTS, LEVEL_THRESHOLDS, LEVEL_TITLES, POLL_RATING_MAX, POLL_RATING_MIN } from "@ttrpg-club/shared";
+import {
+  ACHIEVEMENTS,
+  formatGameTitle,
+  LEVEL_THRESHOLDS,
+  LEVEL_TITLES,
+  POLL_RATING_MAX,
+  POLL_RATING_MIN,
+} from "@ttrpg-club/shared";
 import { ddb, Tables } from "../../lib/dynamo.js";
 import { formatTelegramDisplayName, verifyTelegramInitData } from "../../lib/telegramAuth.js";
 import { HttpError, json } from "../../lib/response.js";
+import type { PollRecord } from "./telegramGames.js";
 
 const RECENT_RATINGS_LIMIT = 10;
 
@@ -46,14 +56,25 @@ export async function getTelegramStats(event: APIGatewayProxyEventV2) {
   const user = await verifyTelegramInitData(body.initData);
   if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
 
-  const result = await ddb.send(
-    new QueryCommand({
-      TableName: Tables.telegramRatingVotes(),
-      IndexName: "telegramUserId-index",
-      KeyConditionExpression: "telegramUserId = :userId",
-      ExpressionAttributeValues: { ":userId": user.id },
-    })
-  );
+  const [result, conductedResult] = await Promise.all([
+    ddb.send(
+      new QueryCommand({
+        TableName: Tables.telegramRatingVotes(),
+        IndexName: "telegramUserId-index",
+        KeyConditionExpression: "telegramUserId = :userId",
+        ExpressionAttributeValues: { ":userId": user.id },
+      })
+    ),
+    ddb.send(
+      new QueryCommand({
+        TableName: Tables.telegramRatingPolls(),
+        IndexName: "creatorUserId-index",
+        KeyConditionExpression: "creatorUserId = :userId",
+        ExpressionAttributeValues: { ":userId": user.id },
+        Select: "COUNT",
+      })
+    ),
+  ]);
 
   const votes = (result.Items ?? []) as {
     pollId: string;
@@ -92,6 +113,7 @@ export async function getTelegramStats(event: APIGatewayProxyEventV2) {
     levelEmoji: levelTitle.emoji,
     currentXp: playerLevel.currentXp,
     xpForNextLevel: LEVEL_THRESHOLDS[playerLevel.level - 1] ?? null,
+    gamesConducted: conductedResult.Count ?? 0,
   };
 
   return json(200, { stats });
@@ -203,6 +225,86 @@ export async function postTelegramFeedback(event: APIGatewayProxyEventV2) {
   );
 
   return json(201, { ok: true });
+}
+
+interface FeedbackRecord {
+  pollId: string;
+  feedbackId: string;
+  telegramUserId: number;
+  submitterFirstName: string;
+  submitterLastName: string;
+  submitterUsername: string;
+  revealIdentity: boolean;
+  adventureRating: number;
+  tableRating: number;
+  gmRating: number;
+  selfRating: number;
+  feedbackText: string;
+  submittedAt: string;
+}
+
+/**
+ * Every feedback submission left on a session the caller ran, grouped by session
+ * (newest first) — sessions with no feedback are left out entirely. A submitter's name
+ * is only included when they opted in via revealIdentity at submit time.
+ */
+export async function getMyFeedback(event: APIGatewayProxyEventV2) {
+  const body = JSON.parse(event.body ?? "{}") as { initData?: string };
+  if (!body.initData) throw new HttpError(400, "initData is required");
+  const user = await verifyTelegramInitData(body.initData);
+  if (!user) throw new HttpError(401, "Invalid or expired Telegram session");
+
+  const pollsResult = await ddb.send(
+    new QueryCommand({
+      TableName: Tables.telegramRatingPolls(),
+      IndexName: "creatorUserId-index",
+      KeyConditionExpression: "creatorUserId = :userId",
+      ExpressionAttributeValues: { ":userId": user.id },
+    })
+  );
+  const polls = (pollsResult.Items ?? []) as PollRecord[];
+
+  const games = (
+    await Promise.all(
+      polls.map(async (poll): Promise<TelegramFeedbackForGame | null> => {
+        const feedbackResult = await ddb.send(
+          new QueryCommand({
+            TableName: Tables.telegramFeedback(),
+            KeyConditionExpression: "pollId = :pollId",
+            ExpressionAttributeValues: { ":pollId": poll.pollId },
+          })
+        );
+        const items = (feedbackResult.Items ?? []) as FeedbackRecord[];
+        if (items.length === 0) return null;
+
+        const feedback: TelegramFeedbackItem[] = items
+          .slice()
+          .sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
+          .map((item) => ({
+            feedbackId: item.feedbackId,
+            submittedAt: item.submittedAt,
+            submitterName: item.revealIdentity
+              ? formatTelegramDisplayName({
+                  firstName: item.submitterFirstName,
+                  lastName: item.submitterLastName,
+                  username: item.submitterUsername,
+                })
+              : null,
+            adventureRating: item.adventureRating,
+            tableRating: item.tableRating,
+            gmRating: item.gmRating,
+            selfRating: item.selfRating,
+            feedbackText: item.feedbackText,
+          }));
+
+        return { pollId: poll.pollId, gameTitle: formatGameTitle(poll.questionText), gameCreatedAt: poll.createdAt, feedback };
+      })
+    )
+  ).filter((g): g is TelegramFeedbackForGame => g !== null);
+
+  games.sort((a, b) => b.gameCreatedAt.localeCompare(a.gameCreatedAt));
+
+  return json(200, { games });
 }
 
 /**

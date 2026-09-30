@@ -152,6 +152,8 @@ export interface TelegramUserStats {
   currentXp: number;
   /** XP needed to reach the next level, or null if already at the max level. */
   xpForNextLevel: number | null;
+  /** Sessions this person is the recorded GM of — the Mini App only shows "My feedback" when this is > 0. */
+  gamesConducted: number;
 }
 
 /** One achievement, merged with the caller's own unlock status — see gamification.ts's ACHIEVEMENTS catalog. */
@@ -262,6 +264,28 @@ export interface TelegramFeedbackEligibilityRequest {
 export interface TelegramFeedbackEligibility {
   eligible: boolean;
   alreadySubmitted: boolean;
+}
+
+/** One feedback submission, as shown to the GM it's about. `submitterName` is null when
+ * the player who left it chose not to reveal their identity. */
+export interface TelegramFeedbackItem {
+  feedbackId: string;
+  submittedAt: string;
+  submitterName: string | null;
+  adventureRating: number;
+  tableRating: number;
+  gmRating: number;
+  selfRating: number;
+  feedbackText: string;
+}
+
+/** All feedback for one of the caller's sessions — only sessions with at least one
+ * feedback item are included. */
+export interface TelegramFeedbackForGame {
+  pollId: string;
+  gameTitle: string;
+  gameCreatedAt: string;
+  feedback: TelegramFeedbackItem[];
 }
 
 export interface LeaderboardEntry {
