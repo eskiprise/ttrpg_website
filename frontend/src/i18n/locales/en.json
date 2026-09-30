@@ -21,7 +21,8 @@
   },
   "common": {
     "loading": "Loading…",
-    "somethingWrong": "Something went wrong"
+    "somethingWrong": "Something went wrong",
+    "cancel": "Cancel"
   },
   "home": {
     "eyebrow": "Tabletop roleplaying club · Vinnytsia",
@@ -236,6 +237,9 @@
     "unmatchedHint": "Polls whose title didn't match any system. Add an alias to the right system and they'll count.",
     "gamesTitle": "Games",
     "gamesHint": "Fix a game's title or assign a GM. The title saves when you leave the field; the GM saves as soon as you pick one.",
+    "editGame": "Edit game",
+    "gameTitleLabel": "Game title",
+    "gameGmLabel": "Game master",
     "gamesOnlyMissingGm": "Show only games with no GM",
     "gamesNoneMissingGm": "Every game has a GM.",
     "noGm": "— No GM —",
