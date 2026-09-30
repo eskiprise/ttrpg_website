@@ -56,11 +56,20 @@ function parseScoreBound(raw: string | undefined): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/** Tallies every poll (not just the current page) by "YYYY-MM" — reuses the same Scan listGameLog already does for sorting/pagination, so this is free (no extra DB read). Sorted oldest-first for a natural left-to-right chart. */
-function gamesPerMonth(polls: PollRecord[]): GameLogMonthlyCount[] {
+function withinRange(createdAt: string, from: string | null, to: string | null): boolean {
+  const date = createdAt.slice(0, 10);
+  if (from && date < from) return false;
+  if (to && date > to) return false;
+  return true;
+}
+
+/** Tallies every game passed in (not just the current page) by "YYYY-MM" — sorted
+ * oldest-first for a natural left-to-right chart. Takes whatever's already been
+ * filtered, so the chart reflects the same games the rest of the response does. */
+function gamesPerMonth(games: { createdAt: string }[]): GameLogMonthlyCount[] {
   const counts = new Map<string, number>();
-  for (const poll of polls) {
-    const month = poll.createdAt.slice(0, 7);
+  for (const game of games) {
+    const month = game.createdAt.slice(0, 7);
     counts.set(month, (counts.get(month) ?? 0) + 1);
   }
   return Array.from(counts.entries())
@@ -97,6 +106,11 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   const offset = parseOffset(event.queryStringParameters?.offset);
   const sortBy = parseSortBy(event.queryStringParameters?.sortBy);
   const dir = parseSortDir(event.queryStringParameters?.sortDir);
+  const from = event.queryStringParameters?.from || null;
+  const to = event.queryStringParameters?.to || null;
+  const gmUserIdParam = event.queryStringParameters?.gmUserId;
+  const gmUserId = gmUserIdParam ? Number(gmUserIdParam) : null;
+  const systemIdFilter = event.queryStringParameters?.systemId || null;
   const minScore = parseScoreBound(event.queryStringParameters?.minScore);
   const maxScore = parseScoreBound(event.queryStringParameters?.maxScore);
   const hasGm = event.queryStringParameters?.hasGm;
@@ -104,12 +118,15 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   // No index sorts telegram_rating_polls by createdAt, so this Scan is unavoidable —
   // same tradeoff getTelegramGamesAll already accepts at this club's scale (small
   // items, no votes attached).
-  const [polls, systems] = await Promise.all([
+  const needSystems = sortBy === "system" || systemIdFilter !== null;
+  const [allPolls, systems] = await Promise.all([
     scanAll<PollRecord>(Tables.telegramRatingPolls()),
-    sortBy === "system" ? scanAll<GameSystem>(Tables.gameSystems()) : Promise.resolve<GameSystem[]>([]),
+    needSystems ? scanAll<GameSystem>(Tables.gameSystems()) : Promise.resolve<GameSystem[]>([]),
   ]);
-  const matchSystem = sortBy === "system" ? createSystemMatcher(systems) : null;
+  const matchSystem = needSystems ? createSystemMatcher(systems) : null;
   const systemNameById = new Map(systems.map((s) => [s.systemId, s.name]));
+
+  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
 
   // Sorting/filtering by a computed field (score, GM, system) needs every game's
   // summary before a page can be sliced off, not just the requested page's votes.
@@ -122,6 +139,12 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   if (maxScore !== undefined) filtered = filtered.filter((g) => g.averageScore !== null && g.averageScore <= maxScore);
   if (hasGm === "false") filtered = filtered.filter((g) => g.gmDisplayName === "—");
   else if (hasGm === "true") filtered = filtered.filter((g) => g.gmDisplayName !== "—");
+  if (gmUserId !== null && Number.isFinite(gmUserId)) {
+    filtered = filtered.filter((g) => g.gmUserId === String(gmUserId));
+  }
+  if (systemIdFilter && matchSystem) {
+    filtered = filtered.filter((g) => matchSystem(g.questionText) === systemIdFilter);
+  }
 
   const sorted = filtered.slice().sort((a, b) => {
     const av = sortValue(a, sortBy, matchSystem, systemNameById);
@@ -135,7 +158,7 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   return json(200, {
     games: page,
     hasMore: offset + limit < sorted.length,
-    gamesPerMonth: gamesPerMonth(polls),
+    gamesPerMonth: gamesPerMonth(sorted),
   });
 }
 

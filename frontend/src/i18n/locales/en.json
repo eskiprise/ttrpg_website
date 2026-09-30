@@ -143,9 +143,7 @@
     "sortSystem": "System",
     "sortScore": "Score",
     "sortAsc": "Ascending ↑",
-    "sortDesc": "Descending ↓",
-    "minScore": "Score from",
-    "maxScore": "Score to"
+    "sortDesc": "Descending ↓"
   },
   "gameDetail": {
     "dm": "Dungeon Master:",

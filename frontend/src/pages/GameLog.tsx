@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { GameLogMonthlyCount, TelegramGameSummary } from "@ttrpg-club/shared";
+import type {
+  GameLogMonthlyCount,
+  GameSystemListResponse,
+  GameSystemWithCount,
+  PublicGameMaster,
+  TelegramGameSummary,
+} from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
 import { PageShell } from "../components/PageShell";
 import { GameRowList } from "../components/GameRow";
+import { EMPTY_GAME_FILTERS, GameFilterBar, type GameFilterValues } from "../components/GameFilterBar";
 
 const PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 type SortBy = "date" | "gm" | "system" | "score";
@@ -22,9 +29,19 @@ export function GameLog() {
 
   const [sortBy, setSortBy] = useState<SortBy>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [minScoreInput, setMinScoreInput] = useState("");
-  const [maxScoreInput, setMaxScoreInput] = useState("");
-  const [scoreFilter, setScoreFilter] = useState<{ min: string; max: string }>({ min: "", max: "" });
+  const [draft, setDraft] = useState<GameFilterValues>(EMPTY_GAME_FILTERS);
+  const [filters, setFilters] = useState<GameFilterValues>(EMPTY_GAME_FILTERS);
+  const [gameMasters, setGameMasters] = useState<PublicGameMaster[]>([]);
+  const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
+
+  useEffect(() => {
+    apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters")
+      .then((data) => setGameMasters(data.gameMasters))
+      .catch(() => setGameMasters([]));
+    apiFetch<GameSystemListResponse>("/game-systems")
+      .then((data) => setSystems(data.systems))
+      .catch(() => setSystems([]));
+  }, []);
 
   const load = useCallback(
     (offset: number, pageSize: number, replace: boolean) => {
@@ -35,8 +52,12 @@ export function GameLog() {
         sortBy,
         sortDir,
       });
-      if (scoreFilter.min) params.set("minScore", scoreFilter.min);
-      if (scoreFilter.max) params.set("maxScore", scoreFilter.max);
+      if (filters.from) params.set("from", filters.from);
+      if (filters.to) params.set("to", filters.to);
+      if (filters.gmUserId) params.set("gmUserId", filters.gmUserId);
+      if (filters.systemId) params.set("systemId", filters.systemId);
+      if (filters.minScore) params.set("minScore", filters.minScore);
+      if (filters.maxScore) params.set("maxScore", filters.maxScore);
       apiFetch<{ games: TelegramGameSummary[]; hasMore: boolean; gamesPerMonth: GameLogMonthlyCount[] }>(
         `/game-log?${params}`,
         { token: idToken }
@@ -50,23 +71,22 @@ export function GameLog() {
         .catch((err) => setError(err instanceof Error ? err.message : t("common.somethingWrong")))
         .finally(() => setLoading(false));
     },
-    [idToken, t, sortBy, sortDir, scoreFilter]
+    [idToken, t, sortBy, sortDir, filters]
   );
 
-  // Page size / sort / score-filter changes all reset to a fresh first page rather
-  // than mixing pages fetched under different query params.
+  // Page size / sort / filter changes all reset to a fresh first page rather than
+  // mixing pages fetched under different query params.
   useEffect(() => {
     load(0, limit, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [limit, idToken, sortBy, sortDir, scoreFilter]);
+  }, [limit, idToken, sortBy, sortDir, filters]);
 
-  function applyScoreFilter() {
-    setScoreFilter({ min: minScoreInput.trim(), max: maxScoreInput.trim() });
+  function applyFilters() {
+    setFilters(draft);
   }
-  function resetScoreFilter() {
-    setMinScoreInput("");
-    setMaxScoreInput("");
-    setScoreFilter({ min: "", max: "" });
+  function resetFilters() {
+    setDraft(EMPTY_GAME_FILTERS);
+    setFilters(EMPTY_GAME_FILTERS);
   }
 
   return (
@@ -88,8 +108,8 @@ export function GameLog() {
         </label>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end gap-4 rounded-xl border border-border bg-surface p-5">
-        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-sm text-ink-muted">
           {t("gameLog.sortByLabel")}
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)}>
             <option value="date">{t("gameLog.sortDate")}</option>
@@ -105,36 +125,18 @@ export function GameLog() {
         >
           {sortDir === "asc" ? t("gameLog.sortAsc") : t("gameLog.sortDesc")}
         </button>
-        <label className="flex flex-col gap-1 text-sm text-ink-muted">
-          {t("gameLog.minScore")}
-          <input
-            type="number"
-            min={1}
-            max={10}
-            step={0.1}
-            value={minScoreInput}
-            onChange={(e) => setMinScoreInput(e.target.value)}
-            className="w-20"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-ink-muted">
-          {t("gameLog.maxScore")}
-          <input
-            type="number"
-            min={1}
-            max={10}
-            step={0.1}
-            value={maxScoreInput}
-            onChange={(e) => setMaxScoreInput(e.target.value)}
-            className="w-20"
-          />
-        </label>
-        <button type="button" onClick={applyScoreFilter}>
-          {t("statistics.apply")}
-        </button>
-        <button type="button" className="secondary" onClick={resetScoreFilter}>
-          {t("statistics.reset")}
-        </button>
+      </div>
+
+      <div className="mt-4">
+        <GameFilterBar
+          value={draft}
+          onChange={setDraft}
+          onApply={applyFilters}
+          onReset={resetFilters}
+          busy={loading}
+          gameMasters={gameMasters}
+          systems={systems}
+        />
       </div>
 
       {error && <p className="mt-6 text-accent">{error}</p>}

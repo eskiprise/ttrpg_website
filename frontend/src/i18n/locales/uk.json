@@ -151,9 +151,7 @@
     "sortSystem": "Системою",
     "sortScore": "Оцінкою",
     "sortAsc": "За зростанням ↑",
-    "sortDesc": "За спаданням ↓",
-    "minScore": "Оцінка від",
-    "maxScore": "Оцінка до"
+    "sortDesc": "За спаданням ↓"
   },
   "gameDetail": {
     "dm": "Майстер гри:",
