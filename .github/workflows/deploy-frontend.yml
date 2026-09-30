@@ -38,6 +38,10 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_TELEGRAM_BOT_USERNAME: ${{ vars.VITE_TELEGRAM_BOT_USERNAME }}
           VITE_AVATAR_CDN_BASE_URL: ${{ vars.VITE_AVATAR_CDN_BASE_URL }}
+          # Drives frontend/scripts/generate-seo-files.mjs (postbuild): only the prod
+          # deploy gets a crawlable robots.txt + sitemap.xml, so dev.dnaclub.com.ua never
+          # ends up duplicated in Google's index alongside the real site.
+          SITE_ENV: ${{ github.ref_name == 'main' && 'production' || 'development' }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

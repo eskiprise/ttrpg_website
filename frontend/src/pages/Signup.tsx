@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
 import { CLUB_TELEGRAM_URL } from "../lib/club";
+import { useSeo } from "../hooks/useSeo";
 
 /** Visual-only — screen readers already announce the input's `required` attribute. */
 function RequiredMark() {
@@ -15,6 +16,7 @@ function RequiredMark() {
 
 export function Signup() {
   const { t } = useTranslation();
+  useSeo({ title: t("seo.signup.title"), description: t("signup.intro"), path: "/signup" });
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [contact, setContact] = useState("");

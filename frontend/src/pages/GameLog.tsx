@@ -13,6 +13,7 @@ import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
 import { PageShell } from "../components/PageShell";
 import { GameRowList } from "../components/GameRow";
 import { EMPTY_GAME_FILTERS, GameFilterBar, type GameFilterValues } from "../components/GameFilterBar";
+import { useSeo } from "../hooks/useSeo";
 
 const PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 type SortBy = "date" | "gm" | "system" | "score";
@@ -20,6 +21,7 @@ type SortBy = "date" | "gm" | "system" | "score";
 export function GameLog() {
   const { t } = useTranslation();
   const { idToken } = useAuth();
+  useSeo({ title: t("seo.gameLog.title"), description: t("gameLog.intro"), path: "/game-log" });
   const [games, setGames] = useState<TelegramGameSummary[]>([]);
   const [gamesPerMonth, setGamesPerMonth] = useState<GameLogMonthlyCount[]>([]);
   const [limit, setLimit] = useState(PAGE_SIZE_OPTIONS[0]);

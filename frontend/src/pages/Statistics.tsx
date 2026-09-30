@@ -14,6 +14,7 @@ import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
 import { EMPTY_GAME_FILTERS, GameFilterBar, type GameFilterValues } from "../components/GameFilterBar";
+import { useSeo } from "../hooks/useSeo";
 
 function Leaderboard({
   title,
@@ -53,6 +54,7 @@ function Leaderboard({
 
 export function Statistics() {
   const { t } = useTranslation();
+  useSeo({ title: t("seo.statistics.title"), description: t("statistics.intro"), path: "/statistics" });
   const [draft, setDraft] = useState<GameFilterValues>(EMPTY_GAME_FILTERS);
   const [stats, setStats] = useState<ClubStatistics | null>(null);
   const [error, setError] = useState<string | null>(null);

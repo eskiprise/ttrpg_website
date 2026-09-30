@@ -8,6 +8,7 @@ import { PageShell } from "../components/PageShell";
 import { StatTile } from "../components/StatTile";
 import { SystemCover } from "../components/SystemCover";
 import { GameRowList } from "../components/GameRow";
+import { useSeo } from "../hooks/useSeo";
 
 /** Enough to show the system is alive without a wall of rows; the rest is one tap away. */
 const INITIAL_GAMES_SHOWN = 10;
@@ -18,6 +19,20 @@ export function GameSystemDetail() {
   const [data, setData] = useState<GameSystemDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAllGames, setShowAllGames] = useState(false);
+
+  useSeo({
+    title: data?.system ? t("seo.gameSystemDetail.title", { name: data.system.name }) : t("gameSystems.title"),
+    description: data?.system
+      ? t("seo.gameSystemDetail.description", {
+          name: data.system.name,
+          // Reuses the same pluralized "N ігор/гра/ігри" phrase GameSystems.tsx already
+          // builds — a bare {{count}} interpolation would need its own _one/_few/_many
+          // suffixes here too, so borrow the existing ones instead of duplicating them.
+          sessionsPhrase: t("gameSystems.games", { count: data.system.sessionCount }),
+        })
+      : t("gameSystems.intro"),
+    path: `/game-systems/${systemId ?? ""}`,
+  });
 
   useEffect(() => {
     if (!systemId) return;

@@ -18,6 +18,7 @@ import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
 import { CLUB_TELEGRAM_URL } from "../lib/club";
+import { useSeo } from "../hooks/useSeo";
 
 const RECENT_SESSIONS_COUNT = 3;
 const GM_PREVIEW_COUNT = 3;
@@ -43,6 +44,7 @@ function Eyebrow({ children, onBand = false }: { children: React.ReactNode; onBa
 export function Home() {
   const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
+  useSeo({ title: t("seo.home.title"), description: t("home.intro"), path: "/" });
   const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
   const [gms, setGms] = useState<PublicGameMaster[]>([]);
   const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);

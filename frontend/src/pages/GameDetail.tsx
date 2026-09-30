@@ -7,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import { formatGameTitle } from "../lib/gameTitle";
 import { Comments } from "../components/Comments";
 import { PageShell } from "../components/PageShell";
+import { useSeo } from "../hooks/useSeo";
 
 function EditIcon() {
   return (
@@ -106,6 +107,15 @@ export function GameDetail() {
   const [game, setGame] = useState<PublicGameDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+
+  const gameTitle = game ? formatGameTitle(game.questionText) : "";
+  useSeo({
+    title: game ? t("seo.gameDetail.title", { title: gameTitle }) : t("gameLog.title"),
+    description: game
+      ? t("seo.gameDetail.description", { title: gameTitle, gm: game.gmDisplayName })
+      : t("gameLog.intro"),
+    path: `/game-log/${pollId ?? ""}`,
+  });
 
   useEffect(() => {
     if (!pollId) return;

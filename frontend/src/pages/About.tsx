@@ -5,9 +5,11 @@ import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
 import { Band } from "../components/Band";
 import { MediaCarousel } from "../components/MediaCarousel";
+import { useSeo } from "../hooks/useSeo";
 
 export function About() {
   const { t } = useTranslation();
+  useSeo({ title: t("seo.about.title"), description: t("about.body"), path: "/about" });
   const [media, setMedia] = useState<MediaItem[]>([]);
 
   useEffect(() => {

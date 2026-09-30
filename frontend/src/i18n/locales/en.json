@@ -74,7 +74,7 @@
     "factWhen": "When",
     "factWhenValue": "Evenings, 18:30",
     "factWhere": "Where",
-    "factWhereValue": "Vinnytsia — add your address",
+    "factWhereValue": "2 Dmytra Maiborody St, Vinnytsia",
     "factPrice": "Cost",
     "factPriceValue": "First game free",
     "factAge": "Age",
@@ -363,5 +363,26 @@
   "footer": {
     "blurb": "Tabletop roleplaying club in Vinnytsia. Games every week, newcomers welcome.",
     "telegram": "Message us on Telegram"
+  },
+  "seo": {
+    "home": { "title": "Dice & Adventures Club — Tabletop RPGs in Vinnytsia" },
+    "about": { "title": "About Us — Dice & Adventures Club" },
+    "gameMasters": { "title": "Game Masters — Dice & Adventures Club" },
+    "gameMasterDetail": {
+      "title": "{{name}} — Game Master | Dice & Adventures Club",
+      "description": "{{name}}'s profile — a game master at our tabletop RPG club in Vinnytsia."
+    },
+    "gameSystems": { "title": "Games We Play — Dice & Adventures Club" },
+    "gameSystemDetail": {
+      "title": "{{name}} — Dice & Adventures Club",
+      "description": "{{name}} at our tabletop RPG club in Vinnytsia: {{sessionsPhrase}} played, player ratings and the full session list."
+    },
+    "gameLog": { "title": "Game Log — Dice & Adventures Club" },
+    "gameDetail": {
+      "title": "{{title}} — Dice & Adventures Club",
+      "description": "The game \"{{title}}\" at our tabletop RPG club in Vinnytsia. Game master: {{gm}}."
+    },
+    "statistics": { "title": "Club Statistics — Dice & Adventures Club" },
+    "signup": { "title": "Join the Club — Dice & Adventures Club" }
   }
 }
