@@ -136,6 +136,7 @@
   "gameLog": {
     "title": "Game Log",
     "none": "No games logged yet.",
+    "noMatches": "No games match these filters.",
     "dm": "DM:",
     "pageSizeLabel": "Show:",
     "loadMore": "Load more",
@@ -273,6 +274,9 @@
     "filterSystemAll": "All systems",
     "filterMinScore": "Score from",
     "filterMaxScore": "Score to",
+    "filterScoreAny": "Any",
+    "filterSearch": "Search by title",
+    "filterSearchPlaceholder": "Game title or part of it",
     "totalGames": "Total Games",
     "averageScore": "Average Score",
     "totalPlayers": "different players",

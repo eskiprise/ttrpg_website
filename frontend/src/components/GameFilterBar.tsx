@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 import type { GameSystemWithCount, PublicGameMaster } from "@ttrpg-club/shared";
 
 export interface GameFilterValues {
+  /** Title search — only offered where `showSearch` is set (the Game Log). */
+  q: string;
   from: string;
   to: string;
   gmUserId: string;
@@ -11,6 +13,7 @@ export interface GameFilterValues {
 }
 
 export const EMPTY_GAME_FILTERS: GameFilterValues = {
+  q: "",
   from: "",
   to: "",
   gmUserId: "",
@@ -18,6 +21,8 @@ export const EMPTY_GAME_FILTERS: GameFilterValues = {
   minScore: "",
   maxScore: "",
 };
+
+const SCORE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
 
 /**
  * Date range + GM + system + score-range filter, shared by the Game Log and Statistics
@@ -34,6 +39,7 @@ export function GameFilterBar({
   busy,
   gameMasters,
   systems,
+  showSearch = false,
 }: {
   value: GameFilterValues;
   onChange: (next: GameFilterValues) => void;
@@ -42,6 +48,7 @@ export function GameFilterBar({
   busy?: boolean;
   gameMasters: PublicGameMaster[];
   systems: GameSystemWithCount[];
+  showSearch?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -52,6 +59,24 @@ export function GameFilterBar({
   return (
     <div className="rounded-xl border border-border bg-surface p-5">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        {showSearch && (
+          <label className="col-span-full flex flex-col gap-1 text-sm text-ink-muted">
+            {t("statistics.filterSearch")}
+            <input
+              type="text"
+              className="w-full"
+              maxLength={100}
+              autoComplete="off"
+              enterKeyHint="search"
+              placeholder={t("statistics.filterSearchPlaceholder")}
+              value={value.q}
+              onChange={(e) => set("q", e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onApply();
+              }}
+            />
+          </label>
+        )}
         <label className="flex flex-col gap-1 text-sm text-ink-muted">
           {t("statistics.from")}
           <input
@@ -96,27 +121,25 @@ export function GameFilterBar({
         </label>
         <label className="flex flex-col gap-1 text-sm text-ink-muted">
           {t("statistics.filterMinScore")}
-          <input
-            type="number"
-            min={1}
-            max={10}
-            step={0.1}
-            className="w-full"
-            value={value.minScore}
-            onChange={(e) => set("minScore", e.target.value)}
-          />
+          <select className="w-full" value={value.minScore} onChange={(e) => set("minScore", e.target.value)}>
+            <option value="">{t("statistics.filterScoreAny")}</option>
+            {SCORE_OPTIONS.map((n) => (
+              <option key={n} value={n} disabled={value.maxScore !== "" && n > Number(value.maxScore)}>
+                {n}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1 text-sm text-ink-muted">
           {t("statistics.filterMaxScore")}
-          <input
-            type="number"
-            min={1}
-            max={10}
-            step={0.1}
-            className="w-full"
-            value={value.maxScore}
-            onChange={(e) => set("maxScore", e.target.value)}
-          />
+          <select className="w-full" value={value.maxScore} onChange={(e) => set("maxScore", e.target.value)}>
+            <option value="">{t("statistics.filterScoreAny")}</option>
+            {SCORE_OPTIONS.map((n) => (
+              <option key={n} value={n} disabled={value.minScore !== "" && n < Number(value.minScore)}>
+                {n}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">

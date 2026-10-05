@@ -54,6 +54,7 @@ export function GameLog() {
         sortBy,
         sortDir,
       });
+      if (filters.q.trim()) params.set("q", filters.q.trim());
       if (filters.from) params.set("from", filters.from);
       if (filters.to) params.set("to", filters.to);
       if (filters.gmUserId) params.set("gmUserId", filters.gmUserId);
@@ -138,6 +139,7 @@ export function GameLog() {
           busy={loading}
           gameMasters={gameMasters}
           systems={systems}
+          showSearch
         />
       </div>
 
@@ -150,7 +152,9 @@ export function GameLog() {
       )}
 
       {!loading && games.length === 0 && !error && (
-        <p className="mt-6 text-ink-muted">{t("gameLog.none")}</p>
+        <p className="mt-6 text-ink-muted">
+          {Object.values(filters).some(Boolean) ? t("gameLog.noMatches") : t("gameLog.none")}
+        </p>
       )}
 
       {games.length > 0 && (

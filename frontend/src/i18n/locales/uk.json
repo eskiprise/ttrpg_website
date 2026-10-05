@@ -144,6 +144,7 @@
   "gameLog": {
     "title": "Історія ігор",
     "none": "Поки що немає жодної записаної гри.",
+    "noMatches": "За цими умовами ігор не знайдено.",
     "dm": "МГ:",
     "pageSizeLabel": "Показувати по:",
     "loadMore": "Завантажити ще",
@@ -281,6 +282,9 @@
     "filterSystemAll": "Усі системи",
     "filterMinScore": "Оцінка від",
     "filterMaxScore": "Оцінка до",
+    "filterScoreAny": "Будь-яка",
+    "filterSearch": "Пошук за назвою",
+    "filterSearchPlaceholder": "Назва гри або її частина",
     "totalGames": "Всього ігор",
     "averageScore": "Середня оцінка",
     "totalPlayers": "різних гравців",

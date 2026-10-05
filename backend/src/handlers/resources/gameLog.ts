@@ -2,6 +2,8 @@ import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import {
   createSystemMatcher,
+  formatGameTitle,
+  normalizeForMatch,
   type GameLogMonthlyCount,
   type GameSystem,
   type PublicGameDetail,
@@ -54,6 +56,23 @@ function parseScoreBound(raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined;
   const n = Number(raw);
   return Number.isFinite(n) ? n : undefined;
+}
+
+const MAX_SEARCH_LENGTH = 100;
+
+/**
+ * The words of a title search. Normalized the way the system matcher normalizes titles, so
+ * case, diacritics and punctuation can't make a search miss ("mork borg" finds "Mörk Borg").
+ */
+function searchWords(raw: string | undefined): string[] {
+  return normalizeForMatch((raw ?? "").slice(0, MAX_SEARCH_LENGTH)).split(" ").filter(Boolean);
+}
+
+/** True when every search word appears somewhere in the game's displayed title, in any order. */
+function matchesSearch(questionText: string, words: string[]): boolean {
+  if (words.length === 0) return true;
+  const title = normalizeForMatch(formatGameTitle(questionText));
+  return words.every((word) => title.includes(word));
 }
 
 function withinRange(createdAt: string, from: string | null, to: string | null): boolean {
@@ -114,6 +133,7 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   const minScore = parseScoreBound(event.queryStringParameters?.minScore);
   const maxScore = parseScoreBound(event.queryStringParameters?.maxScore);
   const hasGm = event.queryStringParameters?.hasGm;
+  const words = searchWords(event.queryStringParameters?.q);
 
   // No index sorts telegram_rating_polls by createdAt, so this Scan is unavoidable —
   // same tradeoff getTelegramGamesAll already accepts at this club's scale (small
@@ -126,7 +146,7 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   const matchSystem = needSystems ? createSystemMatcher(systems) : null;
   const systemNameById = new Map(systems.map((s) => [s.systemId, s.name]));
 
-  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
+  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to) && matchesSearch(p.questionText, words));
 
   // Votes only feed a game's score and player count. Date/GM/system ordering and filtering
   // come from the poll record itself, so unless the request sorts or filters by score,
