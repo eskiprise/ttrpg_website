@@ -70,18 +70,20 @@ export function TelegramStatsHome() {
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col rounded-lg border border-border bg-surface p-4">
           <p className="text-sm text-ink-muted">{t("telegramApp.totalRatings")}</p>
-          <p className="mt-auto pt-1 font-numeric text-2xl font-extrabold tracking-[-0.04em] tabular-nums">
+          <p className="mt-auto pt-1 font-numeric text-xl font-bold tracking-[-0.03em] tabular-nums">
             {stats.totalRatingsGiven}
           </p>
         </div>
         <div className="flex flex-col rounded-lg border border-border bg-surface p-4">
           <p className="text-sm text-ink-muted">{t("telegramApp.averageRating")}</p>
           {/* The "/ 10" is set small, as on the site's Statistics tiles — Unbounded is wide
-              enough that the whole thing at full size wouldn't fit a half-width card. */}
-          <p className="mt-auto pt-1 font-numeric text-2xl font-extrabold tracking-[-0.04em] tabular-nums">
+              enough that the whole thing at full size wouldn't fit a half-width card. Bold
+              (700), not extrabold: it's the lightest weight the site loads, and the figures
+              stood out too much at 800. */}
+          <p className="mt-auto pt-1 font-numeric text-xl font-bold tracking-[-0.03em] tabular-nums">
             {stats.averageRatingGiven !== null ? stats.averageRatingGiven.toFixed(1) : "—"}
             {stats.averageRatingGiven !== null && (
-              <span className="text-[0.42em] tracking-normal text-ink-muted"> / 10</span>
+              <span className="text-[0.55em] tracking-normal text-ink-muted"> / 10</span>
             )}
           </p>
         </div>
