@@ -53,6 +53,11 @@ function Leaderboard({
 }
 
 type TopGame = NonNullable<ClubStatistics["highestRatedGame"]>;
+interface MonthlyPick {
+  game: TopGame;
+  month: Date;
+  isCurrent: boolean;
+}
 
 /** Local calendar date as YYYY-MM-DD — toISOString() would shift it into UTC. */
 function isoDate(d: Date): string {
@@ -61,13 +66,12 @@ function isoDate(d: Date): string {
 
 /**
  * The best-rated game of this month, or of last month while this one has none yet. Always
- * about the calendar month, whatever the filters below are set to. Reuses /statistics with
- * a one-month range (its highestRatedGame is exactly this), both months fetched together
- * so the fallback doesn't cost a second round trip.
+ * about the calendar month, whatever the filters are set to. Reuses /statistics with a
+ * one-month range (its highestRatedGame is exactly this), both months fetched together so
+ * the fallback doesn't cost a second round trip.
  */
-function MonthlyTopGame() {
-  const { t, i18n } = useTranslation();
-  const [pick, setPick] = useState<{ game: TopGame; month: Date; isCurrent: boolean } | null>(null);
+function useMonthlyTopGame(): MonthlyPick | null {
+  const [pick, setPick] = useState<MonthlyPick | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,25 +95,29 @@ function MonthlyTopGame() {
     };
   }, []);
 
-  if (!pick) return null;
+  return pick;
+}
+
+function MonthlyTopCard({ pick }: { pick: MonthlyPick }) {
+  const { t, i18n } = useTranslation();
   return (
     <Link
       to={`/game-log/${pick.game.pollId}`}
-      className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
     >
-      <div className="min-w-0">
-        <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
-          {t(pick.isCurrent ? "statistics.topOfMonthThis" : "statistics.topOfMonthPrev")}
-        </span>
-        <h2 className="mt-1 text-lg leading-snug font-bold">{formatGameTitle(pick.game.questionText)}</h2>
-        <p className="mt-1 text-sm text-ink-muted">
-          {pick.month.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })}
-        </p>
-      </div>
-      <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
-        {pick.game.averageScore.toFixed(1)}
-        <span className="text-sm text-ink-muted"> / 10</span>
+      <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
+        {t(pick.isCurrent ? "statistics.topOfMonthThis" : "statistics.topOfMonthPrev")}
       </span>
+      <h2 className="text-lg leading-snug font-bold">{formatGameTitle(pick.game.questionText)}</h2>
+      <div className="mt-auto flex items-baseline justify-between gap-3">
+        <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
+          {pick.game.averageScore.toFixed(1)}
+          <span className="text-sm text-ink-muted"> / 10</span>
+        </span>
+        <span className="text-sm text-ink-muted">
+          {pick.month.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })}
+        </span>
+      </div>
     </Link>
   );
 }
@@ -123,6 +131,7 @@ export function Statistics() {
   const [busy, setBusy] = useState(false);
   const [gameMasters, setGameMasters] = useState<PublicGameMaster[]>([]);
   const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
+  const monthlyTop = useMonthlyTopGame();
 
   // The GM/system picklists don't depend on the current filters, so they're fetched
   // once — reusing the same public endpoints the "Майстри гри"/"Ігри" pages already use.
@@ -184,8 +193,6 @@ export function Statistics() {
         </h1>
         <p className="mt-4 max-w-[54ch] text-lg text-ink-muted">{t("statistics.intro")}</p>
 
-        <MonthlyTopGame />
-
         <div className="mt-8">
           <GameFilterBar
             value={draft}
@@ -240,6 +247,11 @@ export function Statistics() {
       {stats && !hasGames && (
         <Band tone="page" width="wide">
           <p className="text-ink-muted">{t("statistics.noGamesInPeriod")}</p>
+          {monthlyTop && (
+            <div className="mt-6 max-w-md">
+              <MonthlyTopCard pick={monthlyTop} />
+            </div>
+          )}
         </Band>
       )}
 
@@ -296,23 +308,28 @@ export function Statistics() {
             />
           </div>
 
-          {/* Only the best game — a "worst rated" card would pin a GM's name to it. */}
-          {stats.highestRatedGame && (
-            <Link
-              to={`/game-log/${stats.highestRatedGame.pollId}`}
-              className="mt-6 flex max-w-md flex-col gap-2 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
-            >
-              <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
-                {t("statistics.highestRated")}
-              </span>
-              <h2 className="text-lg leading-snug font-bold">
-                {formatGameTitle(stats.highestRatedGame.questionText)}
-              </h2>
-              <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
-                {stats.highestRatedGame.averageScore.toFixed(1)}
-                <span className="text-sm text-ink-muted"> / 10</span>
-              </span>
-            </Link>
+          {(stats.highestRatedGame || monthlyTop) && (
+            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Only the best game — a "worst rated" card would pin a GM's name to it. */}
+              {stats.highestRatedGame && (
+                <Link
+                  to={`/game-log/${stats.highestRatedGame.pollId}`}
+                  className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
+                >
+                  <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
+                    {t("statistics.highestRated")}
+                  </span>
+                  <h2 className="text-lg leading-snug font-bold">
+                    {formatGameTitle(stats.highestRatedGame.questionText)}
+                  </h2>
+                  <span className="mt-auto font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
+                    {stats.highestRatedGame.averageScore.toFixed(1)}
+                    <span className="text-sm text-ink-muted"> / 10</span>
+                  </span>
+                </Link>
+              )}
+              {monthlyTop && <MonthlyTopCard pick={monthlyTop} />}
+            </div>
           )}
         </Band>
       )}
