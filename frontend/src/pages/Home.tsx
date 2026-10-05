@@ -44,7 +44,7 @@ function Eyebrow({ children, onBand = false }: { children: React.ReactNode; onBa
 export function Home() {
   const { t, i18n } = useTranslation();
   const { idToken } = useAuth();
-  useSeo({ title: t("seo.home.title"), description: t("home.intro"), path: "/" });
+  useSeo({ title: t("seo.home.title"), description: t("seo.home.description"), path: "/" });
   const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
   const [gms, setGms] = useState<PublicGameMaster[]>([]);
   const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);

@@ -365,7 +365,10 @@
     "telegram": "Message us on Telegram"
   },
   "seo": {
-    "home": { "title": "Dice & Adventures Club — Tabletop RPGs in Vinnytsia" },
+    "home": {
+      "title": "Dice & Adventures Club — Tabletop RPGs in Vinnytsia",
+      "description": "Tabletop RPG club in Vinnytsia: D&D, Delta Green, Dragonbane and dozens more systems. First game is free, no experience needed."
+    },
     "about": { "title": "About Us — Dice & Adventures Club" },
     "gameMasters": { "title": "Game Masters — Dice & Adventures Club" },
     "gameMasterDetail": {
