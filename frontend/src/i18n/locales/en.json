@@ -78,7 +78,12 @@
     "factPrice": "Cost",
     "factPriceValue": "First game free",
     "factAge": "Age",
-    "factAgeValue": "16+"
+    "factAgeValue": "16+",
+    "locationEyebrow": "Find us",
+    "locationTitle": "We're in Vinnytsia",
+    "locationSub": "Come by the address below — or open directions in Google Maps.",
+    "locationOpenMaps": "Open in Google Maps",
+    "locationMapTitle": "Club location on the map"
   },
   "about": {
     "title": "About Us",

@@ -82,7 +82,12 @@
     "factPrice": "Скільки",
     "factPriceValue": "Перша гра безкоштовно",
     "factAge": "Вік",
-    "factAgeValue": "16+"
+    "factAgeValue": "16+",
+    "locationEyebrow": "Як нас знайти",
+    "locationTitle": "Ми у Вінниці",
+    "locationSub": "Приходьте за адресою нижче — або відкрийте маршрут у Google Maps.",
+    "locationOpenMaps": "Відкрити в Google Maps",
+    "locationMapTitle": "Розташування клубу на карті"
   },
   "about": {
     "title": "Про нас",
