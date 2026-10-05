@@ -11,6 +11,7 @@
     "admin": "Admin",
     "menu": "Menu",
     "profile": "Profile",
+    "account": "Account",
     "logIn": "Log In",
     "logOut": "Log Out",
     "joinCta": "Come play",
@@ -282,6 +283,8 @@
     "topGameMasters": "Most Active Game Masters",
     "topPlayers": "Most Active Players",
     "highestRated": "Highest Rated",
+    "topOfMonthThis": "Highest-rated game this month",
+    "topOfMonthPrev": "Highest-rated game last month",
     "noData": "Not enough data yet.",
     "gamesSuffix_one": "{{count}} game",
     "gamesSuffix_other": "{{count}} games"

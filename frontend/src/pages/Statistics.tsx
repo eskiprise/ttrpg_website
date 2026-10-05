@@ -52,6 +52,68 @@ function Leaderboard({
   );
 }
 
+type TopGame = NonNullable<ClubStatistics["highestRatedGame"]>;
+
+/** Local calendar date as YYYY-MM-DD — toISOString() would shift it into UTC. */
+function isoDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * The best-rated game of this month, or of last month while this one has none yet. Always
+ * about the calendar month, whatever the filters below are set to. Reuses /statistics with
+ * a one-month range (its highestRatedGame is exactly this), both months fetched together
+ * so the fallback doesn't cost a second round trip.
+ */
+function MonthlyTopGame() {
+  const { t, i18n } = useTranslation();
+  const [pick, setPick] = useState<{ game: TopGame; month: Date; isCurrent: boolean } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const now = new Date();
+    const forMonth = (offset: number) => {
+      const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+      const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+      return apiFetch<{ statistics: ClubStatistics }>(
+        `/statistics?from=${isoDate(first)}&to=${isoDate(last)}`
+      ).then((data) => ({ month: first, game: data.statistics.highestRatedGame }));
+    };
+    Promise.all([forMonth(0), forMonth(-1)])
+      .then(([current, previous]) => {
+        if (cancelled) return;
+        if (current.game) setPick({ game: current.game, month: current.month, isCurrent: true });
+        else if (previous.game) setPick({ game: previous.game, month: previous.month, isCurrent: false });
+      })
+      .catch(() => {}); // a missing spotlight shouldn't break the page
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!pick) return null;
+  return (
+    <Link
+      to={`/game-log/${pick.game.pollId}`}
+      className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-border bg-surface p-6 text-ink transition-colors hover:border-accent hover:no-underline"
+    >
+      <div className="min-w-0">
+        <span className="text-xs font-semibold tracking-[0.1em] text-accent uppercase">
+          {t(pick.isCurrent ? "statistics.topOfMonthThis" : "statistics.topOfMonthPrev")}
+        </span>
+        <h2 className="mt-1 text-lg leading-snug font-bold">{formatGameTitle(pick.game.questionText)}</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          {pick.month.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })}
+        </p>
+      </div>
+      <span className="font-numeric text-2xl font-extrabold tracking-[-0.03em] tabular-nums">
+        {pick.game.averageScore.toFixed(1)}
+        <span className="text-sm text-ink-muted"> / 10</span>
+      </span>
+    </Link>
+  );
+}
+
 export function Statistics() {
   const { t } = useTranslation();
   useSeo({ title: t("seo.statistics.title"), description: t("statistics.intro"), path: "/statistics" });
@@ -121,6 +183,8 @@ export function Statistics() {
           {t("statistics.title")}
         </h1>
         <p className="mt-4 max-w-[54ch] text-lg text-ink-muted">{t("statistics.intro")}</p>
+
+        <MonthlyTopGame />
 
         <div className="mt-8">
           <GameFilterBar
@@ -217,7 +281,7 @@ export function Statistics() {
             </div>
           )}
 
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             <Leaderboard
               title={t("statistics.topGameMasters")}
               entries={stats.topGameMasters}
