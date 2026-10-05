@@ -213,11 +213,11 @@ export function TelegramLeaderboard() {
         <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4">
           <label className="flex flex-col gap-1 text-sm">
             {t("statistics.from")}
-            <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+            <input type="date" className={customFrom ? undefined : "date-empty"} value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             {t("statistics.to")}
-            <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+            <input type="date" className={customTo ? undefined : "date-empty"} value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </label>
           <button
             type="button"

@@ -38,8 +38,6 @@ export function TelegramStatsHome() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">{t("telegramApp.title", { name: stats.displayName })}</h1>
-
       <Link
         to="/telegram/achievements"
         className="rounded-lg border border-border bg-surface p-4 hover:bg-surface-2"
@@ -70,14 +68,21 @@ export function TelegramStatsHome() {
       </Link>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="flex flex-col rounded-lg border border-border bg-surface p-4">
           <p className="text-sm text-ink-muted">{t("telegramApp.totalRatings")}</p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{stats.totalRatingsGiven}</p>
+          <p className="mt-auto pt-1 font-numeric text-2xl font-extrabold tracking-[-0.04em] tabular-nums">
+            {stats.totalRatingsGiven}
+          </p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="flex flex-col rounded-lg border border-border bg-surface p-4">
           <p className="text-sm text-ink-muted">{t("telegramApp.averageRating")}</p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-            {stats.averageRatingGiven !== null ? `${stats.averageRatingGiven.toFixed(1)} / 10` : "—"}
+          {/* The "/ 10" is set small, as on the site's Statistics tiles — Unbounded is wide
+              enough that the whole thing at full size wouldn't fit a half-width card. */}
+          <p className="mt-auto pt-1 font-numeric text-2xl font-extrabold tracking-[-0.04em] tabular-nums">
+            {stats.averageRatingGiven !== null ? stats.averageRatingGiven.toFixed(1) : "—"}
+            {stats.averageRatingGiven !== null && (
+              <span className="text-[0.42em] tracking-normal text-ink-muted"> / 10</span>
+            )}
           </p>
         </div>
       </div>

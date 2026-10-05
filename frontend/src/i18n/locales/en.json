@@ -299,7 +299,6 @@
   },
   "telegramApp": {
     "openFromBot": "Open this from the club's Telegram bot to see your stats.",
-    "title": "Hi, {{name}}!",
     "createPoll": "Create a poll",
     "createPollTitle": "New poll",
     "createPollIntro": "The poll goes into the club chat, where players can rate the session right away.",
