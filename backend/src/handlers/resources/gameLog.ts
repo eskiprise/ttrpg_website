@@ -128,11 +128,14 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
 
   const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
 
-  // Sorting/filtering by a computed field (score, GM, system) needs every game's
-  // summary before a page can be sliced off, not just the requested page's votes.
-  const allGames = await Promise.all(
-    polls.map(async (poll) => summarize(poll, await fetchVotesForPoll(poll.pollId), null))
-  );
+  // Votes only feed a game's score and player count. Date/GM/system ordering and filtering
+  // come from the poll record itself, so unless the request sorts or filters by score,
+  // votes are fetched for the requested page alone — not one Query per poll, which took
+  // ~2s once the club had a couple of hundred.
+  const needsAllVotes = sortBy === "score" || minScore !== undefined || maxScore !== undefined;
+  const allGames = needsAllVotes
+    ? await Promise.all(polls.map(async (poll) => summarize(poll, await fetchVotesForPoll(poll.pollId), null)))
+    : polls.map((poll) => summarize(poll, [], null));
 
   let filtered = allGames;
   if (minScore !== undefined) filtered = filtered.filter((g) => g.averageScore !== null && g.averageScore >= minScore);
@@ -153,7 +156,13 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
     if (typeof av.key === "number" && typeof bv.key === "number") return (av.key - bv.key) * dir;
     return String(av.key).localeCompare(String(bv.key)) * dir;
   });
-  const page = sorted.slice(offset, offset + limit);
+  let page = sorted.slice(offset, offset + limit);
+  if (!needsAllVotes) {
+    const pollById = new Map(polls.map((poll) => [poll.pollId, poll]));
+    page = await Promise.all(
+      page.map(async (game) => summarize(pollById.get(game.pollId)!, await fetchVotesForPoll(game.pollId), null))
+    );
+  }
 
   return json(200, {
     games: page,
