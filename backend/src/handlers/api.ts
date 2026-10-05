@@ -22,7 +22,7 @@ import {
   deleteMediaItem,
 } from "./resources/media.js";
 import { listGameMasters, getGameMasterDetail } from "./resources/gameMasters.js";
-import { listGameLog, getGameLogDetail, updateGame } from "./resources/gameLog.js";
+import { listGameLog, getGameLogDetail, updateGame, deleteGame } from "./resources/gameLog.js";
 import { listComments, postComment, deleteComment } from "./resources/comments.js";
 import { getMyProfile, updateMyProfile, getAvatarUploadUrl } from "./resources/profile.js";
 import {
@@ -79,6 +79,7 @@ const routes: Record<string, RouteHandler> = {
   "GET /game-log": listGameLog,
   "GET /game-log/{pollId}": getGameLogDetail,
   "PATCH /admin/game-log/{pollId}": updateGame,
+  "DELETE /admin/game-log/{pollId}": deleteGame,
 
   "GET /game-log/{pollId}/comments": listComments,
   "POST /game-log/{pollId}/comments": postComment,
