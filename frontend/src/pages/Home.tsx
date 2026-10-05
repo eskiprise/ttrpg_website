@@ -272,7 +272,7 @@ export function Home() {
             {t("home.seeAllGameLog")} →
           </Link>
         </div>
-        <p className="mt-4 max-w-[52ch] text-ink-muted">{t("home.recentSub")}</p>
+        <p className="mt-4 max-w-[52ch] whitespace-pre-line text-ink-muted">{t("home.recentSub")}</p>
 
         {recentSessions.length === 0 ? (
           <p className="mt-8 text-ink-muted">{t("home.noSessionsYet")}</p>
