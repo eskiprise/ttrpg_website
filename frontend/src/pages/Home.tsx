@@ -195,7 +195,9 @@ export function Home() {
       {totalSessions > 0 && (
         <Band tone="dark">
           <Eyebrow onBand>{t("home.evidenceEyebrow")}</Eyebrow>
-          <h2 className="mt-4 max-w-[20ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] text-band-ink">
+          {/* whitespace-pre-line: the translation puts the count and "І це тільки початок."
+              on separate lines, with a "\n" between them. */}
+          <h2 className="mt-4 max-w-[24ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] whitespace-pre-line text-band-ink">
             {totalApprox
               ? t("home.evidenceTitleApprox", { count: totalApprox })
               : t("home.evidenceTitle", { count: totalSessions })}
@@ -270,7 +272,7 @@ export function Home() {
             {t("home.seeAllGameLog")} →
           </Link>
         </div>
-        <p className="mt-4 max-w-[52ch] text-ink-muted">{t("home.recentSub")}</p>
+        <p className="mt-4 max-w-[52ch] whitespace-pre-line text-ink-muted">{t("home.recentSub")}</p>
 
         {recentSessions.length === 0 ? (
           <p className="mt-8 text-ink-muted">{t("home.noSessionsYet")}</p>
@@ -423,45 +425,6 @@ export function Home() {
         </div>
       </Band>
 
-      {/* ── Location ───────────────────────────────────────────── */}
-      <Band tone="raised">
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-          <div>
-            <Eyebrow>{t("home.locationEyebrow")}</Eyebrow>
-            <h2 className="mt-4 text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
-              {t("home.locationTitle")}
-            </h2>
-            <p className="mt-4 max-w-[40ch] text-ink-muted">{t("home.locationSub")}</p>
-            <dl className="mt-6 flex flex-col">
-              {(["Where", "When"] as const).map((k) => (
-                <div key={k} className="flex gap-4 border-b border-border py-3 first:pt-0 last:border-b-0">
-                  <dt className="w-20 flex-shrink-0 text-xs font-semibold tracking-[0.14em] text-accent uppercase">
-                    {t(`home.fact${k}`)}
-                  </dt>
-                  <dd className="text-sm">{t(`home.fact${k}Value`)}</dd>
-                </div>
-              ))}
-            </dl>
-            <a href={CLUB_MAPS_URL} target="_blank" rel="noreferrer" className="mt-6 inline-block hover:no-underline">
-              <button type="button" className="secondary">
-                {t("home.locationOpenMaps")}
-              </button>
-            </a>
-          </div>
-          {/* Always light-themed, like the calendar above — it's Google's own embed. */}
-          <div className="overflow-hidden rounded-xl border border-border bg-surface-2">
-            <iframe
-              src={CLUB_MAP_EMBED_URL}
-              title={t("home.locationMapTitle")}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-              className="block h-[22rem] w-full border-0 sm:h-[26rem]"
-            />
-          </div>
-        </div>
-      </Band>
-
       {/* ── Closing CTA ────────────────────────────────────────── */}
       <Band tone="dark">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
@@ -501,6 +464,35 @@ export function Home() {
               </div>
             ))}
           </dl>
+        </div>
+      </Band>
+
+      {/* ── Location ───────────────────────────────────────────── */}
+      <Band tone="raised">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <Eyebrow>{t("home.locationEyebrow")}</Eyebrow>
+            <h2 className="mt-4 text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
+              {t("home.locationTitle")}
+            </h2>
+            <p className="mt-4 max-w-[40ch] text-ink-muted">{t("home.locationSub")}</p>
+            <a href={CLUB_MAPS_URL} target="_blank" rel="noreferrer" className="mt-6 inline-block hover:no-underline">
+              <button type="button" className="secondary">
+                {t("home.locationOpenMaps")}
+              </button>
+            </a>
+          </div>
+          {/* Always light-themed, like the calendar above — it's Google's own embed. */}
+          <div className="overflow-hidden rounded-xl border border-border bg-surface-2">
+            <iframe
+              src={CLUB_MAP_EMBED_URL}
+              title={t("home.locationMapTitle")}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="block h-[22rem] w-full border-0 sm:h-[26rem]"
+            />
+          </div>
         </div>
       </Band>
     </div>

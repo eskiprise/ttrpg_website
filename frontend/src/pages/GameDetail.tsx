@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { PublicGameDetail, User } from "@ttrpg-club/shared";
 import { apiFetch } from "../lib/api";
@@ -14,6 +14,67 @@ function EditIcon() {
     <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
     </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6h18" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  );
+}
+
+/**
+ * Admin-only "are you sure" for deleting a game that was created by mistake. Spells out
+ * what goes with it, since the delete takes the game's ratings, feedback and comments too
+ * and can't be undone; on success the game no longer exists, so it goes back to the log.
+ */
+function DeleteGamePanel({
+  game,
+  token,
+  onCancel,
+}: {
+  game: PublicGameDetail;
+  token: string | null;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function confirmDelete() {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch(`/admin/game-log/${game.pollId}`, { method: "DELETE", token });
+      navigate("/game-log");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.somethingWrong"));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div role="alertdialog" aria-labelledby="delete-game-title" className="mt-6 rounded-xl border border-accent bg-surface p-5">
+      <p id="delete-game-title" className="font-bold">
+        {t("admin.deleteGameTitle")}
+      </p>
+      <p className="mt-1 text-sm text-ink-muted">{t("admin.deleteGameBody")}</p>
+      {error && <p className="mt-3 text-sm text-accent">{error}</p>}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" className="bg-accent text-accent-ink" disabled={busy} onClick={confirmDelete}>
+          {t("admin.deleteGameConfirm")}
+        </button>
+        <button type="button" className="secondary" disabled={busy} onClick={onCancel}>
+          {t("common.cancel")}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -107,6 +168,7 @@ export function GameDetail() {
   const [game, setGame] = useState<PublicGameDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const gameTitle = game ? formatGameTitle(game.questionText) : "";
   useSeo({
@@ -138,17 +200,35 @@ export function GameDetail() {
           <div className="mt-6 flex items-start justify-between gap-4">
             <h1 className="page-title">{formatGameTitle(game.questionText)}</h1>
             {isAdmin && !editing && (
-              <button
-                type="button"
-                aria-label={t("admin.editGame")}
-                title={t("admin.editGame")}
-                onClick={() => setEditing(true)}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-border text-ink-muted hover:border-accent hover:text-accent"
-              >
-                <EditIcon />
-              </button>
+              <div className="flex flex-shrink-0 gap-2">
+                <button
+                  type="button"
+                  aria-label={t("admin.editGame")}
+                  title={t("admin.editGame")}
+                  onClick={() => {
+                    setConfirmingDelete(false);
+                    setEditing(true);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-ink-muted hover:border-accent hover:text-accent"
+                >
+                  <EditIcon />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t("admin.deleteGame")}
+                  title={t("admin.deleteGame")}
+                  onClick={() => setConfirmingDelete((open) => !open)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-ink-muted hover:border-accent hover:text-accent"
+                >
+                  <TrashIcon />
+                </button>
+              </div>
             )}
           </div>
+
+          {isAdmin && confirmingDelete && !editing && (
+            <DeleteGamePanel game={game} token={idToken} onCancel={() => setConfirmingDelete(false)} />
+          )}
 
           {editing ? (
             <GameEditForm

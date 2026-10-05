@@ -1,7 +1,9 @@
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DeleteCommand, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import {
   createSystemMatcher,
+  formatGameTitle,
+  normalizeForMatch,
   type GameLogMonthlyCount,
   type GameSystem,
   type PublicGameDetail,
@@ -54,6 +56,23 @@ function parseScoreBound(raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined;
   const n = Number(raw);
   return Number.isFinite(n) ? n : undefined;
+}
+
+const MAX_SEARCH_LENGTH = 100;
+
+/**
+ * The words of a title search. Normalized the way the system matcher normalizes titles, so
+ * case, diacritics and punctuation can't make a search miss ("mork borg" finds "Mörk Borg").
+ */
+function searchWords(raw: string | undefined): string[] {
+  return normalizeForMatch((raw ?? "").slice(0, MAX_SEARCH_LENGTH)).split(" ").filter(Boolean);
+}
+
+/** True when every search word appears somewhere in the game's displayed title, in any order. */
+function matchesSearch(questionText: string, words: string[]): boolean {
+  if (words.length === 0) return true;
+  const title = normalizeForMatch(formatGameTitle(questionText));
+  return words.every((word) => title.includes(word));
 }
 
 function withinRange(createdAt: string, from: string | null, to: string | null): boolean {
@@ -114,6 +133,7 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   const minScore = parseScoreBound(event.queryStringParameters?.minScore);
   const maxScore = parseScoreBound(event.queryStringParameters?.maxScore);
   const hasGm = event.queryStringParameters?.hasGm;
+  const words = searchWords(event.queryStringParameters?.q);
 
   // No index sorts telegram_rating_polls by createdAt, so this Scan is unavoidable —
   // same tradeoff getTelegramGamesAll already accepts at this club's scale (small
@@ -126,7 +146,7 @@ export async function listGameLog(event: APIGatewayProxyEventV2) {
   const matchSystem = needSystems ? createSystemMatcher(systems) : null;
   const systemNameById = new Map(systems.map((s) => [s.systemId, s.name]));
 
-  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to));
+  const polls = allPolls.filter((p) => withinRange(p.createdAt, from, to) && matchesSearch(p.questionText, words));
 
   // Votes only feed a game's score and player count. Date/GM/system ordering and filtering
   // come from the poll record itself, so unless the request sorts or filters by score,
@@ -253,4 +273,67 @@ export async function updateGame(event: APIGatewayProxyEventV2) {
   await ddb.send(new PutCommand({ TableName: Tables.telegramRatingPolls(), Item: poll }));
   const votes = await fetchVotesForPoll(pollId);
   return json(200, { game: summarize(poll, votes, null) });
+}
+
+/** Every row hanging off a game in a table keyed by `pollId` — paged, since one Query returns at most 1MB. */
+async function queryByPoll(tableName: string, pollId: string): Promise<Record<string, unknown>[]> {
+  const items: Record<string, unknown>[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+  do {
+    const result = await ddb.send(
+      new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: "pollId = :pollId",
+        ExpressionAttributeValues: { ":pollId": pollId },
+        ExclusiveStartKey: exclusiveStartKey,
+      })
+    );
+    items.push(...((result.Items ?? []) as Record<string, unknown>[]));
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+  return items;
+}
+
+/**
+ * Admin-only: removes a game that was created by mistake, along with its votes, written
+ * feedback and comments. XP, levels and achievements already awarded to players are left
+ * alone — those are the poll bot's records, not derived from this game on the fly.
+ *
+ * The poll row goes last. If something fails halfway the game is still listed and the
+ * delete can simply be repeated, instead of leaving votes behind a poll that no longer
+ * exists. (The Lambda has DeleteItem but not BatchWriteItem, hence one call per row.)
+ */
+export async function deleteGame(event: APIGatewayProxyEventV2) {
+  await requireAdmin(event);
+  const pollId = event.pathParameters?.pollId;
+  if (!pollId) throw new HttpError(400, "Missing pollId");
+
+  const existing = (
+    await ddb.send(new GetCommand({ TableName: Tables.telegramRatingPolls(), Key: { pollId } }))
+  ).Item;
+  if (!existing) throw new HttpError(404, "Game not found");
+
+  const votesTable = Tables.telegramRatingVotes();
+  const feedbackTable = Tables.telegramFeedback();
+  const commentsTable = Tables.gameComments();
+  const [votes, feedback, comments] = await Promise.all([
+    queryByPoll(votesTable, pollId),
+    queryByPoll(feedbackTable, pollId),
+    queryByPoll(commentsTable, pollId),
+  ]);
+
+  await Promise.all([
+    ...votes.map((v) =>
+      ddb.send(new DeleteCommand({ TableName: votesTable, Key: { pollId, telegramUserId: v.telegramUserId } }))
+    ),
+    ...feedback.map((f) =>
+      ddb.send(new DeleteCommand({ TableName: feedbackTable, Key: { pollId, feedbackId: f.feedbackId } }))
+    ),
+    ...comments.map((c) =>
+      ddb.send(new DeleteCommand({ TableName: commentsTable, Key: { pollId, commentId: c.commentId } }))
+    ),
+  ]);
+  await ddb.send(new DeleteCommand({ TableName: Tables.telegramRatingPolls(), Key: { pollId } }));
+
+  return json(204, {});
 }
