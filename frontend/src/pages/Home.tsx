@@ -17,7 +17,8 @@ import { roundedThreshold } from "../lib/approx";
 import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
-import { CLUB_TELEGRAM_URL } from "../lib/club";
+import { PageLoader } from "../components/PageLoader";
+import { CLUB_MAPS_URL, CLUB_MAP_EMBED_URL, CLUB_TELEGRAM_URL } from "../lib/club";
 import { useSeo } from "../hooks/useSeo";
 
 const RECENT_SESSIONS_COUNT = 3;
@@ -41,36 +42,79 @@ function Eyebrow({ children, onBand = false }: { children: React.ReactNode; onBa
   );
 }
 
+interface HomeData {
+  systems: GameSystemWithCount[];
+  gms: PublicGameMaster[];
+  recentSessions: TelegramGameSummary[];
+  gamesPerMonth: GameLogMonthlyCount[];
+  stats: ClubStatistics | null;
+}
+
+const EMPTY_HOME_DATA: HomeData = { systems: [], gms: [], recentSessions: [], gamesPerMonth: [], stats: null };
+
+/**
+ * The longest the loading screen can stay up. Past this the page shows whatever has
+ * arrived rather than hanging on a slow or failing API.
+ */
+const LOADER_MAX_MS = 6000;
+
+/**
+ * The last successful load. Coming back to Home within the same visit shows it at once
+ * (and refreshes it quietly) instead of putting the loading screen up every time.
+ */
+let cachedHomeData: HomeData | null = null;
+
 export function Home() {
   const { t, i18n } = useTranslation();
-  const { idToken } = useAuth();
-  useSeo({ title: t("seo.home.title"), description: t("home.intro"), path: "/" });
-  const [systems, setSystems] = useState<GameSystemWithCount[]>([]);
-  const [gms, setGms] = useState<PublicGameMaster[]>([]);
-  const [recentSessions, setRecentSessions] = useState<TelegramGameSummary[]>([]);
-  const [gamesPerMonth, setGamesPerMonth] = useState<GameLogMonthlyCount[]>([]);
-  const [stats, setStats] = useState<ClubStatistics | null>(null);
+  const { idToken, loading: authLoading } = useAuth();
+  useSeo({ title: t("seo.home.title"), description: t("seo.home.description"), path: "/" });
+  const [data, setData] = useState<HomeData | null>(cachedHomeData);
+  const ready = data !== null;
+  const { systems, gms, recentSessions, gamesPerMonth, stats } = data ?? EMPTY_HOME_DATA;
 
   useEffect(() => {
-    apiFetch<GameSystemListResponse>("/game-systems").then((d) => setSystems(d.systems));
-    apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters").then((d) => setGms(d.gameMasters));
-    // Public since the redesign — the headline figures are the pitch to a stranger.
-    // Tolerates failure: the two tiles it feeds simply don't render, rather than the
-    // hero dying with them (and it 401s until the backend change is deployed).
-    apiFetch<{ statistics: ClubStatistics }>("/statistics")
-      .then((d) => setStats(d.statistics))
-      .catch(() => setStats(null));
-  }, []);
+    // Wait for the stored login to be restored, so the game log is fetched once with the
+    // right token instead of twice.
+    if (authLoading) return;
+    let cancelled = false;
+    const giveUp = window.setTimeout(() => {
+      if (!cancelled) setData((prev) => prev ?? EMPTY_HOME_DATA);
+    }, LOADER_MAX_MS);
 
-  useEffect(() => {
-    apiFetch<{ games: TelegramGameSummary[]; gamesPerMonth: GameLogMonthlyCount[] }>(
-      `/game-log?limit=${RECENT_SESSIONS_COUNT}&offset=0`,
-      { token: idToken }
-    ).then((d) => {
-      setRecentSessions(d.games);
-      setGamesPerMonth(d.gamesPerMonth);
+    // allSettled: one failing endpoint costs its own section, never the whole page.
+    Promise.allSettled([
+      apiFetch<GameSystemListResponse>("/game-systems"),
+      apiFetch<{ gameMasters: PublicGameMaster[] }>("/game-masters"),
+      // Public since the redesign — the headline figures are the pitch to a stranger.
+      // The two tiles it feeds simply don't render if it fails (and it 401s until the
+      // backend change is deployed), rather than the hero dying with them.
+      apiFetch<{ statistics: ClubStatistics }>("/statistics"),
+      apiFetch<{ games: TelegramGameSummary[]; gamesPerMonth: GameLogMonthlyCount[] }>(
+        `/game-log?limit=${RECENT_SESSIONS_COUNT}&offset=0`,
+        { token: idToken }
+      ),
+      // The webfonts too, so the headline doesn't re-flow when Literata arrives just
+      // after the loading screen has faded.
+      document.fonts?.ready,
+    ]).then(([systemsRes, gmsRes, statsRes, logRes]) => {
+      if (cancelled) return;
+      window.clearTimeout(giveUp);
+      const next: HomeData = {
+        systems: systemsRes.status === "fulfilled" ? systemsRes.value.systems : [],
+        gms: gmsRes.status === "fulfilled" ? gmsRes.value.gameMasters : [],
+        stats: statsRes.status === "fulfilled" ? statsRes.value.statistics : null,
+        recentSessions: logRes.status === "fulfilled" ? logRes.value.games : [],
+        gamesPerMonth: logRes.status === "fulfilled" ? logRes.value.gamesPerMonth : [],
+      };
+      cachedHomeData = next;
+      setData(next);
     });
-  }, [idToken]);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(giveUp);
+    };
+  }, [authLoading, idToken]);
 
   const totalSessions = gamesPerMonth.reduce((sum, m) => sum + m.count, 0);
   // Rounded here as everywhere outside a system's own page: "200+", not "237".
@@ -78,7 +122,11 @@ export function Home() {
   const seatsApprox = roundedThreshold(stats?.totalSeats ?? 0);
 
   return (
-    <div>
+    // inert while the splash is up: keeps the page out of the tab order and away from
+    // screen readers until the splash is gone. The splash portals out to <body>, so it
+    // isn't inert itself.
+    <div inert={!ready}>
+      <PageLoader visible={!ready} />
       {/* ── Hero ───────────────────────────────────────────────── */}
       <Band tone="page">
         {/* grid-cols-1 = minmax(0, 1fr): without it the single mobile column sizes to the
@@ -372,6 +420,45 @@ export function Home() {
             frameBorder="0"
             scrolling="no"
           />
+        </div>
+      </Band>
+
+      {/* ── Location ───────────────────────────────────────────── */}
+      <Band tone="raised">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <Eyebrow>{t("home.locationEyebrow")}</Eyebrow>
+            <h2 className="mt-4 text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
+              {t("home.locationTitle")}
+            </h2>
+            <p className="mt-4 max-w-[40ch] text-ink-muted">{t("home.locationSub")}</p>
+            <dl className="mt-6 flex flex-col">
+              {(["Where", "When"] as const).map((k) => (
+                <div key={k} className="flex gap-4 border-b border-border py-3 first:pt-0 last:border-b-0">
+                  <dt className="w-20 flex-shrink-0 text-xs font-semibold tracking-[0.14em] text-accent uppercase">
+                    {t(`home.fact${k}`)}
+                  </dt>
+                  <dd className="text-sm">{t(`home.fact${k}Value`)}</dd>
+                </div>
+              ))}
+            </dl>
+            <a href={CLUB_MAPS_URL} target="_blank" rel="noreferrer" className="mt-6 inline-block hover:no-underline">
+              <button type="button" className="secondary">
+                {t("home.locationOpenMaps")}
+              </button>
+            </a>
+          </div>
+          {/* Always light-themed, like the calendar above — it's Google's own embed. */}
+          <div className="overflow-hidden rounded-xl border border-border bg-surface-2">
+            <iframe
+              src={CLUB_MAP_EMBED_URL}
+              title={t("home.locationMapTitle")}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="block h-[22rem] w-full border-0 sm:h-[26rem]"
+            />
+          </div>
         </div>
       </Band>
 

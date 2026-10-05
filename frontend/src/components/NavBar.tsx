@@ -34,7 +34,11 @@ export function NavBar() {
     <header className="sticky top-0 z-10 border-b border-border bg-surface will-change-transform">
       <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-4 px-6 lg:gap-8">
         <NavLink to="/" className="flex flex-shrink-0 items-center gap-2 font-display text-base font-bold text-ink hover:no-underline xl:text-xl">
-          <span className="relative h-6 w-6 flex-shrink-0 rounded border-[1.5px] border-ink">
+          {/* data-brand-mark: where PageLoader's die lands, and is hidden until it does. */}
+          <span
+            data-brand-mark
+            className="relative h-6 w-6 flex-shrink-0 rounded border-[1.5px] border-ink transition-opacity duration-150"
+          >
             <span className="absolute top-1/2 left-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent" />
           </span>
           {/* The full wordmark only fits once the nav links, controls and join CTA

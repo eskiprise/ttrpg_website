@@ -72,13 +72,18 @@
     "joinTelegram": "Message us on Telegram",
     "joinForm": "Fill in the form",
     "factWhen": "When",
-    "factWhenValue": "Evenings, 18:30",
+    "factWhenValue": "Your game time!",
     "factWhere": "Where",
     "factWhereValue": "2 Dmytra Maiborody St, Vinnytsia",
     "factPrice": "Cost",
     "factPriceValue": "First game free",
     "factAge": "Age",
-    "factAgeValue": "16+"
+    "factAgeValue": "16+",
+    "locationEyebrow": "Find us",
+    "locationTitle": "We're in Vinnytsia",
+    "locationSub": "We're located at the address below",
+    "locationOpenMaps": "Open in Google Maps",
+    "locationMapTitle": "Club location on the map"
   },
   "about": {
     "title": "About Us",
@@ -365,7 +370,10 @@
     "telegram": "Message us on Telegram"
   },
   "seo": {
-    "home": { "title": "Dice & Adventures Club — Tabletop RPGs in Vinnytsia" },
+    "home": {
+      "title": "Dice & Adventures Club — Tabletop RPGs in Vinnytsia",
+      "description": "Tabletop RPG club in Vinnytsia: D&D, Delta Green, Dragonbane and dozens more systems. First game is free, no experience needed."
+    },
     "about": { "title": "About Us — Dice & Adventures Club" },
     "gameMasters": { "title": "Game Masters — Dice & Adventures Club" },
     "gameMasterDetail": {
