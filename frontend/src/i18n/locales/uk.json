@@ -86,7 +86,7 @@
     "factAgeValue": "16+",
     "locationEyebrow": "Як нас знайти",
     "locationTitle": "Ми у Вінниці",
-    "locationSub": "Ми розташовані за адресою {{address}}",
+    "locationSub": "Ми розташовані за адресою\n{{address}}",
     "locationOpenMaps": "Відкрити в Google Maps",
     "locationMapTitle": "Розташування клубу на карті"
   },

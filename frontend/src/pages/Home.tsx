@@ -475,7 +475,7 @@ export function Home() {
             <h2 className="mt-4 text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
               {t("home.locationTitle")}
             </h2>
-            <p className="mt-4 max-w-[40ch] text-ink-muted">{t("home.locationSub", { address: t("home.factWhereValue") })}</p>
+            <p className="mt-4 max-w-[40ch] whitespace-pre-line text-ink-muted">{t("home.locationSub", { address: t("home.factWhereValue") })}</p>
             <a href={CLUB_MAPS_URL} target="_blank" rel="noreferrer" className="mt-6 inline-block hover:no-underline">
               <button type="button" className="secondary">
                 {t("home.locationOpenMaps")}
