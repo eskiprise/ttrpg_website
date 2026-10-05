@@ -72,7 +72,7 @@
     "joinTelegram": "Message us on Telegram",
     "joinForm": "Fill in the form",
     "factWhen": "When",
-    "factWhenValue": "Evenings, 18:30",
+    "factWhenValue": "Your game time!",
     "factWhere": "Where",
     "factWhereValue": "2 Dmytra Maiborody St, Vinnytsia",
     "factPrice": "Cost",
@@ -81,7 +81,7 @@
     "factAgeValue": "16+",
     "locationEyebrow": "Find us",
     "locationTitle": "We're in Vinnytsia",
-    "locationSub": "Come by the address below — or open directions in Google Maps.",
+    "locationSub": "We're located at the address below",
     "locationOpenMaps": "Open in Google Maps",
     "locationMapTitle": "Club location on the map"
   },

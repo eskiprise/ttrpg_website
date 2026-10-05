@@ -76,7 +76,7 @@
     "joinTelegram": "Написати в Telegram",
     "joinForm": "Заповнити форму",
     "factWhen": "Коли",
-    "factWhenValue": "Щовечора, 18:30",
+    "factWhenValue": "Час вашої гри!",
     "factWhere": "Де",
     "factWhereValue": "вул. Дмитра Майбороди, 2, Вінниця",
     "factPrice": "Скільки",
@@ -85,7 +85,7 @@
     "factAgeValue": "16+",
     "locationEyebrow": "Як нас знайти",
     "locationTitle": "Ми у Вінниці",
-    "locationSub": "Приходьте за адресою нижче — або відкрийте маршрут у Google Maps.",
+    "locationSub": "Ми розташовані за адресою нижче",
     "locationOpenMaps": "Відкрити в Google Maps",
     "locationMapTitle": "Розташування клубу на карті"
   },
