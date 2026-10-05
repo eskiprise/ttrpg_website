@@ -223,6 +223,12 @@
      so it's still readable while picking. Chrome/Safari/Edge only — Firefox's own date
      chrome doesn't expose these parts, but already renders its hint in a muted tone by
      default rather than full ink, so there's nothing to hide there. */
+  /* While PageLoader's die is flying to the navbar logo, the real logo waits invisible
+     so the die can land on it (set on <html> by PageLoader). */
+  html[data-page-loading] [data-brand-mark] {
+    opacity: 0;
+  }
+
   input[type="date"].date-empty {
     color: transparent;
   }
