@@ -195,7 +195,9 @@ export function Home() {
       {totalSessions > 0 && (
         <Band tone="dark">
           <Eyebrow onBand>{t("home.evidenceEyebrow")}</Eyebrow>
-          <h2 className="mt-4 max-w-[20ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] text-band-ink">
+          {/* whitespace-pre-line: the translation puts the count and "І це тільки початок."
+              on separate lines, with a "\n" between them. */}
+          <h2 className="mt-4 max-w-[24ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] whitespace-pre-line text-band-ink">
             {totalApprox
               ? t("home.evidenceTitleApprox", { count: totalApprox })
               : t("home.evidenceTitle", { count: totalSessions })}
