@@ -82,7 +82,7 @@
     "factAgeValue": "16+",
     "locationEyebrow": "Find us",
     "locationTitle": "We're in Vinnytsia",
-    "locationSub": "We're located at the address below",
+    "locationSub": "We're located at {{address}}",
     "locationOpenMaps": "Open in Google Maps",
     "locationMapTitle": "Club location on the map"
   },
