@@ -12,6 +12,9 @@ const PHOTO_MS = 4500;
  */
 const COMPACT_SCRUB_THRESHOLD = 20;
 
+/** The speaker button is hidden for now, not removed — flip to true to bring it back. Videos stay muted without it. */
+const SHOW_MUTE_TOGGLE = false;
+
 function SpeakerIcon({ muted }: { muted: boolean }) {
   // shrink-0: a flex child's default min-width:auto lets the browser collapse a
   // replaced element like this svg to 0 width inside the flex button, even with an
@@ -286,7 +289,7 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
                 {t("about.galleryVideoBadge")}
               </span>
             )}
-            {item.kind === "video" && (
+            {item.kind === "video" && SHOW_MUTE_TOGGLE && (
               <button
                 type="button"
                 aria-label={muted ? t("about.galleryUnmute") : t("about.galleryMute")}
