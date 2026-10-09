@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { GameSystemDetail as GameSystemDetailData } from "@ttrpg-club/shared";
+import type { GameSystem, GameSystemDetail as GameSystemDetailData } from "@ttrpg-club/shared";
 import { ApiError, apiFetch } from "../lib/api";
 import { CLUB_TELEGRAM_URL } from "../lib/club";
 import { PageShell } from "../components/PageShell";
@@ -13,6 +13,28 @@ import { useSeo } from "../hooks/useSeo";
 /** Enough to show the system is alive without a wall of rows; the rest is one tap away. */
 const INITIAL_GAMES_SHOWN = 10;
 
+/** How many of the other names fit in the meta description before it gets cut off in results. */
+const OTHER_NAMES_IN_DESCRIPTION = 3;
+
+/**
+ * The system's aliases as "other names" — what people actually type into a search ("ДнД
+ * Вінниця", "DnD"), so the page should say them. Aliases exist to match poll titles, so
+ * they may repeat the name or differ from each other only by case or "&" vs "and" — those
+ * are dropped, keeping the first spelling.
+ */
+function otherNames(system: GameSystem): string[] {
+  const key = (text: string) => text.toLowerCase().replace(/&/g, "and").replace(/\s+/g, " ").trim();
+  const seen = new Set([key(system.name)]);
+  const names: string[] = [];
+  for (const alias of system.aliases ?? []) {
+    const k = key(alias);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    names.push(alias.trim());
+  }
+  return names;
+}
+
 export function GameSystemDetail() {
   const { t } = useTranslation();
   const { systemId } = useParams<{ systemId: string }>();
@@ -20,15 +42,15 @@ export function GameSystemDetail() {
   const [error, setError] = useState<string | null>(null);
   const [showAllGames, setShowAllGames] = useState(false);
 
+  const system = data?.system;
+  const aliases = system ? otherNames(system) : [];
+
   useSeo({
-    title: data?.system ? t("seo.gameSystemDetail.title", { name: data.system.name }) : t("gameSystems.title"),
-    description: data?.system
+    title: system ? t("seo.gameSystemDetail.title", { name: system.name }) : t("gameSystems.title"),
+    description: system
       ? t("seo.gameSystemDetail.description", {
-          name: data.system.name,
-          // Reuses the same pluralized "N ігор/гра/ігри" phrase GameSystems.tsx already
-          // builds — a bare {{count}} interpolation would need its own _one/_few/_many
-          // suffixes here too, so borrow the existing ones instead of duplicating them.
-          sessionsPhrase: t("gameSystems.games", { count: data.system.sessionCount }),
+          name: system.name,
+          otherNames: aliases.length > 0 ? ` (${aliases.slice(0, OTHER_NAMES_IN_DESCRIPTION).join(", ")})` : "",
         })
       : t("gameSystems.intro"),
     path: `/game-systems/${systemId ?? ""}`,
@@ -46,7 +68,6 @@ export function GameSystemDetail() {
       );
   }, [systemId, t]);
 
-  const system = data?.system;
   const games = data?.games ?? [];
   const visibleGames = showAllGames ? games : games.slice(0, INITIAL_GAMES_SHOWN);
 
@@ -67,6 +88,9 @@ export function GameSystemDetail() {
             </div>
             <div className="min-w-0">
               <h1 className="page-title [overflow-wrap:anywhere]">{system.name}</h1>
+              {aliases.length > 0 && (
+                <p className="mt-2 text-sm text-ink-muted">{t("gameSystemDetail.otherNames", { names: aliases.join(", ") })}</p>
+              )}
               {system.description && (
                 <p className="mt-5 max-w-[62ch] text-lg leading-relaxed whitespace-pre-wrap">{system.description}</p>
               )}
@@ -118,7 +142,9 @@ export function GameSystemDetail() {
             <h2 className="font-display text-[clamp(1.4rem,1.1rem+1.2vw,2rem)] leading-tight font-bold [overflow-wrap:anywhere]">
               {t("gameSystemDetail.ctaTitle", { name: system.name })}
             </h2>
-            <p className="mt-3 max-w-[52ch] text-band-ink-muted">{t("gameSystemDetail.ctaBody")}</p>
+            <p className="mt-3 max-w-[52ch] text-band-ink-muted">
+              {t("gameSystemDetail.ctaBody", { address: t("home.factWhereValue") })}
+            </p>
             <a href={CLUB_TELEGRAM_URL} target="_blank" rel="noreferrer" className="mt-6 inline-block hover:no-underline">
               <button type="button" className="bg-band-accent text-band hover:bg-band-ink">
                 {t("home.ctaPrimary")}

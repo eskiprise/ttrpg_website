@@ -130,8 +130,9 @@
     "gamesTitle": "Games played",
     "noGames": "No games yet — you could be at the first table.",
     "showAll": "Show all ({{count}})",
-    "ctaTitle": "Want to play {{name}}?",
-    "ctaBody": "Message us — we'll tell you when the next game is and whether there's a seat."
+    "otherNames": "Also known as: {{names}}",
+    "ctaTitle": "Want to play {{name}} in Vinnytsia?",
+    "ctaBody": "We play at {{address}}. Message us — we'll tell you when the next game is and whether there's a seat."
   },
   "gameLog": {
     "title": "Game Log",
@@ -381,8 +382,8 @@
   },
   "seo": {
     "home": {
-      "title": "Dice & Adventures Club — Tabletop RPGs in Vinnytsia",
-      "description": "Tabletop RPG club in Vinnytsia: D&D, Delta Green, Dragonbane and dozens more systems. First game is free, no experience needed."
+      "title": "Tabletop RPGs and D&D in Vinnytsia — Dice & Adventures Club",
+      "description": "Tabletop RPG club in Vinnytsia: D&D (DnD), Delta Green, Dragonbane and dozens more systems. First game is free, no experience needed."
     },
     "about": { "title": "About Us — Dice & Adventures Club" },
     "gameMasters": { "title": "Game Masters — Dice & Adventures Club" },
@@ -390,10 +391,13 @@
       "title": "{{name}} — Game Master | Dice & Adventures Club",
       "description": "{{name}}'s profile — a game master at our tabletop RPG club in Vinnytsia."
     },
-    "gameSystems": { "title": "Games We Play — Dice & Adventures Club" },
+    "gameSystems": {
+      "title": "Tabletop RPGs in Vinnytsia: D&D, Dragonbane, Delta Green — Dice & Adventures Club",
+      "description": "What to play in Vinnytsia: D&D (DnD), Dragonbane, Daggerheart, Delta Green, Vampire: the Masquerade and more tabletop RPGs. How many games we've played in each system and who runs them."
+    },
     "gameSystemDetail": {
-      "title": "{{name}} — Dice & Adventures Club",
-      "description": "{{name}} at our tabletop RPG club in Vinnytsia: {{sessionsPhrase}} played, player ratings and the full session list."
+      "title": "{{name}} in Vinnytsia — where to play | Dice & Adventures Club",
+      "description": "Where to play {{name}}{{otherNames}} in Vinnytsia: the Dice & Adventures tabletop RPG club. Who runs it, player ratings and past games. Newcomers welcome."
     },
     "gameLog": { "title": "Game Log — Dice & Adventures Club" },
     "gameDetail": {
