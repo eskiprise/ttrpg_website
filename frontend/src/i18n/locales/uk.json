@@ -138,8 +138,9 @@
     "gamesTitle": "Зіграні ігри",
     "noGames": "Ще жодної гри — ви можете стати першими за столом.",
     "showAll": "Показати всі ({{count}})",
-    "ctaTitle": "Хочете зіграти в {{name}}?",
-    "ctaBody": "Напишіть нам — підкажемо, коли найближча гра і чи є вільне місце."
+    "otherNames": "Інші назви: {{names}}",
+    "ctaTitle": "Хочете зіграти в {{name}} у Вінниці?",
+    "ctaBody": "Ми граємо за адресою {{address}}. Напишіть нам — підкажемо, коли найближча гра і чи є вільне місце."
   },
   "gameLog": {
     "title": "Історія ігор",
@@ -397,8 +398,8 @@
   },
   "seo": {
     "home": {
-      "title": "Dice & Adventures Club — настільні рольові ігри у Вінниці",
-      "description": "Клуб настільних рольових ігор у Вінниці: D&D, Delta Green, Dragonbane та десятки інших систем. Перша гра безкоштовно, досвід не потрібен."
+      "title": "Настільні рольові ігри та D&D у Вінниці — Dice & Adventures Club",
+      "description": "Клуб настільних рольових ігор (НРІ) у Вінниці: D&D (ДнД), Delta Green, Dragonbane та десятки інших систем. Перша гра безкоштовно, досвід не потрібен."
     },
     "about": { "title": "Про клуб — Dice & Adventures Club" },
     "gameMasters": { "title": "Майстри гри — Dice & Adventures Club" },
@@ -406,10 +407,13 @@
       "title": "{{name}} — майстер гри | Dice & Adventures Club",
       "description": "Профіль {{name}} — майстра гри в клубі настільних рольових ігор у Вінниці."
     },
-    "gameSystems": { "title": "Ігри, у які ми граємо — Dice & Adventures Club" },
+    "gameSystems": {
+      "title": "Системи НРІ у Вінниці: D&D, Dragonbane, Delta Green — Dice & Adventures Club",
+      "description": "У що пограти у Вінниці: D&D (ДнД), Dragonbane, Daggerheart, Delta Green, Vampire: the Masquerade та інші настільні рольові ігри (НРІ). Скільки ігор зіграно в кожній системі і хто їх водить."
+    },
     "gameSystemDetail": {
-      "title": "{{name}} — Dice & Adventures Club",
-      "description": "{{name}} у клубі настільних рольових ігор у Вінниці: {{sessionsPhrase}}, оцінки гравців і список зіграних ігор."
+      "title": "{{name}} у Вінниці — де пограти | Dice & Adventures Club",
+      "description": "Де пограти в {{name}}{{otherNames}} у Вінниці: клуб настільних рольових ігор Dice & Adventures. Хто водить, оцінки гравців і зіграні ігри. Новачкам раді."
     },
     "gameLog": { "title": "Історія ігор — Dice & Adventures Club" },
     "gameDetail": {

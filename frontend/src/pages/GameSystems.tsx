@@ -15,7 +15,7 @@ const FEATURED_FROM_GAMES = 11;
 
 export function GameSystems() {
   const { t } = useTranslation();
-  useSeo({ title: t("seo.gameSystems.title"), description: t("gameSystems.intro"), path: "/game-systems" });
+  useSeo({ title: t("seo.gameSystems.title"), description: t("seo.gameSystems.description"), path: "/game-systems" });
   const [systems, setSystems] = useState<GameSystemWithCount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
