@@ -71,11 +71,11 @@ export function TelegramGamesList({ kind }: { kind: keyof typeof ENDPOINTS }) {
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4">
         <label className="flex flex-col gap-1 text-sm">
           {t("statistics.from")}
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" className={from ? undefined : "date-empty"} value={from} onChange={(e) => setFrom(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           {t("statistics.to")}
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          <input type="date" className={to ? undefined : "date-empty"} value={to} onChange={(e) => setTo(e.target.value)} />
         </label>
         <button type="button" disabled={busy} onClick={() => load(from, to)}>{t("statistics.apply")}</button>
       </div>

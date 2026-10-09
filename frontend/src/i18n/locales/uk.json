@@ -86,7 +86,7 @@
     "factAgeValue": "16+",
     "locationEyebrow": "Як нас знайти",
     "locationTitle": "Ми у Вінниці",
-    "locationSub": "Ми розташовані за адресою {{address}}",
+    "locationSub": "Ми розташовані за адресою\n{{address}}",
     "locationOpenMaps": "Відкрити в Google Maps",
     "locationMapTitle": "Розташування клубу на карті"
   },
@@ -311,7 +311,6 @@
   },
   "telegramApp": {
     "openFromBot": "Відкрийте це через бота клубу в Telegram, щоб побачити свою статистику.",
-    "title": "Привіт, {{name}}!",
     "createPoll": "Створити опитування",
     "createPollTitle": "Нове опитування",
     "createPollIntro": "Опитування з'явиться в чаті клубу — гравці зможуть одразу поставити оцінку сесії.",
