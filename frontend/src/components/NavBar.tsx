@@ -13,26 +13,45 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 /**
+ * A <details> dropdown stays open on its own until its summary is toggled again — so this
+ * closes it after navigating (picking a link inside it), on a tap or click anywhere else
+ * on the page, and on Escape. pointerdown rather than click: iOS Safari doesn't reliably
+ * dispatch click for taps on non-interactive page areas, and it covers touch and mouse alike.
+ */
+function useDismissibleDetails() {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    ref.current?.removeAttribute("open");
+  }, [pathname]);
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      const menu = ref.current;
+      if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      const menu = ref.current;
+      if (e.key === "Escape" && menu?.open) menu.open = false;
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  return ref;
+}
+
+/**
  * Profile, Admin and Log out behind one button. Spread across the bar they didn't fit
  * next to the full wordmark and the join CTA, and squeezed the page links onto two lines.
  */
 function AccountMenu({ isAdmin, logout }: { isAdmin: boolean; logout: () => void }) {
   const { t } = useTranslation();
-  const { pathname } = useLocation();
-  const ref = useRef<HTMLDetailsElement>(null);
-
-  // A <details> stays open on its own, so close it after navigating and on an outside click.
-  useEffect(() => {
-    ref.current?.removeAttribute("open");
-  }, [pathname]);
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      const menu = ref.current;
-      if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
-    };
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, []);
+  const ref = useDismissibleDetails();
 
   return (
     <details ref={ref} className="relative">
@@ -54,6 +73,7 @@ function AccountMenu({ isAdmin, logout }: { isAdmin: boolean; logout: () => void
 export function NavBar() {
   const { idToken, isAdmin, logout } = useAuth();
   const { t } = useTranslation();
+  const mobileMenuRef = useDismissibleDetails();
 
   const primaryLinks = (
     <>
@@ -71,8 +91,10 @@ export function NavBar() {
     // works around an iOS Safari bug where the toolbar's collapse/expand animation
     // otherwise leaves a stale rendered frame briefly showing above the header.
     <header className="sticky top-0 z-10 border-b border-border bg-surface will-change-transform">
-      <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-4 px-6 lg:gap-6">
-        <NavLink to="/" className="flex flex-shrink-0 items-center gap-2 font-display text-base font-bold text-ink hover:no-underline">
+      {/* max-[360px]: logo + join CTA + Menu button don't fit a 320px phone at the usual
+          24px side padding and 16px gaps — tighten both there only. */}
+      <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-4 px-6 max-[360px]:gap-2 max-[360px]:px-4 lg:gap-6">
+        <NavLink to="/" className="flex flex-shrink-0 items-center gap-2 font-display text-base font-bold text-ink hover:no-underline max-[360px]:text-sm">
           {/* data-brand-mark: where PageLoader's die lands, and is hidden until it does. */}
           <span
             data-brand-mark
@@ -96,13 +118,13 @@ export function NavBar() {
           rel="noreferrer"
           className="ml-auto flex-shrink-0 hover:no-underline lg:order-last lg:ml-0"
         >
-          <button type="button" className="text-sm whitespace-nowrap">
+          <button type="button" className="text-sm whitespace-nowrap max-[360px]:px-3">
             {t("nav.joinCta")}
           </button>
         </a>
 
-        <details className="relative flex-shrink-0 lg:hidden">
-          <summary className="cursor-pointer list-none rounded-lg border border-border px-3 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+        <details ref={mobileMenuRef} className="relative flex-shrink-0 lg:hidden">
+          <summary className="cursor-pointer list-none rounded-lg border border-border px-3 py-2 text-sm font-semibold max-[360px]:px-2.5 [&::-webkit-details-marker]:hidden">
             {t("nav.menu", "Menu")}
           </summary>
           <div className="absolute right-0 z-20 mt-2 flex w-56 flex-col gap-1 rounded-xl border border-border bg-surface p-3 shadow-lg">

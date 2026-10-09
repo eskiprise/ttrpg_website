@@ -336,7 +336,7 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
               type="button"
               aria-label={t("about.gallerySlideLabel", { index: index + 1, total: items.length })}
               onClick={onBarClick}
-              className="relative h-1 flex-1 overflow-hidden rounded-full bg-band-edge"
+              className="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-band-edge p-0"
             >
               <div
                 ref={barFillRef}
@@ -352,7 +352,10 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
                   type="button"
                   aria-label={t("about.gallerySlideLabel", { index: i + 1, total: items.length })}
                   onClick={() => goTo(i)}
-                  className="relative h-1 flex-1 overflow-hidden rounded-full bg-band-edge"
+                  // min-w-0 p-0: the global button padding (1.1rem a side) otherwise sets
+                  // each sliver's minimum width to ~35px, so 8+ of them push the row —
+                  // and the whole page — wider than a phone screen.
+                  className="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-band-edge p-0"
                 >
                   <div
                     ref={(el) => {
@@ -371,7 +374,7 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
           <button
             type="button"
             onClick={() => setPlaying((p) => !p)}
-            className="flex-shrink-0 rounded-full border border-band-edge px-3 py-1 text-xs text-band-ink-muted hover:border-band-accent hover:text-band-accent"
+            className="flex-shrink-0 rounded-full border border-band-edge bg-transparent px-3 py-1 text-xs text-band-ink-muted hover:border-band-accent hover:bg-transparent hover:text-band-accent"
           >
             {playing ? t("about.galleryPause") : t("about.galleryPlay")}
           </button>
