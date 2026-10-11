@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import type {
   ClubStatistics,
   GameLogMonthlyCount,
@@ -17,7 +17,7 @@ import { roundedThreshold } from "../lib/approx";
 import { Band } from "../components/Band";
 import { StatTile } from "../components/StatTile";
 import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
-import { PageLoader } from "../components/PageLoader";
+import { LoadingDots } from "../components/LoadingDots";
 import { CLUB_MAPS_URL, CLUB_MAP_EMBED_URL, CLUB_TELEGRAM_URL } from "../lib/club";
 import { useSeo } from "../hooks/useSeo";
 
@@ -53,23 +53,34 @@ interface HomeData {
 const EMPTY_HOME_DATA: HomeData = { systems: [], gms: [], recentSessions: [], gamesPerMonth: [], stats: null };
 
 /**
- * The longest the loading screen can stay up. Past this the page shows whatever has
- * arrived rather than hanging on a slow or failing API.
+ * The longest the loading dots keep going. Past this the page shows whatever has arrived
+ * (sections with nothing to show drop out) rather than hanging on a slow or failing API.
  */
-const LOADER_MAX_MS = 6000;
+const LOAD_MAX_MS = 6000;
 
 /**
  * The last successful load. Coming back to Home within the same visit shows it at once
- * (and refreshes it quietly) instead of putting the loading screen up every time.
+ * (and refreshes it quietly) instead of dotting every figure again.
  */
 let cachedHomeData: HomeData | null = null;
+
+/** How many entries the FAQ has in the translations (home.faq1Q/faq1A … faqNQ/faqNA). */
+const FAQ_COUNT = 10;
+
+/** FAQ answers carry <tag>…</tag> link markup for <Trans>; the schema.org copy wants plain text. */
+function stripTags(text: string) {
+  return text.replace(/<\/?\w+>/g, "");
+}
 
 export function Home() {
   const { t, i18n } = useTranslation();
   const { idToken, loading: authLoading } = useAuth();
   useSeo({ title: t("seo.home.title"), description: t("seo.home.description"), path: "/" });
   const [data, setData] = useState<HomeData | null>(cachedHomeData);
-  const ready = data !== null;
+  // Only on a visit with no data at all yet — and even then just the live figures and
+  // lists show dots; the copy around them is there from the first paint. A visitor
+  // arriving from search never sees them: the prerendered page already has the data.
+  const loading = data === null;
   const { systems, gms, recentSessions, gamesPerMonth, stats } = data ?? EMPTY_HOME_DATA;
 
   useEffect(() => {
@@ -79,7 +90,7 @@ export function Home() {
     let cancelled = false;
     const giveUp = window.setTimeout(() => {
       if (!cancelled) setData((prev) => prev ?? EMPTY_HOME_DATA);
-    }, LOADER_MAX_MS);
+    }, LOAD_MAX_MS);
 
     // allSettled: one failing endpoint costs its own section, never the whole page.
     Promise.allSettled([
@@ -93,9 +104,6 @@ export function Home() {
         `/game-log?limit=${RECENT_SESSIONS_COUNT}&offset=0`,
         { token: idToken }
       ),
-      // The webfonts too, so the headline doesn't re-flow when Literata arrives just
-      // after the loading screen has faded.
-      document.fonts?.ready,
     ]).then(([systemsRes, gmsRes, statsRes, logRes]) => {
       if (cancelled) return;
       window.clearTimeout(giveUp);
@@ -121,12 +129,22 @@ export function Home() {
   const totalApprox = roundedThreshold(totalSessions);
   const seatsApprox = roundedThreshold(stats?.totalSeats ?? 0);
 
+  const faqItems = Array.from({ length: FAQ_COUNT }, (_, i) => i + 1);
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((n) => ({
+      "@type": "Question",
+      name: t(`home.faq${n}Q`),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: stripTags(t(`home.faq${n}A`, { address: t("home.factWhereValue") })),
+      },
+    })),
+  };
+
   return (
-    // inert while the splash is up: keeps the page out of the tab order and away from
-    // screen readers until the splash is gone. The splash portals out to <body>, so it
-    // isn't inert itself.
-    <div inert={!ready}>
-      <PageLoader visible={!ready} />
+    <div>
       {/* ── Hero ───────────────────────────────────────────────── */}
       <Band tone="page">
         {/* grid-cols-1 = minmax(0, 1fr): without it the single mobile column sizes to the
@@ -151,7 +169,7 @@ export function Home() {
             <p className="mt-4 text-sm text-ink-muted">{t("home.reassure")}</p>
           </div>
 
-          {recentSessions.length > 0 && (
+          {(loading || recentSessions.length > 0) && (
             <aside className="rounded-xl border border-border bg-surface p-5 shadow-sm sm:p-6">
               <div className="flex items-baseline justify-between gap-4">
                 <Eyebrow>{t("home.justPlayed")}</Eyebrow>
@@ -159,6 +177,7 @@ export function Home() {
                   {t("home.seeAllGameLog")} →
                 </Link>
               </div>
+              {loading && <LoadingDots className="mt-6 mb-2 text-3xl text-ink-muted" />}
               <div className="mt-4 flex flex-col">
                 {recentSessions.map((game) => (
                   <Link
@@ -192,24 +211,39 @@ export function Home() {
       </Band>
 
       {/* ── Evidence ───────────────────────────────────────────── */}
-      {totalSessions > 0 && (
+      {(loading || totalSessions > 0) && (
         <Band tone="dark">
           <Eyebrow onBand>{t("home.evidenceEyebrow")}</Eyebrow>
           {/* whitespace-pre-line: the translation puts the count and "І це тільки початок."
               on separate lines, with a "\n" between them. */}
           <h2 className="mt-4 max-w-[24ch] text-[clamp(1.75rem,1.2rem+2.2vw,2.7rem)] leading-[1.1] font-bold tracking-[-0.02em] whitespace-pre-line text-band-ink">
-            {totalApprox
-              ? t("home.evidenceTitleApprox", { count: totalApprox })
-              : t("home.evidenceTitle", { count: totalSessions })}
+            {loading ? (
+              <LoadingDots className="text-band-ink-muted" />
+            ) : totalApprox ? (
+              t("home.evidenceTitleApprox", { count: totalApprox })
+            ) : (
+              t("home.evidenceTitle", { count: totalSessions })
+            )}
           </h2>
           <p className="mt-4 max-w-[52ch] text-band-ink-muted">{t("home.evidenceSub")}</p>
 
           <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
-            <StatTile
-              tone="band"
-              value={totalApprox ? `${totalApprox}+` : totalSessions}
-              label={t("home.statSessions")}
-            />
+            {loading &&
+              (["statSessions", "statAverage", "statSeats", "statSystems"] as const).map((key) => (
+                <StatTile
+                  key={key}
+                  tone="band"
+                  value={<LoadingDots className="text-band-ink-muted" />}
+                  label={t(`home.${key}`)}
+                />
+              ))}
+            {!loading && (
+              <StatTile
+                tone="band"
+                value={totalApprox ? `${totalApprox}+` : totalSessions}
+                label={t("home.statSessions")}
+              />
+            )}
             {stats?.averageScore != null && (
               <StatTile
                 tone="band"
@@ -274,7 +308,9 @@ export function Home() {
         </div>
         <p className="mt-4 max-w-[52ch] whitespace-pre-line text-ink-muted">{t("home.recentSub")}</p>
 
-        {recentSessions.length === 0 ? (
+        {loading ? (
+          <LoadingDots className="mt-8 text-3xl text-ink-muted" />
+        ) : recentSessions.length === 0 ? (
           <p className="mt-8 text-ink-muted">{t("home.noSessionsYet")}</p>
         ) : (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -311,14 +347,15 @@ export function Home() {
       </Band>
 
       {/* ── Systems ────────────────────────────────────────────── */}
-      {systems.length > 0 && (
+      {(loading || systems.length > 0) && (
         <Band tone="page">
-          <Eyebrow>{t("home.systemsEyebrow", { count: systems.length })}</Eyebrow>
+          <Eyebrow>{loading ? <LoadingDots /> : t("home.systemsEyebrow", { count: systems.length })}</Eyebrow>
           <h2 className="mt-4 max-w-[24ch] text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
             {t("home.systemsTitle")}
           </h2>
           <p className="mt-4 max-w-[52ch] text-ink-muted">{t("home.systemsSub")}</p>
-          <div className="mt-8 flex flex-wrap gap-2">
+          {loading && <LoadingDots className="mt-8 text-3xl text-ink-muted" />}
+          <div className="mt-8 flex flex-wrap gap-2 empty:hidden">
             {systems.map((s, index) => {
               // sessionCount is missing if the backend predates it — then it's just names.
               const count = s.sessionCount ?? 0;
@@ -353,7 +390,7 @@ export function Home() {
       )}
 
       {/* ── Game masters ───────────────────────────────────────── */}
-      {gms.length > 0 && (
+      {(loading || gms.length > 0) && (
         <Band tone="raised">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -366,7 +403,8 @@ export function Home() {
               {t("home.seeAllGameMasters")} →
             </Link>
           </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {loading && <LoadingDots className="mt-8 text-3xl text-ink-muted" />}
+          <div className="mt-8 grid gap-5 empty:hidden sm:grid-cols-2 lg:grid-cols-3">
             {gms.slice(0, GM_PREVIEW_COUNT).map((gm) => (
               <Link
                 key={gm.userId}
@@ -376,7 +414,7 @@ export function Home() {
                 {gm.profilePictureUrl ? (
                   <img
                     src={gm.profilePictureUrl}
-                    alt=""
+                    alt={`${gm.firstName} ${gm.lastName}`}
                     width={56}
                     height={56}
                     className="h-14 w-14 flex-shrink-0 rounded-full object-cover"
@@ -416,6 +454,9 @@ export function Home() {
           <iframe
             src="https://calendar.google.com/calendar/embed?src=a06e3c9e0ef67ca9738ad9bb2143afbd4403677de38d1fda8ff7a658b9886734%40group.calendar.google.com&ctz=Europe%2FKiev&mode=AGENDA"
             title={t("home.upcomingSessions")}
+            // Far below the fold, and Google's embed pulls in a lot of script of its own —
+            // it shouldn't compete with the page's first paint.
+            loading="lazy"
             width="100%"
             height={420}
             style={{ border: 0 }}
@@ -423,6 +464,57 @@ export function Home() {
             scrolling="no"
           />
         </div>
+      </Band>
+
+      {/* ── FAQ ────────────────────────────────────────────────── */}
+      {/* Native <details>: opens and closes without any JavaScript, so the answers work
+          (and are in the HTML for search engines and AI assistants) before the app loads. */}
+      <Band tone="raised">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <Eyebrow>{t("home.faqEyebrow")}</Eyebrow>
+            <h2 className="mt-4 max-w-[20ch] text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] leading-[1.12] font-bold tracking-[-0.02em]">
+              {t("home.faqTitle")}
+            </h2>
+          </div>
+          <div className="border-t border-border">
+            {faqItems.map((n) => (
+              <details key={n} className="group border-b border-border">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden">
+                  <h3 className="text-base font-semibold sm:text-lg">{t(`home.faq${n}Q`)}</h3>
+                  <svg
+                    viewBox="0 0 12 12"
+                    className="h-3 w-3 shrink-0 text-ink-muted transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2.5 4.5 6 8l3.5-3.5" />
+                  </svg>
+                </summary>
+                <p className="max-w-[62ch] pb-5 text-ink-muted">
+                  <Trans
+                    i18nKey={`home.faq${n}A`}
+                    values={{ address: t("home.factWhereValue") }}
+                    components={{
+                      systemsLink: <Link to="/game-systems" />,
+                      signupLink: <Link to="/signup" />,
+                      telegramLink: <a href={CLUB_TELEGRAM_URL} target="_blank" rel="noreferrer" />,
+                    }}
+                  />
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+        <script
+          type="application/ld+json"
+          // "<" escaped so no answer text can ever close the script element early.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema).replace(/</g, "\\u003c") }}
+        />
       </Band>
 
       {/* ── Closing CTA ────────────────────────────────────────── */}

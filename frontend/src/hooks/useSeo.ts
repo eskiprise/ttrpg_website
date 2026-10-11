@@ -22,17 +22,35 @@ function setCanonical(href: string) {
 }
 
 /**
- * Sets this page's <title>, meta description, OG title/description and canonical link.
- * No react-helmet-async — for a handful of tags with no SSR involved, a plain DOM write
- * is simpler than a dependency + <HelmetProvider> wrapper. No cleanup: the next page's
- * own useSeo call overwrites these on mount, so there's nothing to restore on unmount.
+ * Sets this page's <title>, meta description, OG title/description/url and canonical
+ * link — and, with `noindex`, asks search engines to leave the page out (a "not found"
+ * page is still served with HTTP 200 by the static host, so this is how Google learns
+ * it isn't a real page). No react-helmet-async — for a handful of tags, a plain DOM
+ * write is simpler than a dependency + <HelmetProvider> wrapper. No cleanup: the next
+ * page's own useSeo call overwrites these on mount. The prerender step
+ * (scripts/prerender.mjs) snapshots whatever this wrote into each page's static HTML.
  */
-export function useSeo({ title, description, path }: { title: string; description: string; path: string }) {
+export function useSeo({
+  title,
+  description,
+  path,
+  noindex = false,
+}: {
+  title: string;
+  description: string;
+  path: string;
+  noindex?: boolean;
+}) {
   useEffect(() => {
+    const url = `${SITE_URL}${path}`;
     document.title = title;
     setMeta("name", "description", description);
     setMeta("property", "og:title", title);
     setMeta("property", "og:description", description);
-    setCanonical(`${SITE_URL}${path}`);
-  }, [title, description, path]);
+    setMeta("property", "og:url", url);
+    setCanonical(url);
+    const robots = document.querySelector('meta[name="robots"]');
+    if (noindex) setMeta("name", "robots", "noindex");
+    else robots?.remove();
+  }, [title, description, path, noindex]);
 }

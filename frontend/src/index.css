@@ -1,4 +1,11 @@
 @import "tailwindcss";
+/* Self-hosted webfonts (fontsource) rather than a fonts.googleapis.com stylesheet: that
+   one was render-blocking and cost two extra third-party connections before any text
+   showed. Literata keeps its optical-size axis so large headings get the display cut,
+   as they did with Google's opsz range. */
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/onest/wght.css";
+@import "@fontsource-variable/unbounded/wght.css";
 
 @theme {
   --color-bg: var(--bg);
@@ -22,9 +29,9 @@
   --color-band-ink-muted: var(--band-ink-muted);
   --color-band-accent: var(--band-accent);
 
-  --font-display: "Literata", Georgia, "Times New Roman", serif;
-  --font-body: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-numeric: "Unbounded", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Literata Variable", Georgia, "Times New Roman", serif;
+  --font-body: "Onest Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-numeric: "Unbounded Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
 }
 
@@ -223,16 +230,26 @@
      so it's still readable while picking. Chrome/Safari/Edge only — Firefox's own date
      chrome doesn't expose these parts, but already renders its hint in a muted tone by
      default rather than full ink, so there's nothing to hide there. */
-  /* While PageLoader's die is flying to the navbar logo, the real logo waits invisible
-     so the die can land on it (set on <html> by PageLoader). */
-  html[data-page-loading] [data-brand-mark] {
-    opacity: 0;
-  }
-
   input[type="date"].date-empty {
     color: transparent;
   }
   input[type="date"].date-empty:focus {
     color: var(--ink-muted);
+  }
+}
+
+/* LoadingDots (components/LoadingDots.tsx): each dot swells and brightens in turn. With
+   reduced motion the global rule above switches animations off and the dots just sit. */
+.loading-dot {
+  animation: loading-dot 1.1s ease-in-out infinite;
+}
+@keyframes loading-dot {
+  0%, 80%, 100% {
+    opacity: 0.25;
+    transform: scale(0.75);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
   }
 }

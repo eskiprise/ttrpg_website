@@ -46,7 +46,7 @@ export function GameMasterDetail() {
             {gm.profilePictureUrl ? (
               <img
                 src={gm.profilePictureUrl}
-                alt=""
+                alt={`${gm.firstName} ${gm.lastName}`}
                 width={96}
                 height={96}
                 className="h-24 w-24 flex-shrink-0 rounded-full object-cover"

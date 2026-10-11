@@ -26,5 +26,7 @@ declare global {
     Telegram?: {
       WebApp: TelegramWebApp;
     };
+    /** Set by index.html on /telegram pages only: resolves once the SDK script has loaded (or failed). */
+    telegramSdkReady?: Promise<void>;
   }
 }

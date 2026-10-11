@@ -95,11 +95,7 @@ export function NavBar() {
           24px side padding and 16px gaps — tighten both there only. */}
       <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-4 px-6 max-[360px]:gap-2 max-[360px]:px-4 lg:gap-6">
         <NavLink to="/" className="flex flex-shrink-0 items-center gap-2 font-display text-base font-bold text-ink hover:no-underline max-[360px]:text-sm">
-          {/* data-brand-mark: where PageLoader's die lands, and is hidden until it does. */}
-          <span
-            data-brand-mark
-            className="relative h-6 w-6 flex-shrink-0 rounded border-[1.5px] border-ink transition-opacity duration-150"
-          >
+          <span className="relative h-6 w-6 flex-shrink-0 rounded border-[1.5px] border-ink">
             <span className="absolute top-1/2 left-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent" />
           </span>
           {/* The full wordmark only fits once the nav links, controls and join CTA
@@ -144,10 +140,6 @@ export function NavBar() {
           </div>
         </details>
 
-        {/* The language switcher is deliberately not rendered: the club's audience is
-            Ukrainian, so the site shows Ukrainian only for now. Everything behind it —
-            LanguageSwitcher.tsx, en.json, the i18n setup — is untouched, so bringing the
-            button back is a one-line change. */}
         <div className="hidden flex-shrink-0 items-center gap-4 lg:flex">
           <ThemeToggle />
           {idToken ? (

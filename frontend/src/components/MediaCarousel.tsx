@@ -265,7 +265,7 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
             {item.kind === "photo" ? (
               <img
                 src={item.url}
-                alt={item.caption ?? ""}
+                alt={item.caption || t("about.galleryPhotoAlt")}
                 loading="lazy"
                 className="relative h-full w-full object-contain"
               />
@@ -280,7 +280,7 @@ export function MediaCarousel({ items }: { items: MediaItem[] }) {
                 className="relative h-full w-full object-contain"
               />
             ) : (
-              <img src={item.posterUrl} alt="" className="relative h-full w-full object-contain" />
+              <img src={item.posterUrl} alt={item.caption || t("about.galleryPhotoAlt")} className="relative h-full w-full object-contain" />
             )}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" />
             {item.kind === "video" && (

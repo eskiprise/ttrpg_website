@@ -28,7 +28,7 @@
         window.gtag("config", id);
       })();
     </script>
-    <title>Настільні рольові ігри та D&amp;D у Вінниці — Dice &amp; Adventures Club</title>
+    <title>Настільні рольові ігри та D&amp;D у Вінниці | DnA Club</title>
     <meta
       name="description"
       content="Клуб настільних рольових ігор (НРІ) у Вінниці. D&amp;D (ДнД), Delta Green, Dragonbane та ще 21 система. 236 зіграних сесій, середня оцінка 8.9/10. Новачків навчимо за столом — приносити нічого не треба."
@@ -106,12 +106,6 @@
       }
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,600;7..72,700&family=Onest:wght@400;500;600&family=Unbounded:wght@700;800&display=swap"
-    />
     <script>
       // Set the theme class before first paint, so there's no flash of the
       // wrong theme while React mounts (see src/theme/ThemeContext.tsx).
@@ -121,10 +115,22 @@
         if (isDark) document.documentElement.classList.add("dark");
       })();
     </script>
-    <!-- Official Telegram Mini App SDK. Harmless outside Telegram — window.Telegram.WebApp
-         just has no real WebView behind it, so the /telegram page detects that and shows
-         a "open this from the bot" message instead. -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+      // Official Telegram Mini App SDK — only the Mini App (/telegram…) needs it. As a
+      // plain <script src> it blocked the first paint of every page on a third-party
+      // download; now it starts here, in parallel with the app, and TelegramMiniAppRoot
+      // waits for window.telegramSdkReady before reading window.Telegram.WebApp.
+      if (location.pathname.indexOf("/telegram") === 0) {
+        window.telegramSdkReady = new Promise(function (resolve) {
+          var sdk = document.createElement("script");
+          sdk.src = "https://telegram.org/js/telegram-web-app.js";
+          sdk.onload = sdk.onerror = function () {
+            resolve();
+          };
+          document.head.appendChild(sdk);
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

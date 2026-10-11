@@ -78,8 +78,7 @@ export function TelegramStatsHome() {
           <p className="text-sm text-ink-muted">{t("telegramApp.averageRating")}</p>
           {/* The "/ 10" is set small, as on the site's Statistics tiles — Unbounded is wide
               enough that the whole thing at full size wouldn't fit a half-width card. Bold
-              (700), not extrabold: it's the lightest weight the site loads, and the figures
-              stood out too much at 800. */}
+              (700), not extrabold: the figures stood out too much at 800. */}
           <p className="mt-auto pt-1 font-numeric text-xl font-bold tracking-[-0.03em] tabular-nums">
             {stats.averageRatingGiven !== null ? stats.averageRatingGiven.toFixed(1) : "—"}
             {stats.averageRatingGiven !== null && (
