@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
 import { SiteFooter } from "./components/SiteFooter";
@@ -14,6 +14,7 @@ import { GameDetail } from "./pages/GameDetail";
 import { Statistics } from "./pages/Statistics";
 import { Signup } from "./pages/Signup";
 import { NotFound } from "./pages/NotFound";
+import { markAppMounted } from "./lib/settle";
 
 // Pages a visitor from search never needs are split into their own chunks, so the
 // public pages don't download the admin dashboard and the whole Mini App up front.
@@ -28,6 +29,7 @@ const TelegramRoutes = lazy(() => import("./pages/telegram/TelegramRoutes"));
 
 function App() {
   const location = useLocation();
+  useEffect(markAppMounted, []);
   // The Telegram Mini App renders inside Telegram's own narrow WebView chrome —
   // the normal site nav doesn't belong there.
   const isTelegramApp = location.pathname.startsWith("/telegram");

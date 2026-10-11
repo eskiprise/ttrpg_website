@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { SITE_URL } from "../lib/site";
+import { PRERENDER_SWAPPED_EVENT, prerenderedPageShowing } from "../lib/settle";
 
 function setMeta(attr: "name" | "property", key: string, content: string) {
   let tag = document.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
@@ -42,15 +43,25 @@ export function useSeo({
   noindex?: boolean;
 }) {
   useEffect(() => {
-    const url = `${SITE_URL}${path}`;
-    document.title = title;
-    setMeta("name", "description", description);
-    setMeta("property", "og:title", title);
-    setMeta("property", "og:description", description);
-    setMeta("property", "og:url", url);
-    setCanonical(url);
-    const robots = document.querySelector('meta[name="robots"]');
-    if (noindex) setMeta("name", "robots", "noindex");
-    else robots?.remove();
+    const apply = () => {
+      const url = `${SITE_URL}${path}`;
+      document.title = title;
+      setMeta("name", "description", description);
+      setMeta("property", "og:title", title);
+      setMeta("property", "og:description", description);
+      setMeta("property", "og:url", url);
+      setCanonical(url);
+      const robots = document.querySelector('meta[name="robots"]');
+      if (noindex) setMeta("name", "robots", "noindex");
+      else robots?.remove();
+    };
+    // While a prerendered page is still on screen its head is already right — the live
+    // app, loading off-screen, would only overwrite it with its "loading…" title for a
+    // moment. Apply once the live page has taken over instead.
+    if (prerenderedPageShowing()) {
+      window.addEventListener(PRERENDER_SWAPPED_EVENT, apply, { once: true });
+      return () => window.removeEventListener(PRERENDER_SWAPPED_EVENT, apply);
+    }
+    apply();
   }, [title, description, path, noindex]);
 }

@@ -42,6 +42,9 @@ jobs:
           # deploy gets a crawlable robots.txt + sitemap.xml, so dev.dnaclub.com.ua never
           # ends up duplicated in Google's index alongside the real site.
           SITE_ENV: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+          # frontend/scripts/prerender.mjs (postbuild): saves every sitemap page as static
+          # HTML under dist/_pre/, rendered in the runner's preinstalled Chrome.
+          PRERENDER: "1"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
