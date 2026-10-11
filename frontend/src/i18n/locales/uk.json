@@ -269,6 +269,8 @@
     "systemNameLabel": "Назва",
     "aliasesLabel": "Синоніми (через кому)",
     "aliasesPlaceholder": "Синоніми через кому, напр. Каїрн, Cairn RPG",
+    "slugLabel": "Адреса сторінки: dnaclub.com.ua/game-systems/…",
+    "slugHint": "Латинські літери, цифри й дефіси. Якщо змінити, стара адреса й далі вестиме на сторінку.",
     "coverLabel": "Обкладинка",
     "replaceCover": "Замінити обкладинку",
     "removeCover": "Прибрати обкладинку",

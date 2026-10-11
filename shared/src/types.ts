@@ -62,11 +62,21 @@ export interface GameSystem {
   aliases?: string[];
   /** Cover art / book cover, served from the avatars CDN like profile pictures. */
   imageUrl?: string;
+  /**
+   * The system page's URL segment (/game-systems/<slug>), once fixed: set at creation
+   * and on the first admin save, so renaming a system doesn't move its page. Until then
+   * it's derived from the name — read the effective one from GameSystemWithCount.slug.
+   */
+  slug?: string;
+  /** Slugs this system's page used to have; their URLs redirect to the current one. */
+  previousSlugs?: string[];
 }
 
 /** A system plus how many rated sessions were played in it (polls matched by title). */
 export interface GameSystemWithCount extends GameSystem {
   sessionCount: number;
+  /** The effective slug — the stored one, or one derived from the name. Unique. */
+  slug: string;
 }
 
 /** Poll titles no system claimed, grouped by their leading prefix — admin-only. */

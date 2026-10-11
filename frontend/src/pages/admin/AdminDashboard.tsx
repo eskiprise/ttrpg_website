@@ -249,6 +249,7 @@ function GameSystemRow({
   const [name, setName] = useState(system.name);
   const [description, setDescription] = useState(system.description);
   const [aliases, setAliases] = useState((system.aliases ?? []).join(", "));
+  const [slug, setSlug] = useState(system.slug);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -272,7 +273,10 @@ function GameSystemRow({
     apiFetch(`/admin/game-systems/${system.systemId}`, { method: "PATCH", token, body });
 
   function save() {
-    run(() => patch({ name, description, aliases: parseAliases(aliases) }), t("admin.saved"));
+    // The slug only goes along when it was actually edited — every save fixes the
+    // current one server-side anyway (see updateGameSystem).
+    const slugEdit = slug.trim() !== system.slug ? { slug: slug.trim() } : {};
+    run(() => patch({ name, description, aliases: parseAliases(aliases), ...slugEdit }), t("admin.saved"));
   }
 
   // A cover is saved as soon as it's uploaded — no second "remember to press Save" step.
@@ -313,6 +317,11 @@ function GameSystemRow({
         <label className="flex flex-col gap-1 text-sm text-ink-muted">
           {t("admin.aliasesLabel")}
           <input value={aliases} placeholder={t("admin.aliasesPlaceholder")} onChange={(e) => setAliases(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-ink-muted">
+          {t("admin.slugLabel")}
+          <input value={slug} spellCheck={false} autoCapitalize="none" onChange={(e) => setSlug(e.target.value)} />
+          <span className="text-xs">{t("admin.slugHint")}</span>
         </label>
         <div className="flex flex-wrap items-center gap-3 text-sm text-ink-muted">
           <label className="flex flex-col gap-1">

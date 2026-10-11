@@ -20,6 +20,7 @@ import { GamesPerMonthChart } from "../components/GamesPerMonthChart";
 import { LoadingDots } from "../components/LoadingDots";
 import { CLUB_MAPS_URL, CLUB_MAP_EMBED_URL, CLUB_TELEGRAM_URL } from "../lib/club";
 import { useSeo } from "../hooks/useSeo";
+import { systemPath } from "../lib/systemPath";
 
 const RECENT_SESSIONS_COUNT = 3;
 const GM_PREVIEW_COUNT = 3;
@@ -365,7 +366,7 @@ export function Home() {
               return (
                 <Link
                   key={s.systemId}
-                  to={`/game-systems/${s.systemId}`}
+                  to={systemPath(s)}
                   className={`inline-flex items-baseline gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors hover:no-underline ${
                     lead
                       ? "border-band bg-band text-band-ink hover:border-band-accent"

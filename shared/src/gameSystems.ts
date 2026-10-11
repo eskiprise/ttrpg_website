@@ -71,3 +71,44 @@ export function titlePrefix(questionText: string): string {
   const title = formatGameTitle(questionText);
   return title.split(/\s*[:–—]\s*|\s+-\s+|\s*[№#]/)[0].trim() || title;
 }
+
+// Ukrainian → Latin per the official 2010 transliteration (КМУ №55), the one passports
+// and road signs use. The pairs are [at the start of a word, anywhere else]: є/ї/й/ю/я
+// are spelled differently at the start of a word ("Яр" → "Yar", "Маяк" → "Maiak").
+const TRANSLIT: Record<string, string | [string, string]> = {
+  а: "a", б: "b", в: "v", г: "h", ґ: "g", д: "d", е: "e", є: ["ye", "ie"], ж: "zh", з: "z",
+  и: "y", і: "i", ї: ["yi", "i"], й: ["y", "i"], к: "k", л: "l", м: "m", н: "n", о: "o",
+  п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh",
+  щ: "shch", ь: "", ю: ["yu", "iu"], я: ["ya", "ia"],
+  // Not Ukrainian, but they turn up in system names typed on a Russian layout.
+  ы: "y", э: "e", ё: "yo", ъ: "",
+};
+
+/**
+ * A readable URL segment for a name: "D&D" → "dnd", "Клинки в пітьмі" → "klynky-v-pitmi",
+ * "Mörk Borg" → "mork-borg". Lowercase Latin letters, digits and single hyphens only;
+ * "" when nothing usable is left (the caller falls back to the id).
+ */
+export function slugify(text: string): string {
+  const latin = text
+    .toLowerCase()
+    // "D&D", "R&R": an ampersand between two single letters reads as part of the name.
+    .replace(/\b(\p{L})\s*&\s*(\p{L})\b/gu, "$1n$2")
+    .replace(/&/g, " and ")
+    // Apostrophes vanish inside a word ("п'ять" → "piat"), as the official rules have it.
+    .replace(/['’ʼ`]/g, "")
+    .replace(/\p{L}/gu, (char, offset: number, whole: string) => {
+      const rule = TRANSLIT[char];
+      if (rule === undefined) return char;
+      if (typeof rule === "string") return rule;
+      const wordStart = offset === 0 || !/\p{L}/u.test(whole[offset - 1]);
+      return wordStart ? rule[0] : rule[1];
+    })
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+  return latin
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60)
+    .replace(/-+$/, "");
+}
