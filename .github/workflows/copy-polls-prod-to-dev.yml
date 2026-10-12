@@ -1,0 +1,54 @@
+name: Copy polls prod → dev
+
+# Manual only: Actions → "Copy polls prod → dev" → Run workflow. Copies the Telegram rating
+# polls and votes from prod's DynamoDB tables to dev's (scripts/copy-polls-prod-to-dev.mjs
+# explains what's copied and why). Prod is only read.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "merge — add/update prod polls on dev, keep dev's own test polls; replace — dev becomes an exact copy of prod"
+        type: choice
+        options: [merge, replace]
+        default: merge
+      dry_run:
+        description: "Dry run: only show what would change, write nothing"
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write # required for AWS OIDC
+  contents: read
+
+# Two runs at once would just do the same writes twice — queue them instead.
+concurrency: copy-polls-prod-to-dev
+
+env:
+  AWS_REGION: eu-west-2
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # Only for @aws-sdk/client-dynamodb; nothing needs building.
+      - run: npm ci --ignore-scripts
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Copy polls and votes
+        env:
+          MODE: ${{ inputs.mode }}
+          # Not `dry_run && '' || '--apply'`: '' is falsy, so that would always apply.
+          APPLY: ${{ !inputs.dry_run && '--apply' || '' }}
+        run: node scripts/copy-polls-prod-to-dev.mjs --mode "$MODE" $APPLY

@@ -224,6 +224,15 @@ buckets, rewrites `imageUrl` to the target's CDN, and matches systems by name so
 re-run updates rather than duplicates. Dry-run by default; `--apply` writes. Nothing is
 deleted — a system that exists only in the target is reported for you to remove by hand.
 
+Game history goes the other way. The **Copy polls prod → dev** workflow
+(`.github/workflows/copy-polls-prod-to-dev.yml`, run by hand from the Actions tab) copies
+the Telegram rating polls and votes from prod's tables to dev's, so the dev site shows
+the real Game Log and statistics — `scripts/copy-polls-prod-to-dev.mjs`, also runnable
+locally (dry-run unless `--apply`). Mode `merge` keeps the dev bot's own test polls;
+`replace` makes dev an exact copy. Prod is only read (the deploy role has read-only
+access to those two prod tables). Feedback isn't copied: inserting it would set off the
+dev bot's new-feedback notifications.
+
 ## Related repos
 
 - [`../aws_infra`](../aws_infra) — all Terraform for this site and the poll bot
