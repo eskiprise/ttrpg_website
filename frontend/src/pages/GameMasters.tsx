@@ -42,7 +42,7 @@ export function GameMasters() {
             {gm.profilePictureUrl ? (
               <img
                 src={gm.profilePictureUrl}
-                alt=""
+                alt={`${gm.firstName} ${gm.lastName}`}
                 width={64}
                 height={64}
                 className="h-16 w-16 flex-shrink-0 rounded-full object-cover"

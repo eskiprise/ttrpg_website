@@ -15,10 +15,26 @@ interface RequestOptions {
   token?: string | null;
 }
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestOptions = {}
-): Promise<T> {
+/**
+ * Requests still in flight, across the whole app. lib/settle.ts watches it to tell when a
+ * page has everything it asked for — the moment its prerendered HTML can be swapped for
+ * the live page, and the moment the prerender step snapshots it.
+ */
+let pending = 0;
+export function pendingRequests(): number {
+  return pending;
+}
+
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  pending += 1;
+  try {
+    return await request<T>(path, options);
+  } finally {
+    pending -= 1;
+  }
+}
+
+async function request<T>(path: string, options: RequestOptions): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (options.token) {
     headers.Authorization = `Bearer ${options.token}`;

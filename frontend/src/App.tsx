@@ -1,3 +1,4 @@
+import { lazy, Suspense, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
 import { SiteFooter } from "./components/SiteFooter";
@@ -12,21 +13,23 @@ import { GameLog } from "./pages/GameLog";
 import { GameDetail } from "./pages/GameDetail";
 import { Statistics } from "./pages/Statistics";
 import { Signup } from "./pages/Signup";
-import { Login } from "./pages/Login";
-import { Profile } from "./pages/Profile";
-import { AdminDashboard } from "./pages/admin/AdminDashboard";
-import { TelegramMiniAppRoot } from "./pages/telegram/TelegramMiniAppRoot";
-import { TelegramStatsHome } from "./pages/telegram/TelegramStatsHome";
-import { TelegramCreatePoll } from "./pages/telegram/TelegramCreatePoll";
-import { TelegramGamesList } from "./pages/telegram/TelegramGamesList";
-import { TelegramGameDetail } from "./pages/telegram/TelegramGameDetail";
-import { TelegramFeedbackForm } from "./pages/telegram/TelegramFeedbackForm";
-import { TelegramMyFeedback } from "./pages/telegram/TelegramMyFeedback";
-import { TelegramLeaderboard } from "./pages/telegram/TelegramLeaderboard";
-import { TelegramAchievements } from "./pages/telegram/TelegramAchievements";
+import { NotFound } from "./pages/NotFound";
+import { markAppMounted } from "./lib/settle";
+
+// Pages a visitor from search never needs are split into their own chunks, so the
+// public pages don't download the admin dashboard and the whole Mini App up front.
+// The public pages stay in the main bundle: they're the ones prerendered, and their
+// static HTML is swapped for the live page only once it has rendered (see main.tsx).
+const Login = lazy(() => import("./pages/Login").then((m) => ({ default: m.Login })));
+const Profile = lazy(() => import("./pages/Profile").then((m) => ({ default: m.Profile })));
+const AdminDashboard = lazy(() =>
+  import("./pages/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard }))
+);
+const TelegramRoutes = lazy(() => import("./pages/telegram/TelegramRoutes"));
 
 function App() {
   const location = useLocation();
+  useEffect(markAppMounted, []);
   // The Telegram Mini App renders inside Telegram's own narrow WebView chrome —
   // the normal site nav doesn't belong there.
   const isTelegramApp = location.pathname.startsWith("/telegram");
@@ -37,35 +40,27 @@ function App() {
     <div className="flex min-h-dvh flex-col">
       {!isTelegramApp && <NavBar />}
       <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/game-masters" element={<GameMasters />} />
-          <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
-          <Route path="/game-systems" element={<GameSystems />} />
-          <Route path="/game-systems/:systemId" element={<GameSystemDetail />} />
-          <Route path="/game-log" element={<GameLog />} />
-          <Route path="/game-log/:pollId" element={<GameDetail />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          {/* Public: the club's activity is the pitch to a stranger, and every figure
-              here already shows per-session on the Game Log. */}
-          <Route path="/statistics" element={<Statistics />} />
-          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-          <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-          <Route path="/telegram" element={<TelegramMiniAppRoot />}>
-            <Route index element={<TelegramStatsHome />} />
-            <Route path="create-poll" element={<TelegramCreatePoll />} />
-            <Route path="feedback/:pollId" element={<TelegramFeedbackForm />} />
-            <Route path="feedback/mine" element={<TelegramMyFeedback />} />
-            <Route path="games/played" element={<TelegramGamesList kind="played" />} />
-            <Route path="games/conducted" element={<TelegramGamesList kind="conducted" />} />
-            <Route path="games/all" element={<TelegramGamesList kind="all" />} />
-            <Route path="game/:pollId" element={<TelegramGameDetail />} />
-            <Route path="leaderboard" element={<TelegramLeaderboard />} />
-            <Route path="achievements" element={<TelegramAchievements />} />
-          </Route>
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/game-masters" element={<GameMasters />} />
+            <Route path="/game-masters/:userId" element={<GameMasterDetail />} />
+            <Route path="/game-systems" element={<GameSystems />} />
+            <Route path="/game-systems/:systemId" element={<GameSystemDetail />} />
+            <Route path="/game-log" element={<GameLog />} />
+            <Route path="/game-log/:pollId" element={<GameDetail />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            {/* Public: the club's activity is the pitch to a stranger, and every figure
+                here already shows per-session on the Game Log. */}
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+            <Route path="/telegram/*" element={<TelegramRoutes />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </main>
       {!isTelegramApp && <SiteFooter />}
     </div>

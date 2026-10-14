@@ -6,6 +6,7 @@ import { apiFetch } from "../lib/api";
 import { PageShell } from "../components/PageShell";
 import { SystemCover } from "../components/SystemCover";
 import { useSeo } from "../hooks/useSeo";
+import { systemPath } from "../lib/systemPath";
 
 /**
  * Systems we've genuinely played a lot get a cover card; the one-off and rare ones
@@ -47,7 +48,7 @@ export function GameSystems() {
           {featured.map((system) => (
             <Link
               key={system.systemId}
-              to={`/game-systems/${system.systemId}`}
+              to={systemPath(system)}
               className="group block min-w-0 text-ink hover:no-underline"
             >
               <div className="aspect-[3/4] overflow-hidden rounded-xl border border-border bg-surface-2 transition-transform duration-200 group-hover:-translate-y-1">
@@ -69,7 +70,7 @@ export function GameSystems() {
             {rest.map((system) => (
               <Link
                 key={system.systemId}
-                to={`/game-systems/${system.systemId}`}
+                to={systemPath(system)}
                 className="flex items-center gap-3 border-b border-border px-4 py-3 text-ink transition-colors last:border-b-0 hover:bg-surface-2 hover:no-underline"
               >
                 <span className="h-12 w-9 flex-shrink-0 overflow-hidden rounded-md border border-border">

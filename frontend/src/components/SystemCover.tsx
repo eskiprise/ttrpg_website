@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { GameSystem } from "@ttrpg-club/shared";
 
 /**
@@ -12,8 +13,16 @@ export function SystemCover({
   system: Pick<GameSystem, "name" | "imageUrl">;
   size?: "tile" | "thumb";
 }) {
+  const { t } = useTranslation();
   if (system.imageUrl) {
-    return <img src={system.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />;
+    return (
+      <img
+        src={system.imageUrl}
+        alt={t("gameSystems.coverAlt", { name: system.name })}
+        loading="lazy"
+        className="h-full w-full object-cover"
+      />
+    );
   }
   if (size === "thumb") {
     return (

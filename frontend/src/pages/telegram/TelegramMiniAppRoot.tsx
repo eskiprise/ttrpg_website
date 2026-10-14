@@ -22,24 +22,33 @@ export function TelegramMiniAppRoot() {
   const [state, setState] = useState<GateState | null>(null);
 
   useEffect(() => {
-    const webApp = window.Telegram?.WebApp;
-    const initData = webApp?.initData;
+    let cancelled = false;
+    // The SDK loads asynchronously (see index.html), so wait for it before deciding
+    // whether this is really inside Telegram.
+    (window.telegramSdkReady ?? Promise.resolve()).then(() => {
+      if (cancelled) return;
+      const webApp = window.Telegram?.WebApp;
+      const initData = webApp?.initData;
 
-    if (!webApp || !initData) {
-      setState({ status: "not-in-telegram" });
-      return;
-    }
+      if (!webApp || !initData) {
+        setState({ status: "not-in-telegram" });
+        return;
+      }
 
-    webApp.ready();
-    webApp.expand();
+      webApp.ready();
+      webApp.expand();
 
-    const startParam = webApp.initDataUnsafe.start_param;
-    const feedbackMatch = startParam?.match(/^feedback_(.+)$/);
-    if (feedbackMatch) {
-      navigate(`/telegram/feedback/${feedbackMatch[1]}`, { replace: true });
-    }
+      const startParam = webApp.initDataUnsafe.start_param;
+      const feedbackMatch = startParam?.match(/^feedback_(.+)$/);
+      if (feedbackMatch) {
+        navigate(`/telegram/feedback/${feedbackMatch[1]}`, { replace: true });
+      }
 
-    setState({ status: "ready", initData });
+      setState({ status: "ready", initData });
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

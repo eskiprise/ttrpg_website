@@ -1,25 +1,15 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import en from "./locales/en.json";
 import uk from "./locales/uk.json";
 
-const STORAGE_KEY = "ttrpg-club-language";
-
-const storedLanguage =
-  typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-
+// Ukrainian only: the club's audience is Ukrainian, so the site has one language. The copy
+// still goes through i18next rather than living inline — every string stays in one file,
+// and the Ukrainian plural forms (_one/_few/_many) keep working.
 void i18n.use(initReactI18next).init({
-  resources: {
-    uk: { translation: uk },
-    en: { translation: en },
-  },
-  lng: storedLanguage ?? "uk",
-  fallbackLng: "en",
+  resources: { uk: { translation: uk } },
+  lng: "uk",
+  fallbackLng: "uk",
   interpolation: { escapeValue: false },
-});
-
-i18n.on("languageChanged", (lng) => {
-  window.localStorage.setItem(STORAGE_KEY, lng);
 });
 
 export default i18n;

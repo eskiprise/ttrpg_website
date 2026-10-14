@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { GameSystem, GameSystemDetail as GameSystemDetailData } from "@ttrpg-club/shared";
 import { ApiError, apiFetch } from "../lib/api";
@@ -9,6 +9,7 @@ import { StatTile } from "../components/StatTile";
 import { SystemCover } from "../components/SystemCover";
 import { GameRowList } from "../components/GameRow";
 import { useSeo } from "../hooks/useSeo";
+import { systemPath } from "../lib/systemPath";
 
 /** Enough to show the system is alive without a wall of rows; the rest is one tap away. */
 const INITIAL_GAMES_SHOWN = 10;
@@ -37,10 +38,15 @@ function otherNames(system: GameSystem): string[] {
 
 export function GameSystemDetail() {
   const { t } = useTranslation();
+  // A slug ("dnd") on today's links; an id or a former slug on older ones.
   const { systemId } = useParams<{ systemId: string }>();
+  const navigate = useNavigate();
   const [data, setData] = useState<GameSystemDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [showAllGames, setShowAllGames] = useState(false);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   const system = data?.system;
   const aliases = system ? otherNames(system) : [];
@@ -53,20 +59,34 @@ export function GameSystemDetail() {
           otherNames: aliases.length > 0 ? ` (${aliases.slice(0, OTHER_NAMES_IN_DESCRIPTION).join(", ")})` : "",
         })
       : t("gameSystems.intro"),
-    path: `/game-systems/${systemId ?? ""}`,
+    path: system ? systemPath(system) : `/game-systems/${systemId ?? ""}`,
+    noindex: notFound,
   });
 
   useEffect(() => {
     if (!systemId) return;
+    // Just moved the address bar to this system's own slug (below) — already loaded.
+    if (dataRef.current?.system.slug === systemId) return;
     setData(null);
     setError(null);
+    setNotFound(false);
     setShowAllGames(false);
     apiFetch<GameSystemDetailData>(`/game-systems/${systemId}`)
       .then(setData)
-      .catch((err) =>
-        setError(err instanceof ApiError && err.status === 404 ? t("gameSystemDetail.notFound") : err.message)
-      );
+      .catch((err) => {
+        const missing = err instanceof ApiError && err.status === 404;
+        setNotFound(missing);
+        setError(missing ? t("gameSystemDetail.notFound") : err.message);
+      });
   }, [systemId, t]);
+
+  // Reached by its id or a former slug: show the page at its current address instead,
+  // so the address bar, shared links and the canonical URL all agree.
+  useEffect(() => {
+    if (data && data.system.slug && systemId !== data.system.slug) {
+      navigate(systemPath(data.system), { replace: true });
+    }
+  }, [data, systemId, navigate]);
 
   const games = data?.games ?? [];
   const visibleGames = showAllGames ? games : games.slice(0, INITIAL_GAMES_SHOWN);
